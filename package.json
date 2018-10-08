@@ -1,0 +1,19 @@
+{
+  "name": "secanna",
+  "version": "0.0.1",
+  "description": "1000Aigis LineBot",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ."
+  },
+  "author": "K.T.",
+  "license": "ISC",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.2",
+    "express": "^4.16.3",
+    "fs": "0.0.1-security",
+    "iconv-lite": "^0.4.24",
+    "linebot": "^1.4.1",
+    "request": "^2.88.0"
+  }
+}
