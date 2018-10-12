@@ -8,8 +8,8 @@ const cheerio = require("cheerio");
 const fs = require("fs");
 const dbox = require("./dbox.js");
 
-var _debug = true;
-var _version = "0.1";
+var _debug = false;
+var _version = "0.2";
 
 // line bot
 // bot 搜尋
@@ -74,6 +74,8 @@ const searchData = function(msg, replyFunc) {
 	// status
 	if (command.indexOf("狀態") != -1)
 	{
+		loadAutoResponseList();
+
 		var replyMsg = "";
 		
 		replyMsg += "目前版本 v" + _version + "\n";
@@ -84,7 +86,7 @@ const searchData = function(msg, replyFunc) {
 		return replyMsg;
 	}
 	// 圖片空間
-	if (command.indexOf("照片") != -1 && command.indexOf("圖片") != -1)
+	if (command.indexOf("照片") != -1 || command.indexOf("圖片") != -1)
 	{
 		/*return createTemplateMsg("圖片空間", ["上傳新照片", "線上圖庫"],
 		["https://www.dropbox.com/request/FhIsMnWVRtv30ZL2Ty69", 
@@ -203,18 +205,21 @@ const searchData = function(msg, replyFunc) {
 			replyMsg = obj.getMessage();
 			return replyMsg.trim();*/
 
-			listDir(obj.str_name)
+			dbox.listDir(obj.str_name)
 			.then(function(msgArray) {
-				var i = Math.floor(Math.random() * msgArray.length)
-				;
+				var i = Math.floor(Math.random() * msgArray.length);
+
 				var replyMsg = [];
-				replyMsg =+ createTextMsg(obj.getMessage());
-				replyMsg =+ createImageMsg(msgArray[i]);
-				replyMsg += createTemplateMsg("Wiki 連結", [obj.str_name], [obj.getWikiUrl()]);
+				replyMsg.push(createTextMsg(obj.getMessage()));
+
+				if (msgArray.length != 0)
+					replyMsg.push(createImageMsg(encodeURI(dbox.getFileUrl(obj.str_name + "\/" + msgArray[i]))));
+
+				replyMsg.push(createTemplateMsg("Wiki 連結", [obj.str_name], [obj.getWikiUrl()]));
 				replyFunc(replyMsg);
 			});
 			
-			return "";
+			return replyMsg;
 		}
 		else if (count > 0) // list
 		{
@@ -241,18 +246,21 @@ const searchData = function(msg, replyFunc) {
 		var i = checkCharaData(result);
 		var obj = charaDataBase[i];
 		
-		listDir(obj.str_name)
+		dbox.listDir(obj.str_name)
 		.then(function(msgArray) {
-			var i = Math.floor(Math.random() * msgArray.length)
-			;
+			var i = Math.floor(Math.random() * msgArray.length);
+
 			var replyMsg = [];
-			replyMsg =+ createTextMsg(obj.getMessage());
-			replyMsg =+ createImageMsg(msgArray[i]);
-			replyMsg += createTemplateMsg("Wiki 連結", [obj.str_name], [obj.getWikiUrl()]);
+			replyMsg.push(createTextMsg(obj.getMessage()));
+			
+			if (msgArray.length != 0)
+				replyMsg.push(createImageMsg(encodeURI(dbox.getFileUrl(obj.str_name + "\/" + msgArray[i]))));
+			
+			replyMsg.push(createTemplateMsg("Wiki 連結", [obj.str_name], [obj.getWikiUrl()]));
 			replyFunc(replyMsg);
 		});
 		
-		return "";
+		return replyMsg;
 	}
 	else if (count > 0) // list
 	{
@@ -266,7 +274,27 @@ const searchData = function(msg, replyFunc) {
 	replyFunc(replyMsg);
 	return replyMsg;
 }
+// 定型文貼圖
+const stampCommand = function(msg, replyFunc) {
+	if (_debug)	console.log(msg);
 
+	for (var i = 0; i < autoResponseList.length; i++) {
+		if (msg == autoResponseList[i])
+		{
+			dbox.listDir("AutoResponse\/" + msg)
+			.then(function(msgArray) {
+				var j = Math.floor(Math.random() * msgArray.length);
+				
+				// 搜尋定型文
+				var replyMsg = [];
+				replyMsg.push(createImageMsg(encodeURI(dbox.getFileUrl("AutoResponse\/" + msg + "\/" + msgArray[j]))));
+
+				replyFunc(replyMsg);
+				if (_debug)	console.log(replyMsg);
+			});
+		}
+	}
+}
 
 
 // 爬蟲
@@ -870,10 +898,10 @@ const getClassString = function(str) {
 
 // Line Message element
 // 文字訊息
-const createTextMsg = function(text) {
+const createTextMsg = function(_text) {
 	return {
 		type: "text",
-		text: "Test msg"
+		text: _text.trim()
 	};
 }
 // 圖片訊息
@@ -913,7 +941,19 @@ const createTemplateMsg = function(altText, label, url) {
 }
 // DROPBOX: encodeURI(url);
 // Wiki   : encodeURI_JP(url);
+// 定型文清單
+var autoResponseList = [];
+// 讀取清單
+const loadAutoResponseList = function() {
+	autoResponseList = [];
 
+	dbox.listDir("AutoResponse", "folder")
+	.then(function(msgArray) {
+		for (var i = 0; i <msgArray.length; i++) {
+			autoResponseList.push(msgArray[i]);
+		}
+	});
+}
 
 
 
@@ -922,6 +962,7 @@ const createTemplateMsg = function(altText, label, url) {
 module.exports = {
 	loadClassDataBase: function() { return loadClassDataBase(); },
 	loadCharaDataBase: function() { return loadCharaDataBase(); },
+	loadAutoResponseList: function() { return loadAutoResponseList(); },
 	
 	classDataCrawler: function() { return classDataCrawler(); },
 	allCharaDataCrawler: function() { return allCharaDataCrawler(); },
@@ -930,6 +971,7 @@ module.exports = {
 	saveCharaDataBase: function() { return saveCharaDataBase(); },
 	
 	searchData: function(msg, replyFunc) { return searchData(msg, replyFunc); },
+	stampCommand: function(msg, replyFunc) { return stampCommand(msg, replyFunc); },
 	
 	_debug: function() { return _debug; }
 };
@@ -940,20 +982,17 @@ module.exports = {
 
 /*
 const debugFunc = function() {
+	
+	_debug = true;
 
-	var url = "";
-	url = "https://seesaawiki.jp/aigis/d/刻詠の風水士リンネ";
-	console.log(encodeURI_JP(url));
-	url = "https://aigis1000secretary.updog.co/刻詠の風水士リンネ/6230667.png";
-	console.log(encodeURI(url));
-
+	searchData("ANNA NNL", function(obj){ console.log(obj)});
 }
 
 
 
-setTimeout(debugFunc, 1 * 1000);
+setTimeout(debugFunc, 1 * 1000);*/
 
-*/
+
 
 
 

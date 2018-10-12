@@ -28,7 +28,7 @@ module.exports = {
 
 
 	// LS
-	listDir: function(_path) {
+	listDir: function(_path, filter) {
 		return new Promise(function(resolve, reject) {
 			
 			var result = [];
@@ -36,8 +36,15 @@ module.exports = {
 			.then(function(response) {
 				//console.log(response);
 				for (var i = 0; i < response.entries.length; i++) {
-					result.push(response.entries[i].name)
-					//result.push(response.entries[i].name + ", " + response.entries[i][".tag"]);
+					//result.push(response.entries[i].name + ", " + response.entries[i][".tag"]); continue;
+					if (typeof(filter) == "undefined")
+					{
+						result.push(response.entries[i].name)
+					}
+					else if (filter == response.entries[i][".tag"])
+					{
+						result.push(response.entries[i].name)
+					}
 				}
 				resolve(result);
 			})
@@ -109,7 +116,7 @@ module.exports = {
 /*
 const debugFunc = function() {
 
-	module.exports.listDir("/刻詠の風水士*リンネ").then(function(obj){console.log(obj);});
+	module.exports.listDir("").then(function(obj){console.log(obj);});
 
 }
 setTimeout(debugFunc, 1 * 1000);*/

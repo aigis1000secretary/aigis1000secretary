@@ -2,15 +2,10 @@
 // todo
 /*
 	工具超連結
-	自動貼圖
 */
 
 // commit
 /*
-	push 測試 ok
-	搜尋附圖功能上線
-	wiki 超連結上線
-	忘記暱稱
 */
 
 // 初始化
@@ -75,6 +70,9 @@ const bot_on = function() {
 				//if (typeof(replyMsg) == "undefined" && replyMsg != [] && replyMsg != "")
 					//replyFunc(replyMsg);
 			}
+
+			// 呼叫定型文
+			var replyMsg = anna.stampCommand(msg, replyFunc);
 			
 			// 無視...
 			//if (_debug) console.log("Not a command");
@@ -93,6 +91,7 @@ const bot_on = function() {
 // 讀取資料
 anna.loadClassDataBase();
 anna.loadCharaDataBase();
+anna.loadAutoResponseList();
 // 開始監聽
 bot_on();
 
