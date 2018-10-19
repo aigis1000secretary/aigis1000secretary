@@ -10,6 +10,8 @@ anna.loadCharaDataBase();
 setTimeout(function() {anna.classDataCrawler();}, 3 * 1000);
 setTimeout(function() {anna.allCharaDataCrawler();}, 3 * 1000);
 
+//setTimeout(function() {anna.charaDataCrawler();}, 3 * 1000);
+
 // 80sec 後儲存資料庫
 setTimeout(function() {anna.saveClassDataBase();}, 80 * 1000);
 setTimeout(function() {anna.saveCharaDataBase();}, 80 * 1000);
