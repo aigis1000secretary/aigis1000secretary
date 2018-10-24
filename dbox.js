@@ -13,6 +13,7 @@ const root = "/應用程式/updog/aigis1000secretary/";
 // 應用程式/updog/aigis1000secretary/刻詠の風水士リンネ?preview=6230667.png
 
 module.exports = {
+	core: dbox,
 	root: root,
 
 	// MD

@@ -1,13 +1,13 @@
 
 // todo
 /*
-	工具超連結
+	搜索職業函數化
 */
 
 // commit
 /*
-0.3.0 更換圖床 Imgur
-      程式碼重構&格式整理
+0.3.1
+	工具超連結
 */
 
 // 初始化
@@ -45,7 +45,7 @@ const bot_on = function() {
 
 			// reply
 			var replyFunc = function(rMsg) {
-				if (anna._debug())	console.log(data);
+				if (anna._debug())	console.log(rMsg);
 				event.reply(rMsg)
 				.then(function(data) {
 					if (anna._debug())	console.log(data);

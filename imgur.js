@@ -239,7 +239,18 @@ imgur.dataBase.createImage = function(newData) {
 	newImage.index = newData.description.split(",");
 	newImage.id = newData.id;
 	newImage.imageLink = newData.link;
-	newImage.thumbnailLink = newData.link.replace(newImage.id, newImage.id + "b");
+	newImage.thumbnailLink = newData.link.replace(newImage.id, newImage.id + "m");
+	/*
+	Thumbnail Suffix	Thumbnail Name		Thumbnail Size	Keeps Image Proportions
+	"s"					Small Square		90x90			No
+	"b"					Big Square			160x160			No
+	"t"					Small Thumbnail		160x160			Yes
+	"m"					Medium Thumbnail	320x320			Yes
+	"l"					Large Thumbnail		640x640			Yes
+	"h"					Huge Thumbnail		1024x1024		Yes
+	*/
+
+
 	for (let i in newImage.index) {
 		newImage.index[i] = newImage.index[i].trim();
 	}

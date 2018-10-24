@@ -31,8 +31,8 @@ const main = async function() {
 
             // try to find existed image first
             let onlineImage = imgur.dataBase.findImageByNameTag(fileName, mainTag);
-            if (onlineImage != null) {
-                console.log("file already existed: " + pathArray[i]);
+            if (onlineImage.length != 0) {
+                console.log("file already existed(file): " + pathArray[i]);
                 // return "file already existed";
 
             } else {
@@ -43,7 +43,7 @@ const main = async function() {
 
                 let onlineImage = imgur.dataBase.findImageByMd5(fileMd5);
                 if (onlineImage != null) {
-                    console.log("file already existed: " + pathArray[i]);
+                    console.log("file already existed(md5): " + pathArray[i]);
                     // return "file already existed";
 
                 } else {
@@ -82,6 +82,7 @@ const getFileList = async function(mainFolder) {
         for(let j in fileArray) {
             // set AR image full path
             pathArray.push(dirArray[i] + "/" + fileArray[j]);
+            console.log("pathArray: " + dirArray[i] + "/" + fileArray[j]);
         }
     }
     return pathArray;
@@ -110,7 +111,7 @@ const asyncReadFile = function(filePath){
 
 const fileDataDownload = function(path) {
     return new Promise(function(resolve, reject) {
-        dbox.filesDownload({path: dbox.root + path})
+        dbox.core.filesDownload({path: dbox.root + path})
         .then(function(response) {
             resolve(response.fileBinary);
         })

@@ -10,10 +10,11 @@ const dbox = require("./dbox.js");
 const imgur = require("./imgur.js");
 
 var _debug = false;
-var _version = "0.3";
+var _version = "0.3.1.11";
 // 主版本號：當你做了不兼容的API修改
 // 次版本號：當你做了向下兼容的功能性新增
 // 修訂號：當你做了向下兼容的問題修正
+// 次修訂號：線上debug
 
 // line bot
 // 搜尋資料
@@ -35,7 +36,7 @@ const searchDataAndReply = function(msg, replyFunc) {
 
 	// 定型文
 	if (command.length == 1) {
-		if (searchCharacterAndReply(command, false, replyFunc) >= 0) {
+		if (searchCharacterAndReply(command, false, replyFunc) == 1) {
 			return ;
 
 		} else {
@@ -64,7 +65,7 @@ const searchDataAndReply = function(msg, replyFunc) {
 		replyMsg += "\n";
 
 		replyMsg += "直接輸入稀有度+職業可以搜索角色\n(>>安娜 黑弓)\n";
-		replyMsg += "輸入關鍵字可進行模糊搜索&關鍵字搜索\n(>>安娜 NNL)(>>安娜 射手ナナリー)";
+		replyMsg += "輸入關鍵字可進行模糊搜索&關鍵字搜索\n(>>安娜 NNL)(>>安娜 射手ナナリー)\n";
 
 		if (!_debug)
 		{
@@ -72,7 +73,7 @@ const searchDataAndReply = function(msg, replyFunc) {
 			return ;
 		}
 
-		replyMsg += "\n上傳資料庫。";
+		replyMsg += "\n上傳。";
 
 		replyFunc(replyMsg);
 		return ;
@@ -80,7 +81,12 @@ const searchDataAndReply = function(msg, replyFunc) {
 	// status
 	if (command.indexOf("狀態") != -1) {
 		//loadAutoResponseList();
-		imgur.dataBase.loadImages();
+		imgur.account.images()
+		.then(imgur.dataBase.loadImages)
+		.catch(function(error) {
+			console.log("Imgur images load error!");
+			console.log(error);
+		});
 
 		var replyMsg = "";
 
@@ -92,7 +98,7 @@ const searchDataAndReply = function(msg, replyFunc) {
 		return ;
 	}
 	// 圖片空間
-	if (command.indexOf("照片") != -1 || command.indexOf("圖片") != -1) {
+	if (command.indexOf("照片") != -1 || command.indexOf("圖片") != -1 || command.indexOf("相片") != -1) {
 		replyFunc(createTemplateMsg("圖片空間", ["上傳新照片", "線上圖庫"],
 		["https://www.dropbox.com/request/FhIsMnWVRtv30ZL2Ty69",
 		"https://www.dropbox.com/sh/vonsrxzy79nkpah/AAD4p6TwZF44GHP5f6gdEh3ba?dl=0"]));
@@ -108,7 +114,7 @@ const searchDataAndReply = function(msg, replyFunc) {
 	if (command.indexOf("學習") != -1) {
 		//var learn = command.substring(msg.indexOf(" ")).trim();
 		let learn = command.replace("學習", "").trim().replace("：", ":");
-		learn = lear;		if (_debug) console.log("learn: <" + learn + ">");
+		if (_debug) console.log("learn: <" + learn + ">");
 
 		let keys = learn.split(":"); // NNL:
 		if (keys.length < 2)
@@ -174,7 +180,7 @@ const searchDataAndReply = function(msg, replyFunc) {
 		var laleArray = [];
 		var urlArray = [];
 		laleArray.push("特殊合成表");
-		urlArray.push("http://seesaawiki.jp/aigis/d/%C6%C3%BC%EC%B9%E7%C0%AE%C9%BD");
+		urlArray.push("https://seesaawiki.jp/aigis/d/%C6%C3%BC%EC%B9%E7%C0%AE%C9%BD");
 		laleArray.push("經驗值計算機");
 		urlArray.push("http://aigistool.html.xdomain.jp/EXP.html");
 		laleArray.push("體魅計算機");
@@ -184,7 +190,7 @@ const searchDataAndReply = function(msg, replyFunc) {
 		laleArray = [];
 		urlArray = [];
 		laleArray.push("DPS一覽表 (日)");
-		urlArray.push("www116.sakura.ne.jp/~kuromoji/aigis_dps.htm");
+		urlArray.push("http://www116.sakura.ne.jp/~kuromoji/aigis_dps.htm");
 		laleArray.push("攻略頻道: Sennen");
 		urlArray.push("https://www.youtube.com/channel/UC8RlGt22URJuM0yM0pUyWBA");
 		laleArray.push("千年戦争アイギス攻略ブログ");
@@ -233,7 +239,7 @@ const searchDataAndReply = function(msg, replyFunc) {
 		}
 	}
 
-	if (searchCharacterAndReply(command, blurry, replyFunc) >= 0) {
+	if (searchCharacterAndReply(command, true, replyFunc) > 0) {
 		return ;
 	}
 
@@ -275,14 +281,14 @@ const searchCharacterAndReply = function(command, blurry, replyFunc) {
 const replayCharaData = function(charaName, replyFunc) {
 	if (_debug)	console.log(charaName);
 
-	//let i = checkCharaData(charaName);
-	//var obj = charaDataBase[i];
+	let i = checkCharaData(charaName);
+	var obj = charaDataBase[i];
 
 	var replyMsg = [];
 	replyMsg.push(createTextMsg(obj.getMessage()));
 
 	let imgArray = imgur.dataBase.findImageByTag(charaName);
-	if (charaName.length > 0) {
+	if (imgArray.length > 0) {
 		let i = Math.floor(Math.random() * imgArray.length);
 		replyMsg.push(createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
 	}
@@ -299,10 +305,9 @@ const stampReply = function(msg, replyFunc) {
 	var replyMsg = [];
 
 	let imgArray = imgur.dataBase.findImageByTag(msg);
-	let i = Math.floor(Math.random() * imgArray.length);
-	replyMsg.push(createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
-	
-	if (replyMsg.length > 0) {
+	if (imgArray.length > 0) {
+		let i = Math.floor(Math.random() * imgArray.length);
+		replyMsg.push(createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
 		replyFunc(replyMsg);
 	}
 	return ;
@@ -760,12 +765,14 @@ const searchCharacter = function(key, blurry) {
 
 	// 模糊加權結果
 	var result = [];
-	if (blurry) {
+	if (blurry && array_metrics.length > 0) {
 		// 權值大到小
-		if (_debug)	console.log("for (array_metrics) i : <" + array_metrics.length - 1 + ">");
-		if (_debug)	console.log("for (array_metrics) limit : <" + Math.floor((array_metrics.length - 1) * 0.9) + ">");
+		let metricsMax = array_metrics.length - 1;
+		let metricsMin = Math.floor(metricsMax * 0.9);
+		if (_debug)	console.log("metricsMax: <" + metricsMax + ">");
+		if (_debug)	console.log("metricsMin: <" + metricsMin + ">");
 
-		for (let charaIndex = array_metrics.length - 1; charaIndex >= Math.floor((array_metrics.length - 1) * 0.9); charaIndex--) {
+		for (let charaIndex = metricsMax; charaIndex >= metricsMin; charaIndex--) {
 			if (typeof(array_metrics[charaIndex]) == "undefined")	continue;	// 檢查搜尋結果
 
 			// 遍歷搜尋結果
