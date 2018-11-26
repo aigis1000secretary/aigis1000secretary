@@ -10,7 +10,7 @@ const dbox = require("./dbox.js");
 const imgur = require("./imgur.js");
 
 var _debug = false;
-var _version = "0.3.1.11";
+var _version = "0.3.2.3";
 // 主版本號：當你做了不兼容的API修改
 // 次版本號：當你做了向下兼容的功能性新增
 // 修訂號：當你做了向下兼容的問題修正
@@ -18,8 +18,9 @@ var _version = "0.3.1.11";
 
 // line bot
 // 搜尋資料
-const searchDataAndReply = function(msg, replyFunc) {
+const searchDataAndReply = async function(msgs, replyFunc) {
 	// 指令:
+	var msg = msgs.split("\n")[0];
 	if (_debug)	console.log("msg: <" + msg + ">");
 
 	// 分析命令
@@ -57,15 +58,15 @@ const searchDataAndReply = function(msg, replyFunc) {
 	if (command.indexOf("指令") != -1 || command.toUpperCase().indexOf("HELP") != -1) {
 		var replyMsg = "";
 
-		replyMsg += "狀態: 確認目前版本，資料庫資料筆數。\n";
-		replyMsg += "照片: 上傳角色附圖的網路空間(DropBox)。\n";
-		replyMsg += "工具: 千年戰爭Aigis實用工具。\n";
-		replyMsg += "學習: 用來教會安娜角色的暱稱。\n(>>安娜 學習 NNL:射手ナナリー)。\n";
+		replyMsg += "狀態: 確認目前版本，資料庫資料筆數。\n(>>安娜 狀態)。\n\n";
+		replyMsg += "照片: 上傳角色附圖的網路空間(DropBox)。\n(>>安娜 照片)。\n\n";
+		replyMsg += "工具: 千年戰爭Aigis實用工具。\n(>>安娜 工具)。\n\n";
+		replyMsg += "學習: 用來教會安娜角色的暱稱。\n(>>安娜 學習 NNL:射手ナナリー)。\n\n";
 
 		replyMsg += "\n";
 
-		replyMsg += "直接輸入稀有度+職業可以搜索角色\n(>>安娜 黑弓)\n";
-		replyMsg += "輸入關鍵字可進行模糊搜索&關鍵字搜索\n(>>安娜 NNL)(>>安娜 射手ナナリー)\n";
+		replyMsg += "直接輸入稀有度+職業可以搜索角色\n(>>安娜 黑弓)\n\n";
+		replyMsg += "輸入關鍵字可進行模糊搜索&關鍵字搜索\n(>>安娜 NNL)\n(>>安娜 射手ナナリー)";
 
 		if (!_debug)
 		{
@@ -81,7 +82,7 @@ const searchDataAndReply = function(msg, replyFunc) {
 	// status
 	if (command.indexOf("狀態") != -1) {
 		//loadAutoResponseList();
-		imgur.account.images()
+		await imgur.account.allImages()
 		.then(imgur.dataBase.loadImages)
 		.catch(function(error) {
 			console.log("Imgur images load error!");
@@ -92,7 +93,8 @@ const searchDataAndReply = function(msg, replyFunc) {
 
 		replyMsg += "目前版本 v" + _version + "\n";
 		replyMsg += "資料庫內有 " + charaDataBase.length + " 筆角色資料\n";
-		replyMsg += "　　　　　 " + classDataBase.length + " 筆職業資料";
+		replyMsg += "　　　　　 " + classDataBase.length + " 筆職業資料\n";
+		replyMsg += "　　　　　 " + imgur.dataBase.images.length + " 筆貼圖資料";
 
 		replyFunc(replyMsg);
 		return ;
@@ -368,7 +370,7 @@ const charaDataCrawler = function(urlPath) {
 
 				if ($(this).prev().text().trim() == "スキル") {
 					var _skill_name = $(this).children("table").eq(-1).children("tbody").children("tr").eq(2).children("td").eq(0).text().replace(/\n/, " ").replace(/\s\s/, " ").trim();
-					var _skill = $(this).children("table").eq(-1).children("tbody").children("tr").eq(-2).children("td").eq(1).text().replace(/\n/, " ").replace(/\s\s/, " ").trim();
+					var _skill = $(this).children("table").eq(-1).children("tbody").children("tr").eq(-2).children("td").eq(1).text().replace(/\n/, " ").replace(/\s\s/, " ").trim().replace(/\n\n/, "\n");
 
 					if (_skill == "-")
 					{
@@ -387,7 +389,7 @@ const charaDataCrawler = function(urlPath) {
 					if (_skill_aw == "-")
 					{
 						_skill_aw_name = $(this).children("table").children("tbody").children("tr").eq(-1).children("td").eq(0).text().replace(/\n/, " ").replace(/\s\s/, " ").trim();
-						_skill_aw = $(this).children("table").children("tbody").children("tr").eq(-1).children("td").eq(1).text().replace(/\n/, " ").replace(/\s\s/, " ").trim();
+						_skill_aw = $(this).children("table").children("tbody").children("tr").eq(-1).children("td").eq(1).text().replace(/\n/, " ").replace(/\s\s/, " ").trim().replace(/\n\n/, "\n");
 					}
 					if (_skill_aw_name != "")
 					{
@@ -543,10 +545,15 @@ const createCharaData = function() {
 
 		if (this.str_nickname.length > 0) {
 			//for (var i = 0; i < this.str_nickname.length; i++) {
+			let buffer = "";
 			for (let i in this.str_nickname) {
-				string += this.str_nickname[i] + " ";
+				buffer += this.str_nickname[i] + " ";
 			}
-			string += "\n";
+			buffer = buffer.trim();
+			if (buffer != "")
+			{
+				string += buffer + "\n";
+			}
 		}
 
 		if (this.str_ability != "") {
@@ -568,6 +575,10 @@ const createCharaData = function() {
 		return string;
 	};
 	obj.getWikiUrl = function() {
+		if (this.str_name.indexOf("王子") != -1) {
+			var string = "http://seesaawiki.jp/aigis/d/王子";
+			return encodeURI_JP(string);
+		}
 		var string = "http://seesaawiki.jp/aigis/d/" + this.str_name;
 		return encodeURI_JP(string);
 	};
@@ -618,7 +629,13 @@ const loadCharaDataBase = async function() {
 		let data = await asyncReadFile("CharaDataBase.json");
 
 		let count = 0;
-		let obj = JSON.parse(data);
+		let obj = [];
+		try{
+			obj = JSON.parse(data);
+		} catch(e) {
+			obj = eval("("+ data +")");
+		}
+		
 		//for (let i = 0; i < obj.length; i++) {
 		for (let i in obj) {
 
@@ -835,9 +852,15 @@ const loadClassDataBase = async function() {
 	console.log("ClassDataBase loading...");
 	try {
 		let data = await asyncReadFile("ClassDataBase.json");
-
+		
 		let count = 0;
-		var obj = JSON.parse(data);
+		let obj = [];
+		try{
+			obj = JSON.parse(data);
+		} catch(e) {
+			obj = eval("("+ data +")");
+		}
+
 		//for (let i = 0; i < obj.length; i++) {
 		for (let i in obj) {
 			addClassData(obj[i]);
@@ -997,13 +1020,17 @@ module.exports = {
 
 /*
 const debugFunc = async function() {
-
+	await module.exports.init();
+	await imgur.init();
 	_debug = true;
+	searchDataAndReply("安娜 元帥\nナナ", function(obj) {
+		console.log(obj);
+	});
 }
 
 
 
-setTimeout(debugFunc, 1 * 1000);*/
+setTimeout(debugFunc, 1 * 100);//*/
 
 
 

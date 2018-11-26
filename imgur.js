@@ -112,13 +112,38 @@ imgur.oauth2.token = function() {
 
 // Account API
 imgur.account = {};
+// GET All Images
+imgur.account.allImages = function() {
+	console.log("GET Account All Images");
+	return new Promise(async function(resolve, reject) {
+		try {
+			// get images every page
+			var page = 0;
+			var allImages = [];
+			let lastImages = await imgur.account.images(page++);
+			allImages = allImages.concat(lastImages);
+			
+			while (lastImages.length == 50) {
+				lastImages = await imgur.account.images(page++);
+				allImages = allImages.concat(lastImages);
+			}
+			resolve(allImages);
+		} catch (error) {
+			reject(error);
+		}
+
+	});
+}
 // GET Images
-imgur.account.images = function() {
-	console.log("GET Account Images");
+imgur.account.images = function(page) {
+	if (typeof(page) != "number")	page = 0;
+	console.log("GET Account Images page: " + page);
+
 	return new Promise(function(resolve, reject) {
 		// Configure the request
 		var options = {
-			url: IMGUR_API_URL + "account/" + IMGUR_USERNAME + "/images",
+			//url: IMGUR_API_URL + "account/" + IMGUR_USERNAME + "/images",
+			url: IMGUR_API_URL + "account/me/images/" + page,
 			method: "GET"
 		};
 
@@ -228,15 +253,15 @@ imgur.dataBase.loadImages = function(jsonResponse) {
 		var newImage = imgur.dataBase.createImage(jsonResponse[i]);
 		imgur.dataBase.images.push(newImage);
 	}
-	console.log("Imgur account images load complete!");
+	console.log("Imgur account images load complete (" + imgur.dataBase.images.length + " images)!");
 	return ;
 }
 imgur.dataBase.createImage = function(newData) {
 	// set new image data
 	var newImage = {};
-	newImage.name = newData.name;
+	newImage.fileName = newData.name;
 	newImage.md5 = newData.title;
-	newImage.index = newData.description.split(",");
+	newImage.tags = newData.description.toUpperCase().split(",");
 	newImage.id = newData.id;
 	newImage.imageLink = newData.link;
 	newImage.thumbnailLink = newData.link.replace(newImage.id, newImage.id + "m");
@@ -250,9 +275,8 @@ imgur.dataBase.createImage = function(newData) {
 	"h"					Huge Thumbnail		1024x1024		Yes
 	*/
 
-
-	for (let i in newImage.index) {
-		newImage.index[i] = newImage.index[i].trim();
+	for (let i in newImage.tags) {
+		newImage.tags[i] = newImage.tags[i].trim();
 	}
 
 	return newImage;
@@ -270,8 +294,8 @@ imgur.dataBase.findImageByTag = function(imageTag) {
 	// search album by tag
 	var result = [];
 	for (let i in imgur.dataBase.images) {
-		for (let j in imgur.dataBase.images[i].index) {
-			if (imgur.dataBase.images[i].index[j] == imageTag)
+		for (let j in imgur.dataBase.images[i].tags) {
+			if (imgur.dataBase.images[i].tags[j] == imageTag.toUpperCase())
 				result.push(imgur.dataBase.images[i]);
 		}
 	}
@@ -281,10 +305,10 @@ imgur.dataBase.findImageByNameTag = function(imageName, imageTag) {
 	// search album by tag
 	var result = [];
 	for (let i in imgur.dataBase.images) {
-		if (imgur.dataBase.images[i].name == imageName) {
+		if (imgur.dataBase.images[i].fileName == imageName) {
 
-			for (let j in imgur.dataBase.images[i].index) {
-				if (imgur.dataBase.images[i].index[j] == imageTag)
+			for (let j in imgur.dataBase.images[i].tags) {
+				if (imgur.dataBase.images[i].tags[j] == imageTag.toUpperCase())
 					result.push(imgur.dataBase.images[i]);
 			}
 		}
@@ -292,6 +316,25 @@ imgur.dataBase.findImageByNameTag = function(imageName, imageTag) {
 	return result;
 }
 
+// 儲存資料
+imgur.dataBase.saveDatabase = function() {
+	console.log("Imgur dataBase saving...");
+
+	// object to json
+	var json = JSON.stringify(imgur.dataBase.images);
+
+	// callback
+	let fsCallBack = function(error, bytesRead, buffer) {
+		if (error) {
+			console.log(error);
+			return;
+		}
+	}
+	// json to file
+	fs.writeFile("ImgurDataBase.log", json, "utf8", fsCallBack);
+
+	console.log("Imgur dataBase saved!");
+}
 
 
 module.exports = {
@@ -301,7 +344,7 @@ module.exports = {
 
 	init: async function() {
 		// access token updata
-		let p1 = imgur.oauth2.token()
+		await imgur.oauth2.token()
 		.then(function(jsonResponse) {
 			console.log("IMGUR_ACCESS_TOKEN updata complete!");
 		})
@@ -310,14 +353,13 @@ module.exports = {
 			console.log(error);
 		});
 
-		let p2 = imgur.account.images()
+		await imgur.account.allImages()
 		.then(imgur.dataBase.loadImages)
 		.catch(function(error) {
 			console.log("Imgur images load error!");
 			console.log(error);
 		});
 
-		await Promise.all([p1, p2]);
 		return;
 	}
 }

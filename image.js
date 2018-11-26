@@ -8,18 +8,18 @@ const md5 = function(str) { return require('crypto').createHash('md5').update(st
 
 const main = async function() {
     await imgur.init();
+    //imgur.dataBase.saveDatabase();
     console.log("==Main==");
 
     let pathArray = [];
     // chara
     try {
-        let pathArrayAR = await getFileList("AutoResponse");
-        let pathArrayCh = await getFileList("Character");
-
-        pathArray = pathArrayAR.concat(pathArrayCh)
+        let pathArrayAR = await getFileList("AutoResponse");    pathArray = pathArray.concat(pathArrayAR)
+        let pathArrayCh = await getFileList("Character");   pathArray = pathArray.concat(pathArrayCh)
     } catch (error) {
         console.log(error);
     }
+	console.log("GET DBox Images count: " + pathArray.length);
 
     for(let i in pathArray) {
 
@@ -28,6 +28,7 @@ const main = async function() {
             let mainTag = pathArray[i].substr(0, pathArray[i].lastIndexOf("/"));
                 mainTag = mainTag.substr(mainTag.indexOf("/") + 1);
             let fileName = pathArray[i].substr(pathArray[i].lastIndexOf("/") + 1);
+            //console.log(mainTag + ", " + fileName);
 
             // try to find existed image first
             let onlineImage = imgur.dataBase.findImageByNameTag(fileName, mainTag);
@@ -53,15 +54,15 @@ const main = async function() {
                     //let uploadResponse = await imgur.image.binaryImageUpload(fileBinary, fileMd5, "6230667.png", "刻詠の風水士リンネ");
                     let uploadResponse = await imgur.image.binaryImageUpload(fileBinary, fileMd5, fileName, mainTag);
 
-                    console.log(uploadResponse.data.title);
-                    //console.log(fileMd5 + ", " + fileName + ", " + mainTag);
+                    //console.log("upload file: " + pathArray[i]);
+                    console.log("upload file: " + uploadResponse.data.title + ", " + fileName + ", " + mainTag);
 
                 }
             }
         } catch (err) {
             console.log(err);
         }
-    }
+    }//*/
 
 };main();
 
@@ -82,7 +83,8 @@ const getFileList = async function(mainFolder) {
         for(let j in fileArray) {
             // set AR image full path
             pathArray.push(dirArray[i] + "/" + fileArray[j]);
-            console.log("pathArray: " + dirArray[i] + "/" + fileArray[j]);
+            //console.log("pathArray: " + dirArray[i] + "/" + fileArray[j]);
+            console.log("pathArray: " + pathArray[pathArray.length - 1]);
         }
     }
     return pathArray;
