@@ -6,8 +6,8 @@
 
 // commit
 /*
-0.3.1
-	工具超連結
+	0.4.0.12
+	Member join event 線上debug
 */
 
 // 初始化
@@ -27,49 +27,83 @@ const bot = linebot({
 const app = express();
 const linebotParser = bot.parser();
 app.post("/", linebotParser);
-const server = app.listen(process.env.PORT || 8080, function() {
+const server = app.listen(process.env.PORT || 8080, function () {
 	//因為 express 預設走 port 3000，而 heroku 上預設卻不是，要透過下列程式轉換
 	let port = server.address().port;
 	console.log("App now running on port", port);
 });
 
 // bot監聽
-const bot_on = function() {
-	bot.on("message", function(event) {
+const bot_on = function () {
+
+	bot.on("memberJoined", function (event) {
+		if (anna._debug()) console.log(event);
+		// pusg
+		var pushFunc = function (pMsg) {
+			if (anna._debug()) console.log(pMsg);
+
+			if (event.source.type == "group") {
+				bot.push(event.source.groupId, pMsg);
+			} else if (event.source.type == "room") {
+				bot.push(event.source.roomId, pMsg);
+			}
+		};
+		// 呼叫定型文
+		if (anna.stampReply("新人", pushFunc)) {
+			return;
+		}
+
+	});
+
+	bot.on("message", async function (event) {
+		if (anna._debug()) console.log(event);
 
 		// 文字事件
 		if (event.message.type == "text") {
-			if (anna._debug())	console.log(event);
 			// 取出文字內容
 			var msg = event.message.text;
+			if (anna._debug()) console.log(msg);
 
 			// reply
-			var replyFunc = function(rMsg) {
-				if (anna._debug())	console.log(rMsg);
+			var replyFunc = function (rMsg) {
+				if (anna._debug()) console.log(rMsg);
 				event.reply(rMsg)
-				.then(function(data) {
-					if (anna._debug())	console.log(data);
-				})
-				.catch(function(error) {
-					if (anna._debug())	console.log(error);
-				});
+					.then(function (data) {
+						if (anna._debug()) console.log(data);
+					})
+					.catch(function (error) {
+						if (anna._debug()) console.log(error);
+					});
 			};
 
+			// normal response
 			if (msg == "安娜") {
 
 				replyFunc("是的！王子？");
 				return;
 
-			} else if (msg.toUpperCase().indexOf("DEBUG") != -1) {
+			}
 
-				// 身分驗證
-				if (event.source.type == "user" &&
-				event.source.userId == "U9eefeba8c0e5f8ee369730c4f983346b")
+			// get source id
+			let userId = ""
+			if (typeof (event.source.userId) == "undefined") {
+				userId = "U9eefeba8c0e5f8ee369730c4f983346b";
+			} else {
+				userId = event.source.userId;
+			}
 
-				anna.searchDataAndReply("ANNA DEBUG", replyFunc);
-				return;
+			// 身分驗證
+			if (userId == "U9eefeba8c0e5f8ee369730c4f983346b") {
 
-			} else if (msg.toUpperCase().indexOf("ANNA ") == 0 || msg.indexOf("安娜 ") == 0) {
+				if (msg.toUpperCase().indexOf("DEBUG") != -1) {
+					msg = "ANNA DEBUG";
+				} else if (msg.toUpperCase().indexOf("我婆") != -1) {
+					msg = "刻詠の風水士リンネ";
+				}
+			}
+
+			// normal auto-response
+			if (msg.toUpperCase().indexOf("ANNA ") == 0 || msg.indexOf("安娜 ") == 0) {
 
 				// 判讀指令
 				anna.searchDataAndReply(msg, replyFunc);
@@ -77,7 +111,7 @@ const bot_on = function() {
 
 			}
 
-			// 呼叫定型文
+			// 呼叫定型文圖片
 			if (anna.stampReply(msg, replyFunc)) {
 				return;
 			}
@@ -88,15 +122,15 @@ const bot_on = function() {
 			}
 
 			// 無視...
-			//if (_debug) console.log("Not a command");
-			//return "";
+			if (anna._debug()) console.log("Not a command");
+			return "";
 		}
 	});
 }
 
 
 
-const main = async function() {
+const main = async function () {
 	// 讀取資料
 	let p1 = anna.init();
 	let p2 = imgur.init();
@@ -105,7 +139,7 @@ const main = async function() {
 	// 開始監聽
 	bot_on();
 	console.log("Anna secretary online");
-};main();
+}; main();
 
 
 

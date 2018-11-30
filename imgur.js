@@ -1,26 +1,26 @@
 
 const request = require("request");
 const fs = require("fs");
-const md5 = function(str) { return require('crypto').createHash('md5').update(str).digest('hex'); }
+const md5 = function (str) { return require('crypto').createHash('md5').update(str).digest('hex'); }
 
 // vist site: https://api.imgur.com/oauth2/authorize?client_id=84f351fab201d5a&response_type=token
 // get var from url
 const IMGUR_REFRESH_TOKEN = "67d3f69b6ee6fd17f0c77a8df78cc87748fa7c68";
-const IMGUR_USERNAME      = "z1022001jp";
+const IMGUR_USERNAME = "z1022001jp";
 // https://imgur.com/account/settings/apps
-const IMGUR_CLIENT_ID     = "84f351fab201d5a";
+const IMGUR_CLIENT_ID = "84f351fab201d5a";
 const IMGUR_CLIENT_SECRET = "72ac198eaeb6edd3748a805f68fb9b9f741a9884";
 
-const IMGUR_API_URL       = "https://api.imgur.com/3/";
-var IMGUR_ACCESS_TOKEN    = "5f336949d6731b67fcad374a83851f3b543c17ad";
+const IMGUR_API_URL = "https://api.imgur.com/3/";
+var IMGUR_ACCESS_TOKEN = "5f336949d6731b67fcad374a83851f3b543c17ad";
 
 var _debug = false;
 
 // Core
-var imgur     = {};
+var imgur = {};
 // request
-imgur._request = function(options) {
-	return new Promise(function(resolve, reject) {
+imgur._request = function (options) {
+	return new Promise(function (resolve, reject) {
 		request(options, function (error, response, body) {
 
 			//console.log(error);
@@ -50,23 +50,23 @@ imgur._request = function(options) {
 }
 
 // imgur API request
-imgur._apiRequest = function(options) {
-	return new Promise(function(resolve, reject) {
+imgur._apiRequest = function (options) {
+	return new Promise(function (resolve, reject) {
 		// Set the headers
-		options.headers =  {
-			Authorization:	"Bearer " + IMGUR_ACCESS_TOKEN
+		options.headers = {
+			Authorization: "Bearer " + IMGUR_ACCESS_TOKEN
 		}
 
 		// send request
 		imgur._request(options)
-		.then(function(jsonResponse) {
-			if (_debug)	console.log(jsonResponse);
-			resolve(jsonResponse);
-		})
-		.catch(function(error) {
-			if (_debug)	console.log(error);
-			reject(error);
-		});
+			.then(function (jsonResponse) {
+				if (_debug) console.log(jsonResponse);
+				resolve(jsonResponse);
+			})
+			.catch(function (error) {
+				if (_debug) console.log(error);
+				reject(error);
+			});
 	});
 }
 
@@ -75,9 +75,9 @@ imgur._apiRequest = function(options) {
 // POST Generate Access_Token
 // web API: https://api.imgur.com/oauth2/token
 imgur.oauth2 = {};
-imgur.oauth2.token = function() {
+imgur.oauth2.token = function () {
 	console.log("Generate Access_Token");
-	return new Promise(function(resolve, reject) {
+	return new Promise(function (resolve, reject) {
 		// Set the body
 		var form = {
 			refresh_token: IMGUR_REFRESH_TOKEN,
@@ -95,16 +95,16 @@ imgur.oauth2.token = function() {
 
 		// send request
 		imgur._request(options)
-		.then(function(jsonResponse) {
-			if (_debug)	console.log(jsonResponse);
-			IMGUR_ACCESS_TOKEN = jsonResponse.access_token;
-			resolve(jsonResponse);
-		})
-		.catch(function(error) {
-			if (_debug)	console.log(error);
-			IMGUR_ACCESS_TOKEN = "";
-			reject(error);
-		});
+			.then(function (jsonResponse) {
+				if (_debug) console.log(jsonResponse);
+				IMGUR_ACCESS_TOKEN = jsonResponse.access_token;
+				resolve(jsonResponse);
+			})
+			.catch(function (error) {
+				if (_debug) console.log(error);
+				IMGUR_ACCESS_TOKEN = "";
+				reject(error);
+			});
 	});
 }
 
@@ -113,16 +113,16 @@ imgur.oauth2.token = function() {
 // Account API
 imgur.account = {};
 // GET All Images
-imgur.account.allImages = function() {
+imgur.account.allImages = function () {
 	console.log("GET Account All Images");
-	return new Promise(async function(resolve, reject) {
+	return new Promise(async function (resolve, reject) {
 		try {
 			// get images every page
 			var page = 0;
 			var allImages = [];
 			let lastImages = await imgur.account.images(page++);
 			allImages = allImages.concat(lastImages);
-			
+
 			while (lastImages.length == 50) {
 				lastImages = await imgur.account.images(page++);
 				allImages = allImages.concat(lastImages);
@@ -135,11 +135,11 @@ imgur.account.allImages = function() {
 	});
 }
 // GET Images
-imgur.account.images = function(page) {
-	if (typeof(page) != "number")	page = 0;
+imgur.account.images = function (page) {
+	if (typeof (page) != "number") page = 0;
 	console.log("GET Account Images page: " + page);
 
-	return new Promise(function(resolve, reject) {
+	return new Promise(function (resolve, reject) {
 		// Configure the request
 		var options = {
 			//url: IMGUR_API_URL + "account/" + IMGUR_USERNAME + "/images",
@@ -148,12 +148,12 @@ imgur.account.images = function(page) {
 		};
 
 		imgur._apiRequest(options)
-		.then(function(jsonResponse) {
-			resolve(jsonResponse.data);
-		})
-		.catch(function(error) {
-			reject(error);
-		});
+			.then(function (jsonResponse) {
+				resolve(jsonResponse.data);
+			})
+			.catch(function (error) {
+				reject(error);
+			});
 	});
 }
 
@@ -191,8 +191,8 @@ imgur.album.imagesByHash = function(_albumHash) {
 // Image API
 imgur.image = {};
 // POST Image Upload
-imgur.image.imageUpload = function(imageLocalPath, mainTag) {
-	return new Promise(async function(resolve, reject) {
+imgur.image.imageUpload = function (imageLocalPath, mainTag) {
+	return new Promise(async function (resolve, reject) {
 		// get request data
 		var imageBinary = "";
 		var md5 = "";
@@ -202,19 +202,19 @@ imgur.image.imageUpload = function(imageLocalPath, mainTag) {
 			md5 = md5(imageBinary);
 
 			imgur.image.binaryImageUpload(imageBinary, md5, fileName, mainTag)
-			.then(function(jsonResponse) {
-				resolve(jsonResponse);
-			})
-			.catch(function(error) {
-				reject(error);
-			});
+				.then(function (jsonResponse) {
+					resolve(jsonResponse);
+				})
+				.catch(function (error) {
+					reject(error);
+				});
 		} catch (error) {
 			reject(error);
 		}
 	});
 }
-imgur.image.binaryImageUpload = function(imageBinary, md5, fileName, mainTag) {
-	return new Promise(function(resolve, reject) {
+imgur.image.binaryImageUpload = function (imageBinary, md5, fileName, mainTag) {
+	return new Promise(function (resolve, reject) {
 		// Configure the request
 		var options = {
 			url: IMGUR_API_URL + "image",
@@ -229,12 +229,12 @@ imgur.image.binaryImageUpload = function(imageBinary, md5, fileName, mainTag) {
 		};
 
 		imgur._apiRequest(options)
-		.then(function(jsonResponse) {
-			resolve(jsonResponse);
-		})
-		.catch(function(error) {
-			reject(error);
-		});
+			.then(function (jsonResponse) {
+				resolve(jsonResponse);
+			})
+			.catch(function (error) {
+				reject(error);
+			});
 	});
 }
 
@@ -245,7 +245,7 @@ imgur.dataBase = {};
 // cteate image data from response.data
 imgur.dataBase.images = [];
 // get image from response.data
-imgur.dataBase.loadImages = function(jsonResponse) {
+imgur.dataBase.loadImages = function (jsonResponse) {
 	// response.data to album
 	imgur.dataBase.images = [];	// clear database
 	for (let i in jsonResponse) {
@@ -254,9 +254,9 @@ imgur.dataBase.loadImages = function(jsonResponse) {
 		imgur.dataBase.images.push(newImage);
 	}
 	console.log("Imgur account images load complete (" + imgur.dataBase.images.length + " images)!");
-	return ;
+	return;
 }
-imgur.dataBase.createImage = function(newData) {
+imgur.dataBase.createImage = function (newData) {
 	// set new image data
 	var newImage = {};
 	newImage.fileName = newData.name;
@@ -282,7 +282,7 @@ imgur.dataBase.createImage = function(newData) {
 	return newImage;
 }
 // find image from database
-imgur.dataBase.findImageByMd5 = function(imageMd5) {
+imgur.dataBase.findImageByMd5 = function (imageMd5) {
 	// search album by md5
 	for (let i in imgur.dataBase.images) {
 		if (imgur.dataBase.images[i].md5 == imageMd5)
@@ -290,7 +290,7 @@ imgur.dataBase.findImageByMd5 = function(imageMd5) {
 	}
 	return null;
 }
-imgur.dataBase.findImageByTag = function(imageTag) {
+imgur.dataBase.findImageByTag = function (imageTag) {
 	// search album by tag
 	var result = [];
 	for (let i in imgur.dataBase.images) {
@@ -301,7 +301,7 @@ imgur.dataBase.findImageByTag = function(imageTag) {
 	}
 	return result;
 }
-imgur.dataBase.findImageByNameTag = function(imageName, imageTag) {
+imgur.dataBase.findImageByNameTag = function (imageName, imageTag) {
 	// search album by tag
 	var result = [];
 	for (let i in imgur.dataBase.images) {
@@ -317,14 +317,14 @@ imgur.dataBase.findImageByNameTag = function(imageName, imageTag) {
 }
 
 // 儲存資料
-imgur.dataBase.saveDatabase = function() {
+imgur.dataBase.saveDatabase = function () {
 	console.log("Imgur dataBase saving...");
 
 	// object to json
 	var json = JSON.stringify(imgur.dataBase.images);
 
 	// callback
-	let fsCallBack = function(error, bytesRead, buffer) {
+	let fsCallBack = function (error, bytesRead, buffer) {
 		if (error) {
 			console.log(error);
 			return;
@@ -342,23 +342,23 @@ module.exports = {
 	image: imgur.image,
 	dataBase: imgur.dataBase,
 
-	init: async function() {
+	init: async function () {
 		// access token updata
 		await imgur.oauth2.token()
-		.then(function(jsonResponse) {
-			console.log("IMGUR_ACCESS_TOKEN updata complete!");
-		})
-		.catch(function(error) {
-			console.log("IMGUR_ACCESS_TOKEN updata error!");
-			console.log(error);
-		});
+			.then(function (jsonResponse) {
+				console.log("IMGUR_ACCESS_TOKEN updata complete!");
+			})
+			.catch(function (error) {
+				console.log("IMGUR_ACCESS_TOKEN updata error!");
+				console.log(error);
+			});
 
 		await imgur.account.allImages()
-		.then(imgur.dataBase.loadImages)
-		.catch(function(error) {
-			console.log("Imgur images load error!");
-			console.log(error);
-		});
+			.then(imgur.dataBase.loadImages)
+			.catch(function (error) {
+				console.log("Imgur images load error!");
+				console.log(error);
+			});
 
 		return;
 	}
@@ -395,14 +395,14 @@ const debugFunc = function() {
 }//*/
 //setTimeout(debugFunc, 2 * 1000);
 
-const asyncReadFile = function(filePath){
-    return new Promise(function(resolve, reject) {
-        fs.readFile(filePath, function(err, data) {
-            if(err){
-                reject(err);
-            } else {
-                resolve(data);
-            }
-        });
-    });
+const asyncReadFile = function (filePath) {
+	return new Promise(function (resolve, reject) {
+		fs.readFile(filePath, function (err, data) {
+			if (err) {
+				reject(err);
+			} else {
+				resolve(data);
+			}
+		});
+	});
 }

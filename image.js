@@ -1,12 +1,12 @@
-
+﻿
 console.log("Image Upload Script");
 
 const fs = require("fs");
 const dbox = require("./dbox.js");
 const imgur = require("./imgur.js");
-const md5 = function(str) { return require('crypto').createHash('md5').update(str).digest('hex'); }
+const md5 = function (str) { return require('crypto').createHash('md5').update(str).digest('hex'); }
 
-const main = async function() {
+const main = async function () {
     await imgur.init();
     //imgur.dataBase.saveDatabase();
     console.log("==Main==");
@@ -14,19 +14,19 @@ const main = async function() {
     let pathArray = [];
     // chara
     try {
-        let pathArrayAR = await getFileList("AutoResponse");    pathArray = pathArray.concat(pathArrayAR)
-        let pathArrayCh = await getFileList("Character");   pathArray = pathArray.concat(pathArrayCh)
+        let pathArrayAR = await getFileList("AutoResponse"); pathArray = pathArray.concat(pathArrayAR)
+        let pathArrayCh = await getFileList("Character"); pathArray = pathArray.concat(pathArrayCh)
     } catch (error) {
         console.log(error);
     }
-	console.log("GET DBox Images count: " + pathArray.length);
+    console.log("GET DBox Images count: " + pathArray.length);
 
-    for(let i in pathArray) {
+    for (let i in pathArray) {
 
         try {
             // split folder name for AR key word
             let mainTag = pathArray[i].substr(0, pathArray[i].lastIndexOf("/"));
-                mainTag = mainTag.substr(mainTag.indexOf("/") + 1);
+            mainTag = mainTag.substr(mainTag.indexOf("/") + 1);
             let fileName = pathArray[i].substr(pathArray[i].lastIndexOf("/") + 1);
             //console.log(mainTag + ", " + fileName);
 
@@ -64,23 +64,23 @@ const main = async function() {
         }
     }//*/
 
-};main();
+}; main();
 
 
 
 
-const getFileList = async function(mainFolder) {
+const getFileList = async function (mainFolder) {
     var pathArray = [];
     // get AutoResponse key word
     let dirArray = await dbox.listDir(mainFolder, "folder");
-    for(let i in dirArray) {
+    for (let i in dirArray) {
         // set AR image path
         dirArray[i] = mainFolder + "/" + dirArray[i];
 
         // get AR image name
         let fileArray = await dbox.listDir(dirArray[i]);
 
-        for(let j in fileArray) {
+        for (let j in fileArray) {
             // set AR image full path
             pathArray.push(dirArray[i] + "/" + fileArray[j]);
             //console.log("pathArray: " + dirArray[i] + "/" + fileArray[j]);
@@ -97,10 +97,10 @@ const getFileList = async function(mainFolder) {
 
 
 
-const asyncReadFile = function(filePath){
-    return new Promise(function(resolve, reject) {
-        fs.readFile(filePath, function(err, data) {
-            if(err){
+const asyncReadFile = function (filePath) {
+    return new Promise(function (resolve, reject) {
+        fs.readFile(filePath, function (err, data) {
+            if (err) {
                 reject(err);
             } else {
                 resolve(data);
@@ -111,15 +111,15 @@ const asyncReadFile = function(filePath){
 
 
 
-const fileDataDownload = function(path) {
-    return new Promise(function(resolve, reject) {
-        dbox.core.filesDownload({path: dbox.root + path})
-        .then(function(response) {
-            resolve(response.fileBinary);
-        })
-        .catch(function(error) {
-            reject(error);
-        });
+const fileDataDownload = function (path) {
+    return new Promise(function (resolve, reject) {
+        dbox.core.filesDownload({ path: dbox.root + path })
+            .then(function (response) {
+                resolve(response.fileBinary);
+            })
+            .catch(function (error) {
+                reject(error);
+            });
     });
 }
 
