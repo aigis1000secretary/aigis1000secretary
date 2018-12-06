@@ -237,6 +237,24 @@ imgur.image.binaryImageUpload = function (imageBinary, md5, fileName, mainTag) {
 			});
 	});
 }
+// DELETE Image Deletion
+imgur.image.ImageDeletion = function (imageHash) {
+	return new Promise(function (resolve, reject) {
+		// Configure the request
+		var options = {
+			url: IMGUR_API_URL + "image/" + imageHash,
+			method: "DELETE",
+		};
+
+		imgur._apiRequest(options)
+			.then(function (jsonResponse) {
+				resolve(jsonResponse);
+			})
+			.catch(function (error) {
+				reject(error);
+			});
+	});
+}
 
 
 
@@ -251,7 +269,13 @@ imgur.dataBase.loadImages = function (jsonResponse) {
 	for (let i in jsonResponse) {
 		//console.log(jsonResponse[i]);
 		var newImage = imgur.dataBase.createImage(jsonResponse[i]);
-		imgur.dataBase.images.push(newImage);
+
+		let onlineImage = imgur.dataBase.findImageByMd5(newImage.md5);
+		if (onlineImage != null) {
+			imgur.image.ImageDeletion(newImage.id)
+		} else {
+			imgur.dataBase.images.push(newImage);
+		}
 	}
 	console.log("Imgur account images load complete (" + imgur.dataBase.images.length + " images)!");
 	return;
@@ -261,8 +285,8 @@ imgur.dataBase.createImage = function (newData) {
 	var newImage = {};
 	newImage.fileName = newData.name;
 	newImage.md5 = newData.title;
-	newImage.tags = newData.description.toUpperCase().split(",");
-	newImage.id = newData.id;
+	newImage.tags = newData.description == null ? "" : newData.description.toUpperCase().split(",");
+	newImage.id = newData.id;	// imageHash
 	newImage.imageLink = newData.link;
 	newImage.thumbnailLink = newData.link.replace(newImage.id, newImage.id + "m");
 	/*

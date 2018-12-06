@@ -6,8 +6,8 @@
 
 // commit
 /*
-	0.4.0.12
-	Member join event 線上debug
+	0.4.1.4
+	命令轉貼圖修正
 */
 
 // 初始化
@@ -104,11 +104,9 @@ const bot_on = function () {
 
 			// normal auto-response
 			if (msg.toUpperCase().indexOf("ANNA ") == 0 || msg.indexOf("安娜 ") == 0) {
-
 				// 判讀指令
 				anna.searchDataAndReply(msg, replyFunc);
 				return;
-
 			}
 
 			// 呼叫定型文圖片

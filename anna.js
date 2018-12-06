@@ -10,7 +10,7 @@ const dbox = require("./dbox.js");
 const imgur = require("./imgur.js");
 
 var _debug = false;
-var _version = "0.4.0.12";
+var _version = "0.4.1.4";
 // 主版本號：當你做了不兼容的API修改
 // 次版本號：當你做了向下兼容的功能性新增
 // 修訂號：當你做了向下兼容的問題修正
@@ -27,6 +27,11 @@ const searchDataAndReply = async function (msgs, replyFunc) {
 	//let command = msg.substring(msg.indexOf(" ")).trim();
 	let command = msg.replace("安娜", "").replace("ANNA", "").trim();
 	if (_debug) console.log("Command: <" + command + ">");
+
+	// 呼叫定型文圖片
+	if (stampReply(command, replyFunc)) {
+		return;
+	}
 
 	// debug switch
 	if (command.toUpperCase().indexOf("DEBUG") != -1) {
@@ -164,7 +169,7 @@ const searchDataAndReply = async function (msgs, replyFunc) {
 		var learn = command.replace("忘記", "").trim();
 		var target = searchCharacter(learn);
 		if (target.length == 1) {
-			let i = checkCharaData(target.trim());
+			let i = checkCharaData(target[0].trim());
 			charaDataBase[i].str_nickname = [];
 		}
 		return;
@@ -203,10 +208,10 @@ const searchDataAndReply = async function (msgs, replyFunc) {
 
 	// 搜索職業
 	if (command.indexOf("金") == 0 || command.indexOf("藍") == 0
-		|| command.indexOf("白") == 0 || command.indexOf("黑") == 0) {
+		|| command.indexOf("白") == 0 || command.indexOf("白金") == 0 || command.indexOf("黑") == 0) {
 		// 分割命令
 		let _rarity = getRarityString(command[0]);
-		let _class = getClassString(command.substring(1).trim());
+		let _class = command.indexOf("白金") == 0 ? getClassString(command.substring(2).trim()) : getClassString(command.substring(1).trim());
 		if (_debug) console.log("_rarity+_class: <" + command[0] + "+" + command.substring(1).trim() + ">");
 		if (_debug) console.log("_rarity+_class: <" + _rarity + "+" + _class + ">");
 
@@ -237,7 +242,7 @@ const searchDataAndReply = async function (msgs, replyFunc) {
 	if (searchCharacterAndReply(command, true, replyFunc) > 0) {
 		return;
 	}
-
+	
 	// 404
 	let replyMsgs = ["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"];
 	var replyMsg = replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
@@ -273,7 +278,7 @@ const searchCharacterAndReply = function (command, blurry, replyFunc) {
 }
 // 回覆單一腳色資料
 const replayCharaData = function (charaName, replyFunc) {
-	if (_debug) console.log(charaName);
+	if (_debug) console.log("replayCharaData(" + charaName + ")");
 
 	let i = checkCharaData(charaName);
 	var obj = charaDataBase[i];
@@ -294,7 +299,8 @@ const replayCharaData = function (charaName, replyFunc) {
 }
 // 定型文貼圖
 const stampReply = function (msg, replyFunc) {
-	if (_debug) console.log(msg);
+	if (typeof (msg) == "undefined") return false;
+	if (_debug) console.log("stampReply(" + msg + ")");
 
 	var replyMsg = [];
 
@@ -303,8 +309,9 @@ const stampReply = function (msg, replyFunc) {
 		let i = Math.floor(Math.random() * imgArray.length);
 		replyMsg.push(createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
 		replyFunc(replyMsg);
+		return true;
 	}
-	return;
+	return false;
 }
 
 
@@ -366,7 +373,7 @@ const charaDataCrawler = function (urlPath) {
 						_skill = $(this).children("table").children("tbody").children("tr").eq(2).children("td").eq(2).text().replace(/\n/, " ").replace(/\s\s/, " ").trim();
 					}
 					if (_skill_name != "") {
-						newData.str_skill = _skill_name + "\n" + _skill;
+						newData.str_skill = _skill_name + "\n" + _skill.replace(/\n/g, "、");
 					}
 				}
 
@@ -379,7 +386,7 @@ const charaDataCrawler = function (urlPath) {
 						_skill_aw = $(this).children("table").children("tbody").children("tr").eq(-1).children("td").eq(1).text().replace(/\n/, " ").replace(/\s\s/, " ").trim().replace(/\n\n/, "\n");
 					}
 					if (_skill_aw_name != "") {
-						newData.str_skill_aw = _skill_aw_name + "\n" + _skill_aw;
+						newData.str_skill_aw = _skill_aw_name + "\n" + _skill_aw.replace(/\n/g, "、");
 					}
 				}
 			}
