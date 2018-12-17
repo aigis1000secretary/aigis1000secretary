@@ -6,8 +6,8 @@
 
 // commit
 /*
-	0.4.1.4
-	命令轉貼圖修正
+	0.4.2.2
+	修正圖庫 TAG 讀取異常
 */
 
 // 初始化
@@ -38,7 +38,7 @@ const bot_on = function () {
 
 	bot.on("memberJoined", function (event) {
 		if (anna._debug()) console.log(event);
-		// pusg
+		// push
 		var pushFunc = function (pMsg) {
 			if (anna._debug()) console.log(pMsg);
 
@@ -64,7 +64,7 @@ const bot_on = function () {
 			var msg = event.message.text;
 			if (anna._debug()) console.log(msg);
 
-			// reply
+			// reply function
 			var replyFunc = function (rMsg) {
 				if (anna._debug()) console.log(rMsg);
 				event.reply(rMsg)

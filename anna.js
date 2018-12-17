@@ -10,11 +10,19 @@ const dbox = require("./dbox.js");
 const imgur = require("./imgur.js");
 
 var _debug = false;
-var _version = "0.4.1.4";
+var _version = "0.4.2.2";
 // 主版本號：當你做了不兼容的API修改
 // 次版本號：當你做了向下兼容的功能性新增
 // 修訂號：當你做了向下兼容的問題修正
 // 次修訂號：線上debug
+
+String.prototype.replaceAll = function (s1, s2) {
+	var source = this;
+	while ((temp = source.replace(s1, s2)) != source) {
+		source = temp;
+	}
+	return source.toString();
+}
 
 // line bot
 // 搜尋資料
@@ -28,36 +36,36 @@ const searchDataAndReply = async function (msgs, replyFunc) {
 	let command = msg.replace("安娜", "").replace("ANNA", "").trim();
 	if (_debug) console.log("Command: <" + command + ">");
 
-	// 呼叫定型文圖片
-	if (stampReply(command, replyFunc)) {
-		return;
-	}
 
 	// debug switch
 	if (command.toUpperCase().indexOf("DEBUG") != -1) {
 		_debug = !_debug;
 		replyFunc("_debug = " + (_debug ? "on" : "off"));
-		return;
+		return true;
 	}
 
 	// 定型文
 	if (command.length == 1) {
 		if (searchCharacterAndReply(command, false, replyFunc) == 1) {
-			return;
+			return true;
+		}
+		// 呼叫定型文圖片
+		else if (stampReply(command, replyFunc)) {
+			return true;
 
 		} else {
 			replyFunc("王子太短了，找不到...");
-			return;
+			return false;
 		}
 	}
 	if (command.indexOf("巨根") != -1) {
 		replyFunc("王子太小了，找不到...");
-		return;
+		return true;
 	}
 	// wake
 	if (command.indexOf("醒醒") != -1) {
 		replyFunc("呣喵~?");
-		return;
+		return true;
 	}
 	// help
 	if (command.indexOf("指令") != -1 || command.toUpperCase().indexOf("HELP") != -1) {
@@ -75,13 +83,13 @@ const searchDataAndReply = async function (msgs, replyFunc) {
 
 		if (!_debug) {
 			replyFunc(replyMsg);
-			return;
+			return true;
 		}
 
 		replyMsg += "\n上傳。";
 
 		replyFunc(replyMsg);
-		return;
+		return true;
 	}
 	// status
 	if (command.indexOf("狀態") != -1) {
@@ -101,20 +109,20 @@ const searchDataAndReply = async function (msgs, replyFunc) {
 		replyMsg += "　　　　　 " + imgur.dataBase.images.length + " 筆貼圖資料";
 
 		replyFunc(replyMsg);
-		return;
+		return true;
 	}
 	// 圖片空間
 	if (command.indexOf("照片") != -1 || command.indexOf("圖片") != -1 || command.indexOf("相片") != -1) {
 		replyFunc(createTemplateMsg("圖片空間", ["上傳新照片", "線上圖庫"],
 			["https://www.dropbox.com/request/FhIsMnWVRtv30ZL2Ty69",
 				"https://www.dropbox.com/sh/vonsrxzy79nkpah/AAD4p6TwZF44GHP5f6gdEh3ba?dl=0"]));
-		return;
+		return true;
 	}
 	// 手動保存資料庫
 	if (command.indexOf("上傳") != -1) {
 		clearTimeout(uploadTaskId);
 		uploadDataBase();
-		return;
+		return true;
 	}
 	// 關鍵字學習
 	if (command.indexOf("學習") != -1) {
@@ -125,7 +133,7 @@ const searchDataAndReply = async function (msgs, replyFunc) {
 		let keys = learn.split(":"); // NNL:
 		if (keys.length < 2) {
 			replyFunc("[學習] 看不懂...");
-			return;
+			return true;
 		}
 
 		let arrayA = searchCharacter(keys[0].trim(), false);	// 精確搜索 Nick
@@ -138,17 +146,17 @@ const searchDataAndReply = async function (msgs, replyFunc) {
 
 		if (countA == 1) {
 			replyFunc("[學習] 安娜知道的！");
-			return;
+			return true;
 		}
 		else if (countB == 0) {
 			let replyMsgs = ["不認識的人呢...", "那是誰？"];
 			var replyMsg = "[學習] " + replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
 			replyFunc(replyMsg);
-			return;
+			return true;
 		}
 		else if (countB > 1) {
 			replyFunc("[學習] 太多人了，不知道是誰");
-			return;
+			return true;
 		}
 		else {
 			var key = arrayB[0];
@@ -161,7 +169,7 @@ const searchDataAndReply = async function (msgs, replyFunc) {
 			uploadTask();
 
 			replyFunc("[學習] 嗯！記住了！");
-			return;
+			return true;
 		}
 	}
 	// forgot
@@ -172,7 +180,7 @@ const searchDataAndReply = async function (msgs, replyFunc) {
 			let i = checkCharaData(target[0].trim());
 			charaDataBase[i].str_nickname = [];
 		}
-		return;
+		return true;
 	}
 	// tool
 	if (command.indexOf("工具") != -1) {
@@ -201,7 +209,7 @@ const searchDataAndReply = async function (msgs, replyFunc) {
 		var replyMsg = [templateMsgA, templateMsgB];
 
 		replyFunc(replyMsg);
-		return;
+		return true;
 	}
 
 
@@ -231,23 +239,28 @@ const searchDataAndReply = async function (msgs, replyFunc) {
 
 		if (count == 1) {	// only one
 			replayCharaData(result, replyFunc);
-			return;
+			return true;
 
 		} else if (count > 0) {	// list
 			replyFunc(result);
-			return;
+			return true;
 		}
 	}
 
 	if (searchCharacterAndReply(command, true, replyFunc) > 0) {
-		return;
+		return true;
 	}
-	
+
+	// 呼叫定型文圖片
+	if (stampReply(command, replyFunc)) {
+		return true;
+	}
+
 	// 404
 	let replyMsgs = ["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"];
 	var replyMsg = replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
 	replyFunc(replyMsg);
-	return;
+	return false;
 }
 // 搜尋腳色&回復
 const searchCharacterAndReply = function (command, blurry, replyFunc) {
@@ -318,7 +331,7 @@ const stampReply = function (msg, replyFunc) {
 // 爬蟲
 // 爬蟲函數
 const charaDataCrawler = function (urlPath) {
-
+	crawlerCount++;
 	// callback
 	let requestCallBack = function (error, response, body) {
 		if (error || !body) {
@@ -330,74 +343,218 @@ const charaDataCrawler = function (urlPath) {
 		let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
 
 		var newData = createCharaData();
+		let rarity = ["ゴールド", "サファイア", "プラチナ", "ブラック", "ゴ｜ルド"];
 
+		let switchSkill = 0;
 		// 搜尋所有表格
-		$("div").each(function (i, elem) {
+		$("div").each(function (i, iElem) {
 
 			var buffer = $(this).attr("id");
 			if (buffer && buffer.indexOf("content_block_") != -1 && buffer.indexOf("-") != -1) {
 
 				//console.log($(this).attr("id"));
-				//console.log(">>" + $(this).prev().text().trim() + "<<");
-				//console.log($(this).text().trim());
-				//console.log("@@@@@@@@@@");
+				//console.log($(this).children("table").eq(0).attr("id"));
 
-				// 檢查表格標籤
-				if ($(this).prev().text().trim() == "ステータス") {
-					newData.data_rarity = $(this).children("table").children("tbody").children("tr").eq(2).children("td").eq(0).text().replace(/\s\n/, "").trim();
-					newData.str_name = $(this).children("table").children("tbody").children("tr").eq(2).children("td").eq(1).text().replace(/\s\n/, "").trim();
-					newData.data_class = $(this).children("table").children("tbody").children("tr").eq(2).children("td").eq(2).text().replace(/\s\n/, "").trim();
-					//newData.data_rarity = newData.data_rarity.replace("ゴ｜ルド", "ゴールド");
-					if (newData.data_rarity.indexOf("ルド") != -1) newData.data_rarity = "ゴールド";
+				// ステータス
+				if ($(this).prev().children().text().trim() == "ステータス") {
+					$(this).children("table").eq(0).children("tbody").children("tr").children().children().each(function (j, jElem) {
+						// 名前
+						if ($(this).attr("href") == urlPath) {
+							newData.str_name = $(this).text().trim();
+						}
+						// クラス
+						let temp = $(this).attr("href");
+						if (typeof (temp) != "undefined" && temp.indexOf("class") != -1) {
+							newData.data_class = $(this).text().trim();
+						}
+						// レア
+						if (rarity.indexOf($(this).text().trim()) != -1) {
+							let temp = $(this).text().trim();
+							newData.data_rarity = temp == "ゴ｜ルド" ? "ゴールド" : temp;
+						}
+					});
+					if ($(this).text().trim().indexOf("⇔") != -1) switchSkill = 1;
+					if ($(this).text().trim().indexOf("⇒") != -1) switchSkill = 2;
 				}
 
-				if ($(this).prev().text().trim() == "アビリティ") {
-					var _ability = $(this).text().replace(/\s\n/, "\n").trim().replace(/\n\n/, "\n");
-					if (_ability != "") {
-						newData.str_ability = _ability;
+				// アビリティ
+				if ($(this).prev().children().text().trim() == "アビリティ") {
+					let temp = $(this).children("ul").text().trim().replaceAll("\n\n", "\n").replaceAll("?", "").replaceAll("？", "");
+					// format
+					temp = temp.replaceAll(" ", "、").replaceAll("\s", "、").replaceAll("\r", "、").replaceAll("　", "、");
+					temp = temp.replace("\n", "@").replaceAll("\n", "、").replaceAll("@", "\n").replaceAll("、、", "、").replaceAll("%", "％");
+					temp = temp.replaceAll("*1", "*").replaceAll("*2", "*").replaceAll("*3", "*").replaceAll("*4", "*").replaceAll("*5", "*");
+					temp = temp.replaceAll("*6", "*").replaceAll("*7", "*").replaceAll("*8", "*").replaceAll("*9", "*").replaceAll("*0", "*").replaceAll("*", "");
+					newData.str_ability = temp;
+				}
+
+				// 覚醒アビリティ
+				if ($(this).prev().children().text().trim() == "覚醒アビリティ") {
+					let temp = $(this).children("ul").text().trim().replaceAll("\n\n", "\n").replaceAll("?", "").replaceAll("？", "");
+					// format
+					temp = temp.replaceAll(" ", "、").replaceAll("\s", "、").replaceAll("\r", "、").replaceAll("　", "、");
+					temp = temp.replace("\n", "@").replaceAll("\n", "、").replaceAll("@", "\n").replaceAll("、、", "、").replaceAll("%", "％");
+					temp = temp.replaceAll("*1", "*").replaceAll("*2", "*").replaceAll("*3", "*").replaceAll("*4", "*").replaceAll("*5", "*")
+					temp = temp.replaceAll("*6", "*").replaceAll("*7", "*").replaceAll("*8", "*").replaceAll("*9", "*").replaceAll("*0", "*").replaceAll("*", "");
+					newData.str_ability_aw = temp;
+				}
+
+				// スキル
+				if ($(this).prev().children().text().trim() == "スキル") {
+					let skilList = [], textList = [];
+					skilList = $(this).children("table").html().tableToArray();
+
+					// get skill name & effect
+					for (let i in skilList) {
+						for (let j in skilList[i]) {
+							if (skilList[i][j] == "編\n集" || skilList[i][j].toUpperCase() == "LV" || skilList[i][j] == "" || skilList[i][j] == "備考"
+								|| skilList[i][j].indexOf("使用までの") != -1 || skilList[i][j] == "所持ユニット"
+								|| skilList[0][j] == "!" || skilList[i][0] == "!") {
+								skilList[i][j] = "!";
+							}
+						}
+					}
+					// remove non-skill
+					for (let i in skilList) {
+						if (skilList[i].indexOf("スキル名") != -1) {
+							skilList[i] = [];
+						}
+						let j;
+						while ((j = skilList[i].indexOf("!")) != -1) {
+							skilList[i].splice(j, 1);
+						}
+					}
+					// remove empty
+					for (let i = 0; i < skilList.length; i++) {
+						if (skilList[i].length == 0) {
+							skilList.splice(i, 1);
+							i--;
+						}
+					}
+					// remove same skill (lv1~lv4)
+					for (let i = 0; i < skilList.length; i++) {
+						if (i < skilList.length - 1 && skilList[i][0] == skilList[i + 1][0]) {
+							skilList.splice(i, 1);
+							i--;
+						}
+					}
+					// set textList
+					for (let i in skilList) {
+						let temp = skilList[i][1].trim().replaceAll("?", "").replaceAll("？", "");
+						temp = temp.replaceAll(" ", "、").replaceAll("\s", "、").replaceAll("\r", "、").replaceAll("\n", "、").replaceAll("　", "、").replaceAll("、、", "、").replaceAll("%", "％");
+						temp = temp.replaceAll("*1", "*").replaceAll("*2", "*").replaceAll("*3", "*").replaceAll("*4", "*").replaceAll("*5", "*").replaceAll("*6", "*").replaceAll("*7", "*").replaceAll("*8", "*").replaceAll("*9", "*").replaceAll("*0", "*").replaceAll("*", "");
+						textList.push(skilList[i][0] + "\n" + temp);
+					}
+					//if (_debug) console.log(skilList);
+
+					// put array into skill data
+					if (textList.length != 0) {
+						newData.str_skill = textList.join("\n");
 					}
 				}
 
-				if ($(this).prev().text().trim() == "覚醒アビリティ") {
-					var _ability_aw = $(this).text().replace(/\s\n/, "\n").trim().replace(/\n\n/, "\n");
-					if (_ability_aw != "") {
-						newData.str_ability_aw = _ability_aw;
+				// スキル覚醒
+				if ($(this).prev().children().text().trim() == "スキル覚醒") {
+					let skilList = [], textList = [], textList_aw = [];
+					skilList = $(this).children("table").html().tableToArray();
+
+					// get skill name & effect
+					for (let i in skilList) {
+						for (let j in skilList[i]) {
+							if (skilList[i][j] == "編\n集" || skilList[i][j].toUpperCase() == "LV" || skilList[i][j] == "" || skilList[i][j] == "備考"
+								|| skilList[i][j].indexOf("使用までの") != -1 || skilList[i][j].indexOf("初動まで") != -1 || skilList[i][j].indexOf("回復まで") != -1 || skilList[i][j] == "所持ユニット"
+								|| skilList[0][j] == "!" || skilList[i][0] == "!") {
+								skilList[i][j] = "!";
+							}
+						}
+					}
+					// remove non-skill
+					for (let i in skilList) {
+						if (skilList[i].indexOf("スキル名") != -1 || skilList[i].indexOf("覚醒スキル名") != -1) {
+							skilList[i] = [];
+						}
+						let j;
+						while ((j = skilList[i].indexOf("!")) != -1) {
+							skilList[i].splice(j, 1);
+						}
+					}
+					// remove empty
+					for (let i = 0; i < skilList.length; i++) {
+						if (skilList[i].length == 0) {
+							skilList.splice(i, 1);
+							i--;
+						}
+					}
+					// remove same skill (lv1~lv4)
+					for (let i = 0; i < skilList.length; i++) {
+						if (i < skilList.length - 1 && skilList[i][1] == skilList[i + 1][1]) {
+							skilList.splice(i, 1);
+							i--;
+						}
+					}
+					// set textList
+					for (let i in skilList) {
+						let temp = skilList[i][2].trim().replaceAll("?", "").replaceAll("？", "");
+						temp = temp.replaceAll(" ", "、").replaceAll("\s", "、").replaceAll("\r", "、").replaceAll("\n", "、").replaceAll("　", "、").replaceAll("、、", "、").replaceAll("%", "％");
+						temp = temp.replaceAll("*1", "*").replaceAll("*2", "*").replaceAll("*3", "*").replaceAll("*4", "*").replaceAll("*5", "*").replaceAll("*6", "*").replaceAll("*7", "*").replaceAll("*8", "*").replaceAll("*9", "*").replaceAll("*0", "*").replaceAll("*", "");
+						if (skilList[i][0] == "通常") {
+							textList.push(skilList[i][1] + "\n" + temp);
+						}
+						else if (skilList[i][0] == "覚醒") {
+							textList_aw.push(skilList[i][1] + "\n" + temp);
+						}
+					}
+
+					// put array into skill data
+					if (textList.length != 0) {
+						newData.str_skill = textList.join("\n");
+					}
+					if (textList_aw.length != 0) {
+						newData.str_skill_aw = textList_aw.join("\n");
 					}
 				}
 
-				if ($(this).prev().text().trim() == "スキル") {
-					var _skill_name = $(this).children("table").eq(-1).children("tbody").children("tr").eq(2).children("td").eq(0).text().replace(/\n/, " ").replace(/\s\s/, " ").trim();
-					var _skill = $(this).children("table").eq(-1).children("tbody").children("tr").eq(-2).children("td").eq(1).text().replace(/\n/, " ").replace(/\s\s/, " ").trim().replace(/\n\n/, "\n");
+				newData.str_skill = newData.str_skill.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
+				newData.str_skill_aw = newData.str_skill_aw.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
+				newData.str_ability = newData.str_ability.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
+				newData.str_ability_aw = newData.str_ability_aw.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
 
-					if (_skill == "-") {
-						_skill = $(this).children("table").children("tbody").children("tr").eq(2).children("td").eq(2).text().replace(/\n/, " ").replace(/\s\s/, " ").trim();
-					}
-					if (_skill_name != "") {
-						newData.str_skill = _skill_name + "\n" + _skill.replace(/\n/g, "、");
-					}
+				if (newData.str_ability.indexOf("ランダム") != -1) {
+					newData.str_ability = newData.str_ability.replaceAll("、/、", "、");
+					newData.str_ability = newData.str_ability.replaceAll("発動、", "発動：");
+					newData.str_ability = newData.str_ability.replaceAll("回復、", "回復/");
+					newData.str_ability = newData.str_ability.replaceAll("回避、", "回避/");
+					newData.str_ability = newData.str_ability.replaceAll("攻撃、", "攻撃/");
+					newData.str_ability = newData.str_ability.replaceAll("連射、", "連射/");
+					newData.str_ability = newData.str_ability.replaceAll("無視、", "無視/");
+					newData.str_ability = newData.str_ability.replaceAll("入手、", "入手/");
+					newData.str_ability = newData.str_ability.replaceAll("倍、", "倍/");
+					newData.str_ability = newData.str_ability.replaceAll("硬直なし、", "硬直なし/");
 				}
-
-				if ($(this).prev().text().trim() == "スキル覚醒") {
-					var _skill_aw_name = $(this).children("table").children("tbody").children("tr").eq(-1).children("td").eq(1).text().replace(/\n/, " ").replace(/\s\s/, " ").trim();
-					var _skill_aw = $(this).children("table").children("tbody").children("tr").eq(-1).children("td").eq(2).text().replace(/\n/, " ").replace(/\s\s/, " ").trim();
-
-					if (_skill_aw == "-") {
-						_skill_aw_name = $(this).children("table").children("tbody").children("tr").eq(-1).children("td").eq(0).text().replace(/\n/, " ").replace(/\s\s/, " ").trim();
-						_skill_aw = $(this).children("table").children("tbody").children("tr").eq(-1).children("td").eq(1).text().replace(/\n/, " ").replace(/\s\s/, " ").trim().replace(/\n\n/, "\n");
-					}
-					if (_skill_aw_name != "") {
-						newData.str_skill_aw = _skill_aw_name + "\n" + _skill_aw.replace(/\n/g, "、");
-					}
+				if (newData.str_ability_aw.indexOf("ランダム") != -1) {
+					newData.str_ability_aw = newData.str_ability_aw.replaceAll("、/、", "、");
+					newData.str_ability_aw = newData.str_ability_aw.replaceAll("発動、", "発動：");
+					newData.str_ability_aw = newData.str_ability_aw.replaceAll("回復、", "回復/");
+					newData.str_ability_aw = newData.str_ability_aw.replaceAll("回避、", "回避/");
+					newData.str_ability_aw = newData.str_ability_aw.replaceAll("攻撃、", "攻撃/");
+					newData.str_ability_aw = newData.str_ability_aw.replaceAll("連射、", "連射/");
+					newData.str_ability_aw = newData.str_ability_aw.replaceAll("無視、", "無視/");
+					newData.str_ability_aw = newData.str_ability_aw.replaceAll("入手、", "入手/");
+					newData.str_ability_aw = newData.str_ability_aw.replaceAll("倍、", "倍/");
+					newData.str_ability_aw = newData.str_ability_aw.replaceAll("硬直なし、", "硬直なし/");
 				}
 			}
 		});
+		if (_debug) console.log(newData);
 		// 新增腳色資料
 		addCharaData(newData);
+		crawlerCount--;
 	}
 	request.get(urlPath, { encoding: "binary" }, requestCallBack);
 };
 // 爬所有腳色
 var delay = 0;
+var crawlerCount = 0;
 const allCharaDataCrawler = function () {
 	console.log("AllCharaData Crawling...");
 
@@ -418,7 +575,7 @@ const allCharaDataCrawler = function () {
 			if (buffer && $(this).parent().is("td") && $(this).prev().prev().children().is("img")) {
 				//console.log($(this).text());
 				// 延遲呼叫腳色爬蟲
-				setTimeout(function () { charaDataCrawler(buffer); }, delay * 100);
+				setTimeout(function () { charaDataCrawler(buffer); }, delay * 50);
 				delay++;
 			}
 		});
@@ -511,6 +668,82 @@ var encodeURI_JP = function (url) {
 	}
 	return result;
 }
+// HTML table to array
+String.prototype.tableToArray = function () {
+	var result = [];
+	var html = this.replaceAll("<br>", "\n");
+	let i, j, k;
+
+	if ((i = html.indexOf("<tbody>")) != -1 && (j = html.indexOf("</tbody>")) != -1) {
+		// get tbody
+		html = html.substring(i + 7, j);
+
+		// init table data
+		i = -1;
+		while ((i = html.indexOf("<tr>", i + 1)) != -1) {
+			result.push([]);
+		}
+
+		// get single Column body
+		let col = 0;
+		while ((i = html.indexOf("<tr>")) != -1 && (j = html.indexOf("</tr>")) != -1) {
+			if (i > j) continue;
+			// split All Row body
+			let columnBody = html.substring(i + 4, j);
+			html = html.substring(j + 5);
+
+			// get single Cell body
+			let row = 0;
+			while ((i = columnBody.indexOf("<td") + 3) != -1 && (j = columnBody.indexOf(">")) != -1 && (k = columnBody.indexOf("</td>")) != -1) {
+				if (i > j || j > k || i > k) continue;
+				while (result[col][row] == "@") { row++; }
+
+				// split Cell body
+				let cellStyle = columnBody.substring(i + 1, j);
+				let cellBody = columnBody.substring(j + 1, k).trim();;
+				columnBody = columnBody.substring(k + 5);
+
+				// remove <a> </a>
+				while ((i = cellBody.indexOf("<")) != -1 && (j = cellBody.indexOf(">")) != -1) {
+					cellBody = cellBody.replace(cellBody.substring(i, j + 1), "");
+				}
+
+				// set table text
+				result[col][row] = cellBody;
+
+				// check span cell
+				let style = cellStyle.split(" ");
+				for (let l in style) {
+					if (style[l].indexOf("rowspan") != -1) {
+						let rowspan = parseInt(style[l].replaceAll("\"", "").replace("rowspan=", ""));
+						for (let span = 1; span < rowspan; span++) {
+							//result[col][row] = cellBody;
+							result[col + span][row] = "@";
+						}
+					}
+					if (style[l].indexOf("colspan") != -1) {
+						let colspan = parseInt(style[l].replaceAll("\"", "").replace("colspan=", ""));
+						for (let span = 1; span < colspan; span++) {
+							row++;
+							result[col][row] = cellBody;
+						}
+					}
+				}
+				row++;
+			}
+
+			// set span cell text
+			for (row in result[col]) {
+				if (result[col][row] == "@") {
+					result[col][row] = result[col - 1][row];
+				}
+			}
+
+			col++;
+		}
+	}
+	return result;
+}
 
 
 
@@ -595,7 +828,7 @@ const checkCharaData = function (name) {
 }
 // 儲存資料
 const saveCharaDataBase = function () {
-	console.log("CharaDataBase saving...");
+	console.log("CharaDataBase saving..." + crawlerCount);
 
 	// object to json
 	var json = JSON.stringify(charaDataBase);
@@ -634,7 +867,7 @@ const loadCharaDataBase = async function () {
 			var newData = createCharaData();
 
 			newData.str_name = obj[i].str_name.trim();
-			newData.str_nickname = obj[i].str_nickname;
+			//newData.str_nickname = obj[i].str_nickname;
 			newData.str_ability = obj[i].str_ability.trim();
 			newData.str_ability_aw = obj[i].str_ability_aw.trim();
 			newData.str_skill = obj[i].str_skill.trim();
@@ -645,8 +878,10 @@ const loadCharaDataBase = async function () {
 			newData.data_class = obj[i].data_class.trim();
 
 			//for (let j = 0; j < newData.str_nickname.length; j++) {
-			for (let j in newData.str_nickname) {
-				newData.str_nickname[j] = newData.str_nickname[j].trim();
+			for (let j in obj[i].str_nickname) {
+				if (obj[i].str_nickname[j] != "") {
+					newData.str_nickname.push(obj[i].str_nickname[j].trim());
+				}
 			}
 
 			addCharaData(newData);
@@ -995,10 +1230,28 @@ module.exports = {
 	searchDataAndReply: function (msg, replyFunc) { return searchDataAndReply(msg, replyFunc); },
 	stampReply: function (msg, replyFunc) { return stampReply(msg, replyFunc); },
 
-	_debug: function () { return _debug; }
+	sort: function () {
+
+		let nameList = [];
+		for (let i in charaDataBase) {
+			nameList.push(charaDataBase[i].str_name);
+		}
+		nameList.sort();
+
+		var newCharaDataBase = [];
+		for (let i in nameList) {
+			let name = nameList[i];
+			let index = checkCharaData(name);
+			newCharaDataBase.push(charaDataBase[index]);
+		}
+		charaDataBase = newCharaDataBase;
+
+		return 0;
+	},
+
+	_debug: function () { return _debug; },
+	_encodeURI_JP: function (url) { return encodeURI_JP(url); }
 };
-
-
 
 
 
@@ -1007,7 +1260,7 @@ const debugFunc = async function() {
 	await module.exports.init();
 	await imgur.init();
 	_debug = true;
-	searchDataAndReply("安娜 元帥\nナナ", function(obj) {
+	searchDataAndReply("安娜 蛇霊の呪術師オロチヒメ", function(obj) {
 		console.log(obj);
 	});
 }

@@ -98,6 +98,7 @@ imgur.oauth2.token = function () {
 			.then(function (jsonResponse) {
 				if (_debug) console.log(jsonResponse);
 				IMGUR_ACCESS_TOKEN = jsonResponse.access_token;
+				//console.log(IMGUR_ACCESS_TOKEN);
 				resolve(jsonResponse);
 			})
 			.catch(function (error) {
@@ -118,15 +119,21 @@ imgur.account.allImages = function () {
 	return new Promise(async function (resolve, reject) {
 		try {
 			// get images every page
-			var page = 0;
-			var allImages = [];
-			let lastImages = await imgur.account.images(page++);
-			allImages = allImages.concat(lastImages);
-
-			while (lastImages.length == 50) {
-				lastImages = await imgur.account.images(page++);
-				allImages = allImages.concat(lastImages);
+			let maxPage = await imgur.account.imagesCount();
+			var allImages = [], promiseArray = [];
+			for (let i = 0; i <= maxPage; i++) {
+				promiseArray.push(
+					imgur.account.images(i).then(
+						function (lastImages) {
+							for (let j in lastImages) {
+								allImages.push(lastImages[j]);
+							}
+						}
+					)
+				);
 			}
+			await Promise.all(promiseArray);
+
 			resolve(allImages);
 		} catch (error) {
 			reject(error);
@@ -150,6 +157,26 @@ imgur.account.images = function (page) {
 		imgur._apiRequest(options)
 			.then(function (jsonResponse) {
 				resolve(jsonResponse.data);
+			})
+			.catch(function (error) {
+				reject(error);
+			});
+	});
+}
+
+// GET Count
+imgur.account.imagesCount = function () {
+	return new Promise(function (resolve, reject) {
+		// Configure the request
+		var options = {
+			//url: IMGUR_API_URL + "account/" + IMGUR_USERNAME + "/images",
+			url: IMGUR_API_URL + "account/me/images/count",
+			method: "GET"
+		};
+
+		imgur._apiRequest(options)
+			.then(function (jsonResponse) {
+				resolve(parseInt(jsonResponse.data / 50));
 			})
 			.catch(function (error) {
 				reject(error);
@@ -285,7 +312,7 @@ imgur.dataBase.createImage = function (newData) {
 	var newImage = {};
 	newImage.fileName = newData.name;
 	newImage.md5 = newData.title;
-	newImage.tags = newData.description == null ? "" : newData.description.toUpperCase().split(",");
+	newImage.tags = newData.description == null ? [] : newData.description.toUpperCase().split(",");
 	newImage.id = newData.id;	// imageHash
 	newImage.imageLink = newData.link;
 	newImage.thumbnailLink = newData.link.replace(newImage.id, newImage.id + "m");
@@ -303,6 +330,7 @@ imgur.dataBase.createImage = function (newData) {
 		newImage.tags[i] = newImage.tags[i].trim();
 	}
 
+
 	return newImage;
 }
 // find image from database
@@ -317,10 +345,10 @@ imgur.dataBase.findImageByMd5 = function (imageMd5) {
 imgur.dataBase.findImageByTag = function (imageTag) {
 	// search album by tag
 	var result = [];
+	imageTag = imageTag.toUpperCase().trim()
 	for (let i in imgur.dataBase.images) {
-		for (let j in imgur.dataBase.images[i].tags) {
-			if (imgur.dataBase.images[i].tags[j] == imageTag.toUpperCase())
-				result.push(imgur.dataBase.images[i]);
+		if (imgur.dataBase.images[i].tags.indexOf(imageTag) != -1) {
+			result.push(imgur.dataBase.images[i]);
 		}
 	}
 	return result;
@@ -330,10 +358,8 @@ imgur.dataBase.findImageByNameTag = function (imageName, imageTag) {
 	var result = [];
 	for (let i in imgur.dataBase.images) {
 		if (imgur.dataBase.images[i].fileName == imageName) {
-
-			for (let j in imgur.dataBase.images[i].tags) {
-				if (imgur.dataBase.images[i].tags[j] == imageTag.toUpperCase())
-					result.push(imgur.dataBase.images[i]);
+			if (imgur.dataBase.images[i].tags.indexOf(imageTag) != -1) {
+				result.push(imgur.dataBase.images[i]);
 			}
 		}
 	}
@@ -359,6 +385,7 @@ imgur.dataBase.saveDatabase = function () {
 
 	console.log("Imgur dataBase saved!");
 }
+
 
 
 module.exports = {
