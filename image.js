@@ -31,7 +31,7 @@ const main = async function () {
             //console.log(mainTag + ", " + fileName);
 
             // try to find existed image first
-            let onlineImage = imgur.dataBase.findImageByNameTag(fileName, mainTag);
+            let onlineImage = imgur.dataBase.findImageByNameTag(fileName, mainTag.split(",")[0]);
             if (onlineImage.length != 0) {
                 console.log("file already existed(file): " + pathArray[i]);
                 // return "file already existed";

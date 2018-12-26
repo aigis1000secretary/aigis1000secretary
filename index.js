@@ -6,8 +6,8 @@
 
 // commit
 /*
-	0.4.2.2
-	修正圖庫 TAG 讀取異常
+	0.4.3.4
+	修正定型文
 */
 
 // 初始化
@@ -61,10 +61,10 @@ const bot_on = function () {
 		// 文字事件
 		if (event.message.type == "text") {
 			// 取出文字內容
-			var msg = event.message.text;
+			var msg = event.message.text.split("\n")[0];
 			if (anna._debug()) console.log(msg);
 
-			// reply function
+			// define reply function
 			var replyFunc = function (rMsg) {
 				if (anna._debug()) console.log(rMsg);
 				event.reply(rMsg)
@@ -78,10 +78,8 @@ const bot_on = function () {
 
 			// normal response
 			if (msg == "安娜") {
-
 				replyFunc("是的！王子？");
 				return;
-
 			}
 
 			// get source id
@@ -102,6 +100,11 @@ const bot_on = function () {
 				}
 			}
 
+			// in user chat
+			if (event.source.type == "user" && msg.toUpperCase().indexOf("ANNA ") == -1 && msg.indexOf("安娜 ") == -1) {
+				msg = "ANNA " + msg;
+			}
+
 			// normal auto-response
 			if (msg.toUpperCase().indexOf("ANNA ") == 0 || msg.indexOf("安娜 ") == 0) {
 				// 判讀指令
@@ -114,6 +117,7 @@ const bot_on = function () {
 				return;
 			}
 
+			// egg
 			if (Math.floor(Math.random() * 10000) == 0) {
 				replyFunc("ちくわ大明神");
 				return;
@@ -124,6 +128,15 @@ const bot_on = function () {
 			return "";
 		}
 	});
+}
+// line debug function
+const debugPush = function (pMsg) {
+	let linebot = require("linebot");
+	linebot({
+		channelId: 1612493892,
+		channelSecret: "ea71aeca4c54c6aa270df537fbab3ee3",
+		channelAccessToken: "GMunTSrUWF1vRwdNxegvepxHEQWgyaMypbtyPluxqMxoTqq8QEGJWChetLPvlV0DJrY4fvphSUT58vjVQVLhndlfk2JKQ/sbzT6teG1qUUUEVpVfqs5KGzzn3NUngYMw9/lvvU0QZVGBqPS6wKVxrQdB04t89/1O/w1cDnyilFU="
+	}).push("U9eefeba8c0e5f8ee369730c4f983346b", pMsg);
 }
 
 

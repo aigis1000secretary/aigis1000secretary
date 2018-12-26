@@ -10,7 +10,7 @@ const dbox = require("./dbox.js");
 const imgur = require("./imgur.js");
 
 var _debug = false;
-var _version = "0.4.2.2";
+var _version = "0.4.3.4";
 // 主版本號：當你做了不兼容的API修改
 // 次版本號：當你做了向下兼容的功能性新增
 // 修訂號：當你做了向下兼容的問題修正
@@ -26,19 +26,20 @@ String.prototype.replaceAll = function (s1, s2) {
 
 // line bot
 // 搜尋資料
-const searchDataAndReply = async function (msgs, replyFunc) {
+const searchDataAndReply = async function (msg, replyFunc) {
 	// 指令:
-	var msg = msgs.split("\n")[0];
 	if (_debug) console.log("msg: <" + msg + ">");
 
 	// 分析命令
-	//let command = msg.substring(msg.indexOf(" ")).trim();
-	let command = msg.replace("安娜", "").replace("ANNA", "").trim();
+	let msgs = msg.split(" ");
+	if (msgs.length < 2) {
+		return false;
+	}
+	let command = msgs[1].toUpperCase().trim();
 	if (_debug) console.log("Command: <" + command + ">");
 
-
 	// debug switch
-	if (command.toUpperCase().indexOf("DEBUG") != -1) {
+	if (command == "DEBUG") {
 		_debug = !_debug;
 		replyFunc("_debug = " + (_debug ? "on" : "off"));
 		return true;
@@ -48,32 +49,31 @@ const searchDataAndReply = async function (msgs, replyFunc) {
 	if (command.length == 1) {
 		if (searchCharacterAndReply(command, false, replyFunc) == 1) {
 			return true;
-		}
-		// 呼叫定型文圖片
-		else if (stampReply(command, replyFunc)) {
+		} else if (stampReply(command, replyFunc)) {
+			// 呼叫定型文圖片
 			return true;
-
 		} else {
 			replyFunc("王子太短了，找不到...");
-			return false;
+			return true;
 		}
-	}
-	if (command.indexOf("巨根") != -1) {
+
+	} else if (command == "巨根") {
 		replyFunc("王子太小了，找不到...");
 		return true;
-	}
-	// wake
-	if (command.indexOf("醒醒") != -1) {
+
+	} else if (command == "醒醒") {
+		// wake
 		replyFunc("呣喵~?");
 		return true;
-	}
-	// help
-	if (command.indexOf("指令") != -1 || command.toUpperCase().indexOf("HELP") != -1) {
+
+	} else if (command == "指令" || command == "HELP") {
+		// help
 		var replyMsg = "";
 
 		replyMsg += "狀態: 確認目前版本，資料庫資料筆數。\n(>>安娜 狀態)。\n\n";
 		replyMsg += "照片: 上傳角色附圖的網路空間(DropBox)。\n(>>安娜 照片)。\n\n";
 		replyMsg += "工具: 千年戰爭Aigis實用工具。\n(>>安娜 工具)。\n\n";
+		replyMsg += "職業: 列出資料庫現有職業。\n\n";
 		replyMsg += "學習: 用來教會安娜角色的暱稱。\n(>>安娜 學習 NNL:射手ナナリー)。\n\n";
 
 		replyMsg += "\n";
@@ -90,9 +90,9 @@ const searchDataAndReply = async function (msgs, replyFunc) {
 
 		replyFunc(replyMsg);
 		return true;
-	}
-	// status
-	if (command.indexOf("狀態") != -1) {
+
+	} else if (command == "狀態") {
+		// status
 		//loadAutoResponseList();
 		await imgur.account.allImages()
 			.then(imgur.dataBase.loadImages)
@@ -110,80 +110,37 @@ const searchDataAndReply = async function (msgs, replyFunc) {
 
 		replyFunc(replyMsg);
 		return true;
-	}
-	// 圖片空間
-	if (command.indexOf("照片") != -1 || command.indexOf("圖片") != -1 || command.indexOf("相片") != -1) {
+
+	} else if (command == "照片" || command == "圖片" || command == "相片") {
+		// 圖片空間
 		replyFunc(createTemplateMsg("圖片空間", ["上傳新照片", "線上圖庫"],
 			["https://www.dropbox.com/request/FhIsMnWVRtv30ZL2Ty69",
 				"https://www.dropbox.com/sh/vonsrxzy79nkpah/AAD4p6TwZF44GHP5f6gdEh3ba?dl=0"]));
 		return true;
-	}
-	// 手動保存資料庫
-	if (command.indexOf("上傳") != -1) {
+
+	} else if (command == "上傳") {
+		// 手動保存資料庫
 		clearTimeout(uploadTaskId);
 		uploadDataBase();
 		return true;
-	}
-	// 關鍵字學習
-	if (command.indexOf("學習") != -1) {
-		//var learn = command.substring(msg.indexOf(" ")).trim();
-		let learn = command.replace("學習", "").trim().replace("：", ":");
-		if (_debug) console.log("learn: <" + learn + ">");
 
-		let keys = learn.split(":"); // NNL:
-		if (keys.length < 2) {
-			replyFunc("[學習] 看不懂...");
-			return true;
+	} else if (command == "忘記") {
+		// forgot
+		if (msgs.length < 3) {
+			msgs.push("");
 		}
+		let learn = msgs[2].trim();
+		if (_debug) console.log("forgot: <" + learn + ">");
 
-		let arrayA = searchCharacter(keys[0].trim(), false);	// 精確搜索 Nick
-		let arrayB = searchCharacter(keys[1].trim());
-		let countA = arrayA.length;
-		let countB = arrayB.length;
-
-		if (_debug) console.log("full name: <" + arrayB + ">");
-		if (_debug) console.log("new nick: <" + keys[0] + ">");
-
-		if (countA == 1) {
-			replyFunc("[學習] 安娜知道的！");
-			return true;
-		}
-		else if (countB == 0) {
-			let replyMsgs = ["不認識的人呢...", "那是誰？"];
-			var replyMsg = "[學習] " + replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
-			replyFunc(replyMsg);
-			return true;
-		}
-		else if (countB > 1) {
-			replyFunc("[學習] 太多人了，不知道是誰");
-			return true;
-		}
-		else {
-			var key = arrayB[0];
-			var nick = keys[0];
-
-			let i = checkCharaData(key);
-			charaDataBase[i].str_nickname.push(nick);
-
-			// wait 25 min to save
-			uploadTask();
-
-			replyFunc("[學習] 嗯！記住了！");
-			return true;
-		}
-	}
-	// forgot
-	if (command.indexOf("忘記") != -1) {
-		var learn = command.replace("忘記", "").trim();
 		var target = searchCharacter(learn);
 		if (target.length == 1) {
 			let i = checkCharaData(target[0].trim());
 			charaDataBase[i].str_nickname = [];
 		}
 		return true;
-	}
-	// tool
-	if (command.indexOf("工具") != -1) {
+
+	} else if (command == "工具") {
+		// tool
 		var templateMsgA, templateMsgB;
 
 		var laleArray = [];
@@ -210,23 +167,108 @@ const searchDataAndReply = async function (msgs, replyFunc) {
 
 		replyFunc(replyMsg);
 		return true;
+
+	} else if (command == "職業") {
+		let classDB = classDataBase
+		var replyMsgA = "";
+		var replyMsgB = "";
+		for (let i in classDB) {
+			if (classDB[i].type == "近接型") {
+				replyMsgA += classDB[i].index.join(",\t") + "\n";
+			} else if (classDB[i].type == "遠距離型") {
+				replyMsgB += classDB[i].index.join(",\t") + "\n";
+			}
+		}
+		replyMsgA = replyMsgA.trim();
+		replyMsgB = replyMsgB.trim();
+		replyFunc(replyMsgA + "\n" + replyMsgB);
+		return true;
+
+	} else if (command == "學習") {
+		// 關鍵字學習
+		if (msgs.length < 3) {
+			msgs.push("");
+		}
+		let learn = msgs[2].trim().replace("：", ":");
+		if (_debug) console.log("learn: <" + learn + ">");
+
+		let keys = learn.split(":"); // NNL:黑弓
+		if (keys.length < 2) {
+			replyFunc("[學習] 看不懂...");
+			return true;
+		}
+
+		let arrayA = searchCharacter(keys[0].trim(), false);	// 精確搜索 Nickname
+		let arrayB = searchCharacter(keys[1].trim());
+		let countA = arrayA.length;
+		let countB = arrayB.length;
+
+		if (_debug) console.log("full name: <" + arrayB + ">");
+		if (_debug) console.log("new nick: <" + keys[0] + ">");
+
+		if (countA == 1) {
+			replyFunc("[學習] 安娜知道的！");
+			return true;
+
+		} else if (countB == 0) {
+			let replyMsgs = ["不認識的人呢...", "那是誰？"];
+			var replyMsg = "[學習] " + replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
+			replyFunc(replyMsg);
+			return true;
+
+		} else if (countB > 1) {
+			replyFunc("[學習] 太多人了，不知道是誰");
+			return true;
+
+		} else {
+			var key = arrayB[0];
+			var nick = keys[0];
+
+			let i = checkCharaData(key);
+			charaDataBase[i].str_nickname.push(nick);
+
+			// wait 25 min to save
+			uploadTask();
+
+			replyFunc("[學習] 嗯！記住了！");
+			return true;
+		}
 	}
 
+	if (searchClassAndReply(command, replyFunc) > 0) {
+		return true;
+	}
 
+	if (searchCharacterAndReply(command, true, replyFunc) > 0) {
+		return true;
+	}
+
+	// 呼叫定型文圖片
+	if (stampReply(command, replyFunc)) {
+		return true;
+	}
+
+	// 404
+	let replyMsgs = ["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"];
+	var replyMsg = replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
+	replyFunc(replyMsg);
+	return false;
+}
+
+// 搜尋職業&回復
+const searchClassAndReply = function (command, replyFunc) {
 
 	// 搜索職業
-	if (command.indexOf("金") == 0 || command.indexOf("藍") == 0
-		|| command.indexOf("白") == 0 || command.indexOf("白金") == 0 || command.indexOf("黑") == 0) {
+	if (command.indexOf("金") == 0 || command.indexOf("藍") == 0 || command.indexOf("白") == 0
+		|| command.indexOf("鉑") == 0 || command.indexOf("白金") == 0 || command.indexOf("黑") == 0) {
 		// 分割命令
 		let _rarity = getRarityString(command[0]);
 		let _class = command.indexOf("白金") == 0 ? getClassString(command.substring(2).trim()) : getClassString(command.substring(1).trim());
-		if (_debug) console.log("_rarity+_class: <" + command[0] + "+" + command.substring(1).trim() + ">");
 		if (_debug) console.log("_rarity+_class: <" + _rarity + "+" + _class + ">");
 
 		var result = "";
 		let count = 0;
 		// 遍歷
-		//for (var i = 0; i < charaDataBase.length; i++) {
 		for (let i in charaDataBase) {
 			var obj = charaDataBase[i];
 			if (obj.data_rarity == _rarity && obj.data_class == _class) {
@@ -246,22 +288,8 @@ const searchDataAndReply = async function (msgs, replyFunc) {
 			return true;
 		}
 	}
-
-	if (searchCharacterAndReply(command, true, replyFunc) > 0) {
-		return true;
-	}
-
-	// 呼叫定型文圖片
-	if (stampReply(command, replyFunc)) {
-		return true;
-	}
-
-	// 404
-	let replyMsgs = ["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"];
-	var replyMsg = replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
-	replyFunc(replyMsg);
-	return false;
 }
+
 // 搜尋腳色&回復
 const searchCharacterAndReply = function (command, blurry, replyFunc) {
 	if (typeof (blurry) == "undefined") blurry = true;
@@ -272,11 +300,6 @@ const searchCharacterAndReply = function (command, blurry, replyFunc) {
 	if (_debug) console.log("resultArray[" + count + "]: <" + resultArray + ">");
 
 	// 遍歷
-	/*var result = "";
-	for (var i = 0; i < resultArray.length; i++) {
-		result += resultArray[i] + "\n";
-	}
-	result = result.trim();*/
 	var result = resultArray.join("\n");
 
 	// only one
@@ -331,230 +354,233 @@ const stampReply = function (msg, replyFunc) {
 // 爬蟲
 // 爬蟲函數
 const charaDataCrawler = function (urlPath) {
-	crawlerCount++;
-	// callback
-	let requestCallBack = function (error, response, body) {
-		if (error || !body) {
-			console.log(error);
-			return null;
-		}
-
-		var html = iconv.decode(new Buffer(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
-		let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
-
-		var newData = createCharaData();
-		let rarity = ["ゴールド", "サファイア", "プラチナ", "ブラック", "ゴ｜ルド"];
-
-		let switchSkill = 0;
-		// 搜尋所有表格
-		$("div").each(function (i, iElem) {
-
-			var buffer = $(this).attr("id");
-			if (buffer && buffer.indexOf("content_block_") != -1 && buffer.indexOf("-") != -1) {
-
-				//console.log($(this).attr("id"));
-				//console.log($(this).children("table").eq(0).attr("id"));
-
-				// ステータス
-				if ($(this).prev().children().text().trim() == "ステータス") {
-					$(this).children("table").eq(0).children("tbody").children("tr").children().children().each(function (j, jElem) {
-						// 名前
-						if ($(this).attr("href") == urlPath) {
-							newData.str_name = $(this).text().trim();
-						}
-						// クラス
-						let temp = $(this).attr("href");
-						if (typeof (temp) != "undefined" && temp.indexOf("class") != -1) {
-							newData.data_class = $(this).text().trim();
-						}
-						// レア
-						if (rarity.indexOf($(this).text().trim()) != -1) {
-							let temp = $(this).text().trim();
-							newData.data_rarity = temp == "ゴ｜ルド" ? "ゴールド" : temp;
-						}
-					});
-					if ($(this).text().trim().indexOf("⇔") != -1) switchSkill = 1;
-					if ($(this).text().trim().indexOf("⇒") != -1) switchSkill = 2;
-				}
-
-				// アビリティ
-				if ($(this).prev().children().text().trim() == "アビリティ") {
-					let temp = $(this).children("ul").text().trim().replaceAll("\n\n", "\n").replaceAll("?", "").replaceAll("？", "");
-					// format
-					temp = temp.replaceAll(" ", "、").replaceAll("\s", "、").replaceAll("\r", "、").replaceAll("　", "、");
-					temp = temp.replace("\n", "@").replaceAll("\n", "、").replaceAll("@", "\n").replaceAll("、、", "、").replaceAll("%", "％");
-					temp = temp.replaceAll("*1", "*").replaceAll("*2", "*").replaceAll("*3", "*").replaceAll("*4", "*").replaceAll("*5", "*");
-					temp = temp.replaceAll("*6", "*").replaceAll("*7", "*").replaceAll("*8", "*").replaceAll("*9", "*").replaceAll("*0", "*").replaceAll("*", "");
-					newData.str_ability = temp;
-				}
-
-				// 覚醒アビリティ
-				if ($(this).prev().children().text().trim() == "覚醒アビリティ") {
-					let temp = $(this).children("ul").text().trim().replaceAll("\n\n", "\n").replaceAll("?", "").replaceAll("？", "");
-					// format
-					temp = temp.replaceAll(" ", "、").replaceAll("\s", "、").replaceAll("\r", "、").replaceAll("　", "、");
-					temp = temp.replace("\n", "@").replaceAll("\n", "、").replaceAll("@", "\n").replaceAll("、、", "、").replaceAll("%", "％");
-					temp = temp.replaceAll("*1", "*").replaceAll("*2", "*").replaceAll("*3", "*").replaceAll("*4", "*").replaceAll("*5", "*")
-					temp = temp.replaceAll("*6", "*").replaceAll("*7", "*").replaceAll("*8", "*").replaceAll("*9", "*").replaceAll("*0", "*").replaceAll("*", "");
-					newData.str_ability_aw = temp;
-				}
-
-				// スキル
-				if ($(this).prev().children().text().trim() == "スキル") {
-					let skilList = [], textList = [];
-					skilList = $(this).children("table").html().tableToArray();
-
-					// get skill name & effect
-					for (let i in skilList) {
-						for (let j in skilList[i]) {
-							if (skilList[i][j] == "編\n集" || skilList[i][j].toUpperCase() == "LV" || skilList[i][j] == "" || skilList[i][j] == "備考"
-								|| skilList[i][j].indexOf("使用までの") != -1 || skilList[i][j] == "所持ユニット"
-								|| skilList[0][j] == "!" || skilList[i][0] == "!") {
-								skilList[i][j] = "!";
-							}
-						}
-					}
-					// remove non-skill
-					for (let i in skilList) {
-						if (skilList[i].indexOf("スキル名") != -1) {
-							skilList[i] = [];
-						}
-						let j;
-						while ((j = skilList[i].indexOf("!")) != -1) {
-							skilList[i].splice(j, 1);
-						}
-					}
-					// remove empty
-					for (let i = 0; i < skilList.length; i++) {
-						if (skilList[i].length == 0) {
-							skilList.splice(i, 1);
-							i--;
-						}
-					}
-					// remove same skill (lv1~lv4)
-					for (let i = 0; i < skilList.length; i++) {
-						if (i < skilList.length - 1 && skilList[i][0] == skilList[i + 1][0]) {
-							skilList.splice(i, 1);
-							i--;
-						}
-					}
-					// set textList
-					for (let i in skilList) {
-						let temp = skilList[i][1].trim().replaceAll("?", "").replaceAll("？", "");
-						temp = temp.replaceAll(" ", "、").replaceAll("\s", "、").replaceAll("\r", "、").replaceAll("\n", "、").replaceAll("　", "、").replaceAll("、、", "、").replaceAll("%", "％");
-						temp = temp.replaceAll("*1", "*").replaceAll("*2", "*").replaceAll("*3", "*").replaceAll("*4", "*").replaceAll("*5", "*").replaceAll("*6", "*").replaceAll("*7", "*").replaceAll("*8", "*").replaceAll("*9", "*").replaceAll("*0", "*").replaceAll("*", "");
-						textList.push(skilList[i][0] + "\n" + temp);
-					}
-					//if (_debug) console.log(skilList);
-
-					// put array into skill data
-					if (textList.length != 0) {
-						newData.str_skill = textList.join("\n");
-					}
-				}
-
-				// スキル覚醒
-				if ($(this).prev().children().text().trim() == "スキル覚醒") {
-					let skilList = [], textList = [], textList_aw = [];
-					skilList = $(this).children("table").html().tableToArray();
-
-					// get skill name & effect
-					for (let i in skilList) {
-						for (let j in skilList[i]) {
-							if (skilList[i][j] == "編\n集" || skilList[i][j].toUpperCase() == "LV" || skilList[i][j] == "" || skilList[i][j] == "備考"
-								|| skilList[i][j].indexOf("使用までの") != -1 || skilList[i][j].indexOf("初動まで") != -1 || skilList[i][j].indexOf("回復まで") != -1 || skilList[i][j] == "所持ユニット"
-								|| skilList[0][j] == "!" || skilList[i][0] == "!") {
-								skilList[i][j] = "!";
-							}
-						}
-					}
-					// remove non-skill
-					for (let i in skilList) {
-						if (skilList[i].indexOf("スキル名") != -1 || skilList[i].indexOf("覚醒スキル名") != -1) {
-							skilList[i] = [];
-						}
-						let j;
-						while ((j = skilList[i].indexOf("!")) != -1) {
-							skilList[i].splice(j, 1);
-						}
-					}
-					// remove empty
-					for (let i = 0; i < skilList.length; i++) {
-						if (skilList[i].length == 0) {
-							skilList.splice(i, 1);
-							i--;
-						}
-					}
-					// remove same skill (lv1~lv4)
-					for (let i = 0; i < skilList.length; i++) {
-						if (i < skilList.length - 1 && skilList[i][1] == skilList[i + 1][1]) {
-							skilList.splice(i, 1);
-							i--;
-						}
-					}
-					// set textList
-					for (let i in skilList) {
-						let temp = skilList[i][2].trim().replaceAll("?", "").replaceAll("？", "");
-						temp = temp.replaceAll(" ", "、").replaceAll("\s", "、").replaceAll("\r", "、").replaceAll("\n", "、").replaceAll("　", "、").replaceAll("、、", "、").replaceAll("%", "％");
-						temp = temp.replaceAll("*1", "*").replaceAll("*2", "*").replaceAll("*3", "*").replaceAll("*4", "*").replaceAll("*5", "*").replaceAll("*6", "*").replaceAll("*7", "*").replaceAll("*8", "*").replaceAll("*9", "*").replaceAll("*0", "*").replaceAll("*", "");
-						if (skilList[i][0] == "通常") {
-							textList.push(skilList[i][1] + "\n" + temp);
-						}
-						else if (skilList[i][0] == "覚醒") {
-							textList_aw.push(skilList[i][1] + "\n" + temp);
-						}
-					}
-
-					// put array into skill data
-					if (textList.length != 0) {
-						newData.str_skill = textList.join("\n");
-					}
-					if (textList_aw.length != 0) {
-						newData.str_skill_aw = textList_aw.join("\n");
-					}
-				}
-
-				newData.str_skill = newData.str_skill.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
-				newData.str_skill_aw = newData.str_skill_aw.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
-				newData.str_ability = newData.str_ability.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
-				newData.str_ability_aw = newData.str_ability_aw.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
-
-				if (newData.str_ability.indexOf("ランダム") != -1) {
-					newData.str_ability = newData.str_ability.replaceAll("、/、", "、");
-					newData.str_ability = newData.str_ability.replaceAll("発動、", "発動：");
-					newData.str_ability = newData.str_ability.replaceAll("回復、", "回復/");
-					newData.str_ability = newData.str_ability.replaceAll("回避、", "回避/");
-					newData.str_ability = newData.str_ability.replaceAll("攻撃、", "攻撃/");
-					newData.str_ability = newData.str_ability.replaceAll("連射、", "連射/");
-					newData.str_ability = newData.str_ability.replaceAll("無視、", "無視/");
-					newData.str_ability = newData.str_ability.replaceAll("入手、", "入手/");
-					newData.str_ability = newData.str_ability.replaceAll("倍、", "倍/");
-					newData.str_ability = newData.str_ability.replaceAll("硬直なし、", "硬直なし/");
-				}
-				if (newData.str_ability_aw.indexOf("ランダム") != -1) {
-					newData.str_ability_aw = newData.str_ability_aw.replaceAll("、/、", "、");
-					newData.str_ability_aw = newData.str_ability_aw.replaceAll("発動、", "発動：");
-					newData.str_ability_aw = newData.str_ability_aw.replaceAll("回復、", "回復/");
-					newData.str_ability_aw = newData.str_ability_aw.replaceAll("回避、", "回避/");
-					newData.str_ability_aw = newData.str_ability_aw.replaceAll("攻撃、", "攻撃/");
-					newData.str_ability_aw = newData.str_ability_aw.replaceAll("連射、", "連射/");
-					newData.str_ability_aw = newData.str_ability_aw.replaceAll("無視、", "無視/");
-					newData.str_ability_aw = newData.str_ability_aw.replaceAll("入手、", "入手/");
-					newData.str_ability_aw = newData.str_ability_aw.replaceAll("倍、", "倍/");
-					newData.str_ability_aw = newData.str_ability_aw.replaceAll("硬直なし、", "硬直なし/");
-				}
+	return new Promise(function (resolve, reject) {
+		// callback
+		let requestCallBack = function (error, response, body) {
+			if (error || !body) {
+				console.log(error);
+				reject(error);
+				return null;
 			}
-		});
-		if (_debug) console.log(newData);
-		// 新增腳色資料
-		addCharaData(newData);
-		crawlerCount--;
-	}
-	request.get(urlPath, { encoding: "binary" }, requestCallBack);
+
+			var html = iconv.decode(new Buffer(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
+			let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
+
+			var newData = createCharaData();
+			let rarity = ["ゴールド", "サファイア", "プラチナ", "ブラック", "ゴ｜ルド"];
+
+			// 搜尋所有表格
+			$("div").each(function (i, iElem) {
+
+				var buffer = $(this).attr("id");
+				if (buffer && buffer.indexOf("content_block_") != -1 && buffer.indexOf("-") != -1) {
+
+					//console.log($(this).attr("id"));
+					//console.log($(this).children("table").eq(0).attr("id"));
+
+					// ステータス
+					if ($(this).prev().children().text().trim() == "ステータス") {
+						$(this).children("table").eq(0).children("tbody").children("tr").children().children().each(function (j, jElem) {
+							// 名前
+							if ($(this).attr("href") == urlPath) {
+								newData.str_name = $(this).text().trim();
+							}
+							// クラス
+							let temp = $(this).attr("href");
+							if (typeof (temp) != "undefined" && temp.indexOf("class") != -1) {
+								newData.data_class = $(this).text().trim();
+							}
+							// レア
+							if (rarity.indexOf($(this).text().trim()) != -1) {
+								let temp = $(this).text().trim();
+								newData.data_rarity = temp == "ゴ｜ルド" ? "ゴールド" : temp;
+							}
+						});
+					}
+
+					// アビリティ
+					if ($(this).prev().children().text().trim() == "アビリティ") {
+						let temp = $(this).children("ul").text().trim().replaceAll("\n\n", "\n").replaceAll("?", "").replaceAll("？", "");
+						// format
+						temp = temp.replaceAll(" ", "、").replaceAll("\s", "、").replaceAll("\r", "、").replaceAll("　", "、");
+						temp = temp.replace("\n", "@").replaceAll("\n", "、").replaceAll("@", "\n").replaceAll("、、", "、").replaceAll("%", "％");
+						temp = temp.replaceAll("*1", "*").replaceAll("*2", "*").replaceAll("*3", "*").replaceAll("*4", "*").replaceAll("*5", "*");
+						temp = temp.replaceAll("*6", "*").replaceAll("*7", "*").replaceAll("*8", "*").replaceAll("*9", "*").replaceAll("*0", "*").replaceAll("*", "");
+						if (temp.indexOf("説明") == -1) {
+							newData.str_ability = temp;
+						}
+					}
+
+					// 覚醒アビリティ
+					if ($(this).prev().children().text().trim() == "覚醒アビリティ") {
+						let temp = $(this).children("ul").text().trim().replaceAll("\n\n", "\n").replaceAll("?", "").replaceAll("？", "");
+						// format
+						temp = temp.replaceAll(" ", "、").replaceAll("\s", "、").replaceAll("\r", "、").replaceAll("　", "、");
+						temp = temp.replace("\n", "@").replaceAll("\n", "、").replaceAll("@", "\n").replaceAll("、、", "、").replaceAll("%", "％");
+						temp = temp.replaceAll("*1", "*").replaceAll("*2", "*").replaceAll("*3", "*").replaceAll("*4", "*").replaceAll("*5", "*")
+						temp = temp.replaceAll("*6", "*").replaceAll("*7", "*").replaceAll("*8", "*").replaceAll("*9", "*").replaceAll("*0", "*").replaceAll("*", "");
+						if (temp.indexOf("説明") == -1) {
+							newData.str_ability_aw = temp;
+						}
+					}
+
+					// スキル
+					if ($(this).prev().children().text().trim() == "スキル") {
+						let skilList = [], textList = [];
+						skilList = $(this).children("table").html().tableToArray();
+
+						// get skill name & effect
+						for (let i in skilList) {
+							for (let j in skilList[i]) {
+								if (skilList[i][j] == "編\n集" || skilList[i][j].toUpperCase() == "LV" || skilList[i][j] == "" || skilList[i][j] == "備考"
+									|| skilList[i][j].indexOf("使用までの") != -1 || skilList[i][j] == "所持ユニット"
+									|| skilList[0][j] == "!" || skilList[i][0] == "!") {
+									skilList[i][j] = "!";
+								}
+							}
+						}
+						// remove non-skill
+						for (let i in skilList) {
+							if (skilList[i].indexOf("スキル名") != -1 || skilList[i].indexOf("効果説明") != -1) {
+								skilList[i] = [];
+							}
+							let j;
+							while ((j = skilList[i].indexOf("!")) != -1) {
+								skilList[i].splice(j, 1);
+							}
+						}
+						// remove empty
+						for (let i = 0; i < skilList.length; i++) {
+							if (skilList[i].length == 0) {
+								skilList.splice(i, 1);
+								i--;
+							}
+						}
+						// remove same skill (lv1~lv4)
+						for (let i = 0; i < skilList.length; i++) {
+							if (i < skilList.length - 1 && skilList[i][0] == skilList[i + 1][0]) {
+								skilList.splice(i, 1);
+								i--;
+							}
+						}
+						// set textList
+						for (let i in skilList) {
+							let temp = skilList[i][1].trim().replaceAll("?", "").replaceAll("？", "");
+							temp = temp.replaceAll(" ", "、").replaceAll("\s", "、").replaceAll("\r", "、").replaceAll("\n", "、").replaceAll("　", "、").replaceAll("、、", "、").replaceAll("%", "％");
+							temp = temp.replaceAll("*1", "*").replaceAll("*2", "*").replaceAll("*3", "*").replaceAll("*4", "*").replaceAll("*5", "*").replaceAll("*6", "*").replaceAll("*7", "*").replaceAll("*8", "*").replaceAll("*9", "*").replaceAll("*0", "*").replaceAll("*", "");
+							textList.push(skilList[i][0] + "\n" + temp);
+						}
+						//if (_debug) console.log(skilList);
+
+						// put array into skill data
+						if (textList.length != 0) {
+							newData.str_skill = textList.join("\n");
+						}
+					}
+
+					// スキル覚醒
+					if ($(this).prev().children().text().trim() == "スキル覚醒") {
+						let skilList = [], textList = [], textList_aw = [];
+						skilList = $(this).children("table").html().tableToArray();
+
+						// get skill name & effect
+						for (let i in skilList) {
+							for (let j in skilList[i]) {
+								if (skilList[i][j] == "編\n集" || skilList[i][j].toUpperCase() == "LV" || skilList[i][j] == "" || skilList[i][j] == "備考"
+									|| skilList[i][j].indexOf("使用までの") != -1 || skilList[i][j].indexOf("初動まで") != -1 || skilList[i][j].indexOf("回復まで") != -1 || skilList[i][j] == "所持ユニット"
+									|| skilList[0][j] == "!" || skilList[i][0] == "!") {
+									skilList[i][j] = "!";
+								}
+							}
+						}
+						// remove non-skill
+						for (let i in skilList) {
+							if (skilList[i].indexOf("スキル名") != -1 || skilList[i].indexOf("覚醒スキル名") != -1 || skilList[i].indexOf("効果説明") != -1) {
+								skilList[i] = [];
+							}
+							let j;
+							while ((j = skilList[i].indexOf("!")) != -1) {
+								skilList[i].splice(j, 1);
+							}
+						}
+						// remove empty
+						for (let i = 0; i < skilList.length; i++) {
+							if (skilList[i].length == 0) {
+								skilList.splice(i, 1);
+								i--;
+							}
+						}
+						// remove same skill (lv1~lv4)
+						for (let i = 0; i < skilList.length; i++) {
+							if (i < skilList.length - 1 && skilList[i][1] == skilList[i + 1][1]) {
+								skilList.splice(i, 1);
+								i--;
+							}
+						}
+						// set textList
+						for (let i in skilList) {
+							let temp = skilList[i][2].trim().replaceAll("?", "").replaceAll("？", "");
+							temp = temp.replaceAll(" ", "、").replaceAll("\s", "、").replaceAll("\r", "、").replaceAll("\n", "、").replaceAll("　", "、").replaceAll("、、", "、").replaceAll("%", "％");
+							temp = temp.replaceAll("*1", "*").replaceAll("*2", "*").replaceAll("*3", "*").replaceAll("*4", "*").replaceAll("*5", "*").replaceAll("*6", "*").replaceAll("*7", "*").replaceAll("*8", "*").replaceAll("*9", "*").replaceAll("*0", "*").replaceAll("*", "");
+							if (skilList[i][0] == "通常") {
+								textList.push(skilList[i][1] + "\n" + temp);
+							}
+							else if (skilList[i][0] == "覚醒") {
+								textList_aw.push(skilList[i][1] + "\n" + temp);
+							}
+						}
+
+						// put array into skill data
+						if (textList.length != 0) {
+							newData.str_skill = textList.join("\n");
+						}
+						if (textList_aw.length != 0) {
+							newData.str_skill_aw = textList_aw.join("\n");
+						}
+					}
+
+					// 統一格式
+					newData.str_skill = newData.str_skill.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
+					newData.str_skill_aw = newData.str_skill_aw.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
+					newData.str_ability = newData.str_ability.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
+					newData.str_ability_aw = newData.str_ability_aw.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
+
+					if (newData.str_ability.indexOf("ランダム") != -1) {
+						newData.str_ability = newData.str_ability.replaceAll("、/、", "、");
+						newData.str_ability = newData.str_ability.replaceAll("発動、", "発動：");
+						newData.str_ability = newData.str_ability.replaceAll("回復、", "回復/");
+						newData.str_ability = newData.str_ability.replaceAll("回避、", "回避/");
+						newData.str_ability = newData.str_ability.replaceAll("攻撃、", "攻撃/");
+						newData.str_ability = newData.str_ability.replaceAll("連射、", "連射/");
+						newData.str_ability = newData.str_ability.replaceAll("無視、", "無視/");
+						newData.str_ability = newData.str_ability.replaceAll("入手、", "入手/");
+						newData.str_ability = newData.str_ability.replaceAll("倍、", "倍/");
+						newData.str_ability = newData.str_ability.replaceAll("硬直なし、", "硬直なし/");
+					}
+					if (newData.str_ability_aw.indexOf("ランダム") != -1) {
+						newData.str_ability_aw = newData.str_ability_aw.replaceAll("、/、", "、");
+						newData.str_ability_aw = newData.str_ability_aw.replaceAll("発動、", "発動：");
+						newData.str_ability_aw = newData.str_ability_aw.replaceAll("回復、", "回復/");
+						newData.str_ability_aw = newData.str_ability_aw.replaceAll("回避、", "回避/");
+						newData.str_ability_aw = newData.str_ability_aw.replaceAll("攻撃、", "攻撃/");
+						newData.str_ability_aw = newData.str_ability_aw.replaceAll("連射、", "連射/");
+						newData.str_ability_aw = newData.str_ability_aw.replaceAll("無視、", "無視/");
+						newData.str_ability_aw = newData.str_ability_aw.replaceAll("入手、", "入手/");
+						newData.str_ability_aw = newData.str_ability_aw.replaceAll("倍、", "倍/");
+						newData.str_ability_aw = newData.str_ability_aw.replaceAll("硬直なし、", "硬直なし/");
+					}
+				}
+			});
+			if (_debug) console.log(newData);
+			// 新增腳色資料
+			addCharaData(newData);
+			resolve();
+		}
+		request.get(urlPath, { encoding: "binary" }, requestCallBack);
+	});
 };
 // 爬所有腳色
-var delay = 0;
-var crawlerCount = 0;
+var allCharaUrl = [];
 const allCharaDataCrawler = function () {
 	console.log("AllCharaData Crawling...");
 
@@ -575,8 +601,9 @@ const allCharaDataCrawler = function () {
 			if (buffer && $(this).parent().is("td") && $(this).prev().prev().children().is("img")) {
 				//console.log($(this).text());
 				// 延遲呼叫腳色爬蟲
-				setTimeout(function () { charaDataCrawler(buffer); }, delay * 50);
-				delay++;
+				// setTimeout(function () { charaDataCrawler(buffer); }, delay * 50);
+				allCharaUrl.push(buffer);
+				//delay++;
 			}
 		});
 	}
@@ -584,7 +611,35 @@ const allCharaDataCrawler = function () {
 	request.get("http://seesaawiki.jp/aigis/d/%a5%b5%a5%d5%a5%a1%a5%a4%a5%a2", { encoding: "binary" }, requestCallBack);
 	request.get("http://seesaawiki.jp/aigis/d/%a5%d7%a5%e9%a5%c1%a5%ca", { encoding: "binary" }, requestCallBack);
 	request.get("http://seesaawiki.jp/aigis/d/%a5%d6%a5%e9%a5%c3%a5%af", { encoding: "binary" }, requestCallBack);
+
+	setTimeout(async function () {
+		let promiseArray = [];
+		// 50 thread
+		for (let i = 0; i < 50; i++) {
+			promiseArray.push(charaDataCrawlerBot());
+		}
+		await Promise.all(promiseArray);
+
+		// save database
+		saveCharaDataBase();
+	}, 3000);
 }
+// 爬蟲BOT
+const charaDataCrawlerBot = function () {
+	return new Promise(async function (resolve, reject) {
+		while (allCharaUrl.length > 0) {
+			try {
+				var urlPath = allCharaUrl.pop();
+				await charaDataCrawler(urlPath);
+			}
+			catch (err) {
+				reject(err);
+			}
+		}
+		resolve();
+	});
+}
+
 // 爬職業
 const classDataCrawler = function () {
 	console.log("ClassData Crawling...");
@@ -615,6 +670,10 @@ const classDataCrawler = function () {
 						var i = str.indexOf("\/");
 						if (i != -1) {
 							str = str.substring(0, i);
+						}
+
+						if (str.trim() == "" || str.indexOf("編集") != -1) {
+							return;
 						}
 
 						var newData = createClassData();
@@ -828,7 +887,12 @@ const checkCharaData = function (name) {
 }
 // 儲存資料
 const saveCharaDataBase = function () {
-	console.log("CharaDataBase saving..." + crawlerCount);
+	console.log("CharaDataBase saving...");
+
+	// sort
+	charaDataBase.sort(function (A, B) {
+		return A.str_name.localeCompare(B.str_name)
+	})
 
 	// object to json
 	var json = JSON.stringify(charaDataBase);
@@ -846,10 +910,11 @@ const saveCharaDataBase = function () {
 	console.log("CharaDataBase saved!");
 }
 // 讀取資料
-const loadCharaDataBase = async function () {
+const loadCharaDataBase = async function (charaDB) {
+	if (typeof (charaDB) == "undefined") charaDB = "CharaDataBase.json";
 	console.log("CharaDataBase loading...");
 	try {
-		let data = await asyncReadFile("CharaDataBase.json");
+		let data = await asyncReadFile(charaDB);
 
 		let count = 0;
 		let obj = [];
@@ -1051,6 +1116,11 @@ const checkClassData = function (name) {
 const saveClassDataBase = function () {
 	console.log("ClassDataBase saving...");
 
+	// sort
+	classDataBase.sort(function (A, B) {
+		return A.className.localeCompare(B.className)
+	})
+
 	// object to json
 	var json = JSON.stringify(classDataBase);
 
@@ -1177,20 +1247,15 @@ const createTemplateMsg = function (altText, label, url) {
 }
 // DROPBOX: encodeURI(url);
 // Wiki   : encodeURI_JP(url);
-// 定型文清單
-//var autoResponseList = [];
-// 讀取清單
-/*const loadAutoResponseList = function() {
-	autoResponseList = [];
-
-	dbox.listDir("AutoResponse", "folder")
-	.then(function(msgArray) {
-		for (var i = 0; i <msgArray.length; i++) {
-			autoResponseList.push(msgArray[i]);
-		}
-	});
-}*/
-
+// line debug function
+const debugPush = function (pMsg) {
+	let linebot = require("linebot");
+	linebot({
+		channelId: 1612493892,
+		channelSecret: "ea71aeca4c54c6aa270df537fbab3ee3",
+		channelAccessToken: "GMunTSrUWF1vRwdNxegvepxHEQWgyaMypbtyPluxqMxoTqq8QEGJWChetLPvlV0DJrY4fvphSUT58vjVQVLhndlfk2JKQ/sbzT6teG1qUUUEVpVfqs5KGzzn3NUngYMw9/lvvU0QZVGBqPS6wKVxrQdB04t89/1O/w1cDnyilFU="
+	}).push("U9eefeba8c0e5f8ee369730c4f983346b", pMsg);
+}
 
 
 
@@ -1211,43 +1276,24 @@ const asyncReadFile = function (filePath) {
 
 // 外部呼叫
 module.exports = {
-	init: async function () {
+	init: async function (charaDB) {
 
 		let p1 = loadClassDataBase();
-		let p2 = loadCharaDataBase();
+		let p2 = loadCharaDataBase(charaDB);
 		await Promise.all([p1, p2]);
 
 		return;
 	},
 
 	classDataCrawler: function () { return classDataCrawler(); },
-	charaDataCrawler: function (urlPath) { return charaDataCrawler(urlPath); },
-	allCharaDataCrawler: function () { return allCharaDataCrawler(); },
-
 	saveClassDataBase: function () { return saveClassDataBase(); },
-	saveCharaDataBase: function () { return saveCharaDataBase(); },
+
+	//charaDataCrawler: function (urlPath) { return charaDataCrawler(urlPath); },
+	allCharaDataCrawler: function () { return allCharaDataCrawler(); },
+	//saveCharaDataBase: function () { return saveCharaDataBase(); },
 
 	searchDataAndReply: function (msg, replyFunc) { return searchDataAndReply(msg, replyFunc); },
 	stampReply: function (msg, replyFunc) { return stampReply(msg, replyFunc); },
-
-	sort: function () {
-
-		let nameList = [];
-		for (let i in charaDataBase) {
-			nameList.push(charaDataBase[i].str_name);
-		}
-		nameList.sort();
-
-		var newCharaDataBase = [];
-		for (let i in nameList) {
-			let name = nameList[i];
-			let index = checkCharaData(name);
-			newCharaDataBase.push(charaDataBase[index]);
-		}
-		charaDataBase = newCharaDataBase;
-
-		return 0;
-	},
 
 	_debug: function () { return _debug; },
 	_encodeURI_JP: function (url) { return encodeURI_JP(url); }
@@ -1256,7 +1302,7 @@ module.exports = {
 
 
 /*
-const debugFunc = async function() {
+const debugFunc = async function () {
 	await module.exports.init();
 	await imgur.init();
 	_debug = true;
@@ -1264,8 +1310,6 @@ const debugFunc = async function() {
 		console.log(obj);
 	});
 }
-
-
 
 setTimeout(debugFunc, 1 * 100);//*/
 
