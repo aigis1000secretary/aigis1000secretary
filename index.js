@@ -6,18 +6,16 @@
 
 // commit
 /*
-	0.4.3.4
-	修正定型文
+	0.5.0.21
 */
 
 // 初始化
 const anna = require("./anna.js");
 const imgur = require("./imgur.js");
 const express = require("express");
-// line bot
-const linebot = require("linebot");
 
 // line bot
+const linebot = require("linebot");
 // 登入參數
 const bot = linebot({
 	channelId: 1612493892,
@@ -32,15 +30,22 @@ const server = app.listen(process.env.PORT || 8080, function () {
 	let port = server.address().port;
 	console.log("App now running on port", port);
 });
+const adminstrator = ["U9eefeba8c0e5f8ee369730c4f983346b"];
+// remote system
+let botMode = "anna";
+let remoteTarget = "";
+let remoteTargetList = [];
+let remoter = "";
 
 // bot監聽
 const bot_on = function () {
 
+	// wellcome msg
 	bot.on("memberJoined", function (event) {
-		if (anna._debug()) console.log(event);
+		anna.debugLog(event);
 		// push
 		var pushFunc = function (pMsg) {
-			if (anna._debug()) console.log(pMsg);
+			anna.debugLog(pMsg);
 
 			if (event.source.type == "group") {
 				bot.push(event.source.groupId, pMsg);
@@ -49,94 +54,153 @@ const bot_on = function () {
 			}
 		};
 		// 呼叫定型文
-		if (anna.stampReply("新人", pushFunc)) {
+		if (anna.replyStamp("新人", pushFunc)) {
 			return;
 		}
 
 	});
 
+	// normal msg
 	bot.on("message", async function (event) {
-		if (anna._debug()) console.log(event);
+		anna.debugLog(event);
 
 		// 文字事件
 		if (event.message.type == "text") {
 			// 取出文字內容
-			var msg = event.message.text.split("\n")[0];
-			if (anna._debug()) console.log(msg);
-
+			var msg = event.message.text.trim()
+			// get source id
+			let userId = typeof (event.source.userId) == "undefined" ? adminstrator[0] : event.source.userId;
+			anna.debugLog(msg);
 			// define reply function
 			var replyFunc = function (rMsg) {
-				if (anna._debug()) console.log(rMsg);
+				anna.debugLog(rMsg);
 				event.reply(rMsg)
 					.then(function (data) {
-						if (anna._debug()) console.log(data);
+						anna.debugLog(data);
 					})
 					.catch(function (error) {
-						if (anna._debug()) console.log(error);
+						anna.debugLog(error);
 					});
 			};
 
-			// normal response
-			if (msg == "安娜") {
-				replyFunc("是的！王子？");
-				return;
+
+			// remote system
+			await event.source.profile().then(function (profile) {
+				remoteTargetList[userId] = profile.displayName;
+				if (event.source.type == "group") {
+					remoteTargetList[event.source.groupId] = msg.split("\n");
+				} else if (event.source.type == "room") {
+					remoteTargetList[event.source.roomId] = msg.split("\n");
+				}
+			}).catch(function (error) {
+				anna.debugLog(error);
+			});
+
+			if (adminstrator.indexOf(userId) != -1) {
+				if (msg == "remote") {
+					// sort by ID
+					let keyList = [];
+					for (let key in remoteTargetList) {
+						keyList.push(key);
+					}
+					keyList.sort(function (A, B) {
+						return A.localeCompare(B);
+					});
+
+					for (let i in keyList) {
+						let key = keyList[i];
+						let str = key + ":\n\t" + remoteTargetList[key];
+						console.log(str);
+						await bot.push(userId, str);
+					}
+					return;
+
+				} else if (msg == "remote off") {
+					botMode = "anna";
+					remoteTarget = "";
+					remoter = "";
+					replyFunc("remote off");
+					return;
+
+				} else if (msg.indexOf("remote ") == 0) {
+					let _target = msg.split(" ")[1];
+					for (let uID in remoteTargetList) {
+						if (remoteTargetList[uID].indexOf(_target) != -1 || _target == uID) {
+							botMode = "remote";
+							remoteTarget = uID;
+							remoter = userId;
+							replyFunc("remote on " + remoteTargetList[uID]);
+							break;
+						}
+					}
+					return;
+				}
 			}
-
-			// get source id
-			let userId = ""
-			if (typeof (event.source.userId) == "undefined") {
-				userId = "U9eefeba8c0e5f8ee369730c4f983346b";
-			} else {
-				userId = event.source.userId;
-			}
-
-			// 身分驗證
-			if (userId == "U9eefeba8c0e5f8ee369730c4f983346b") {
-
-				if (msg.toUpperCase().indexOf("DEBUG") != -1) {
-					msg = "ANNA DEBUG";
-				} else if (msg.toUpperCase().indexOf("我婆") != -1) {
-					msg = "刻詠の風水士リンネ";
+			// remote mode
+			if (botMode == "remote") {
+				if (event.source.type == "user") {
+					if (userId == remoter) {
+						bot.push(remoteTarget, msg);
+						return;
+					} else if (userId == remoteTarget) {
+						bot.push(remoter, msg);
+						return;
+					}
+				} else if (event.source.groupId == remoteTarget || event.source.roomId == remoteTarget) {
+					bot.push(remoter, remoteTargetList[userId] + ": " + msg);
+					return;
 				}
 			}
 
-			// in user chat
-			if (event.source.type == "user" && msg.toUpperCase().indexOf("ANNA ") == -1 && msg.indexOf("安娜 ") == -1) {
-				msg = "ANNA " + msg;
-			}
+			// bot mode
+			if (botMode == "anna") {
+				// normal response
+				if (msg == "安娜") {
+					replyFunc("是的！王子？");
+					return;
+				}
 
-			// normal auto-response
-			if (msg.toUpperCase().indexOf("ANNA ") == 0 || msg.indexOf("安娜 ") == 0) {
-				// 判讀指令
-				anna.searchDataAndReply(msg, replyFunc);
+				// 身分驗證
+				if (adminstrator.indexOf(userId) == -1) {
+					if (msg.toUpperCase().indexOf("DEBUG") != -1) {
+						msg = "";
+					}
+				} else if (adminstrator.indexOf(userId) == 0) {
+					if (msg.toUpperCase().indexOf("我婆") != -1) {
+						msg = "刻詠の風水士リンネ";
+					}
+				}
+
+				// in user chat
+				if (event.source.type == "user" && msg.toUpperCase().indexOf("ANNA ") == -1 && msg.indexOf("安娜 ") == -1) {
+					msg = "ANNA " + msg;
+				}
+
+				// normal auto-response
+				if (msg.toUpperCase().indexOf("ANNA ") == 0 || msg.indexOf("安娜 ") == 0) {
+					// 判讀指令
+					anna.replyAI(msg, replyFunc);
+					return;
+				}
+
+				// 呼叫定型文圖片
+				if (anna.replyStamp(msg, replyFunc)) {
+					return;
+				}
+
+				// egg
+				if (Math.floor(Math.random() * 10000) == 0) {
+					replyFunc("ちくわ大明神");
+					return;
+				}
+
+				// 無視...
+				anna.debugLog("Not a command");
 				return;
 			}
 
-			// 呼叫定型文圖片
-			if (anna.stampReply(msg, replyFunc)) {
-				return;
-			}
-
-			// egg
-			if (Math.floor(Math.random() * 10000) == 0) {
-				replyFunc("ちくわ大明神");
-				return;
-			}
-
-			// 無視...
-			if (anna._debug()) console.log("Not a command");
-			return "";
 		}
 	});
-}
-// line debug function
-const debugPush = function (pMsg) {
-	let linebot = require("linebot");
-	linebot({
-		channelId: 1612493892,
-		channelSecret: "ea71aeca4c54c6aa270df537fbab3ee3",
-		channelAccessToken: "GMunTSrUWF1vRwdNxegvepxHEQWgyaMypbtyPluxqMxoTqq8QEGJWChetLPvlV0DJrY4fvphSUT58vjVQVLhndlfk2JKQ/sbzT6teG1qUUUEVpVfqs5KGzzn3NUngYMw9/lvvU0QZVGBqPS6wKVxrQdB04t89/1O/w1cDnyilFU="
-	}).push("U9eefeba8c0e5f8ee369730c4f983346b", pMsg);
 }
 
 
@@ -149,7 +213,7 @@ const main = async function () {
 
 	// 開始監聽
 	bot_on();
-	console.log("Anna secretary online");
+	console.log("=====*****Anna secretary online*****=====");
 }; main();
 
 

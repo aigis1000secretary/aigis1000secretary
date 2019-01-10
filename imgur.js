@@ -365,6 +365,16 @@ imgur.dataBase.findImageByNameTag = function (imageName, imageTag) {
 	}
 	return result;
 }
+imgur.dataBase.findImageByFileName = function (imageName) {
+	// search album by tag
+	var result = [];
+	for (let i in imgur.dataBase.images) {
+		if (imgur.dataBase.images[i].fileName == imageName) {
+			result.push(imgur.dataBase.images[i]);
+		}
+	}
+	return result;
+}
 
 // 儲存資料
 imgur.dataBase.saveDatabase = function () {
@@ -388,33 +398,27 @@ imgur.dataBase.saveDatabase = function () {
 
 
 
-module.exports = {
-	account: imgur.account,
-	image: imgur.image,
-	dataBase: imgur.dataBase,
+module.exports = imgur;
+imgur.init = async function () {
+	// access token updata
+	await imgur.oauth2.token()
+		.then(function (jsonResponse) {
+			console.log("IMGUR_ACCESS_TOKEN updata complete!");
+		})
+		.catch(function (error) {
+			console.log("IMGUR_ACCESS_TOKEN updata error!");
+			console.log(error);
+		});
 
-	init: async function () {
-		// access token updata
-		await imgur.oauth2.token()
-			.then(function (jsonResponse) {
-				console.log("IMGUR_ACCESS_TOKEN updata complete!");
-			})
-			.catch(function (error) {
-				console.log("IMGUR_ACCESS_TOKEN updata error!");
-				console.log(error);
-			});
+	await imgur.account.allImages()
+		.then(imgur.dataBase.loadImages)
+		.catch(function (error) {
+			console.log("Imgur images load error!");
+			console.log(error);
+		});
 
-		await imgur.account.allImages()
-			.then(imgur.dataBase.loadImages)
-			.catch(function (error) {
-				console.log("Imgur images load error!");
-				console.log(error);
-			});
-
-		return;
-	}
+	return;
 }
-
 
 
 

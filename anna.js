@@ -5,12 +5,14 @@ const request = require("request");
 const iconv = require("iconv-lite");
 const cheerio = require("cheerio");
 // 資料庫
-const fs = require("fs");
-const dbox = require("./dbox.js");
+//const fs = require("fs");
+//const dbox = require("./dbox.js");
+const database = require("./database.js");
 const imgur = require("./imgur.js");
 
 var _debug = false;
-var _version = "0.4.3.4";
+var _debugPush = false;
+var _version = "0.5.0.21";
 // 主版本號：當你做了不兼容的API修改
 // 次版本號：當你做了向下兼容的功能性新增
 // 修訂號：當你做了向下兼容的問題修正
@@ -26,30 +28,34 @@ String.prototype.replaceAll = function (s1, s2) {
 
 // line bot
 // 搜尋資料
-const searchDataAndReply = async function (msg, replyFunc) {
+const replyAI = async function (rawMsg, replyFunc) {
 	// 指令:
-	if (_debug) console.log("msg: <" + msg + ">");
+	let msg2 = rawMsg.indexOf("\n") == -1 ? "" : rawMsg.substring(rawMsg.indexOf("\n") + 1);
+	rawMsg = rawMsg.split("\n")[0];
+
+	debugLog("rawMsg: <" + rawMsg + ">");
 
 	// 分析命令
-	let msgs = msg.split(" ");
+	let msgs = rawMsg.split(" ");
 	if (msgs.length < 2) {
 		return false;
 	}
 	let command = msgs[1].toUpperCase().trim();
-	if (_debug) console.log("Command: <" + command + ">");
+	debugLog("Command: <" + command + ">");
 
 	// debug switch
 	if (command == "DEBUG") {
 		_debug = !_debug;
+		_debugPush = !_debugPush;
 		replyFunc("_debug = " + (_debug ? "on" : "off"));
 		return true;
 	}
 
 	// 定型文
 	if (command.length == 1) {
-		if (searchCharacterAndReply(command, false, replyFunc) == 1) {
+		if (searchCharacterReply(command, false, replyFunc) == 1) {
 			return true;
-		} else if (stampReply(command, replyFunc)) {
+		} else if (replyStamp(command, replyFunc)) {
 			// 呼叫定型文圖片
 			return true;
 		} else {
@@ -61,7 +67,7 @@ const searchDataAndReply = async function (msg, replyFunc) {
 		replyFunc("王子太小了，找不到...");
 		return true;
 
-	} else if (command == "醒醒") {
+	} else if (command == "醒醒" || command == "WAKE") {
 		// wake
 		replyFunc("呣喵~?");
 		return true;
@@ -70,28 +76,31 @@ const searchDataAndReply = async function (msg, replyFunc) {
 		// help
 		var replyMsg = "";
 
-		replyMsg += "狀態: 確認目前版本，資料庫資料筆數。\n(>>安娜 狀態)。\n\n";
-		replyMsg += "照片: 上傳角色附圖的網路空間(DropBox)。\n(>>安娜 照片)。\n\n";
-		replyMsg += "工具: 千年戰爭Aigis實用工具。\n(>>安娜 工具)。\n\n";
+		replyMsg += "狀態: 確認目前版本，資料庫資料筆數。\n(>>安娜 狀態)\n\n";
+		replyMsg += "照片: 上傳角色附圖的網路空間(DropBox)。\n(>>安娜 照片)\n\n";
+		replyMsg += "工具: 千年戰爭Aigis實用工具。\n(>>安娜 工具)\n\n";
 		replyMsg += "職業: 列出資料庫現有職業。\n\n";
-		replyMsg += "學習: 用來教會安娜角色的暱稱。\n(>>安娜 學習 NNL:射手ナナリー)。\n\n";
+		replyMsg += "學習: 用來教會安娜角色的暱稱。\n(>>安娜 學習 NNL:射手ナナリー)\n\n";
 
 		replyMsg += "\n";
-
-		replyMsg += "直接輸入稀有度+職業可以搜索角色\n(>>安娜 黑弓)\n\n";
-		replyMsg += "輸入關鍵字可進行模糊搜索&關鍵字搜索\n(>>安娜 NNL)\n(>>安娜 射手ナナリー)";
+		replyMsg += "直接輸入稀有度+職業可以搜索角色\n(>>安娜 黑弓) *推薦使用\n\n";
+		replyMsg += "輸入關鍵字可進行暱稱搜索&模糊搜索\n(>>安娜 NNL)\n(>>安娜 射手ナナリー)";
 
 		if (!_debug) {
 			replyFunc(replyMsg);
 			return true;
 		}
 
-		replyMsg += "\n上傳。";
+		replyMsg += "\n";
+		replyMsg += "忘記: 刪除特定暱稱。\n(>>安娜 忘記 NNL)\n\n";
+		replyMsg += "資料庫: 直接修改資料庫內容。\n(>>資料庫 CharaDataBase NNL.ability_aw)\n\n";
+		replyMsg += "上傳: 手動上傳資料庫更新。\n\n";
+		replyMsg += "更新: 手動上傳資料庫更新。\n\n";
 
 		replyFunc(replyMsg);
 		return true;
 
-	} else if (command == "狀態") {
+	} else if (command == "狀態" || command == "STATU") {
 		// status
 		//loadAutoResponseList();
 		await imgur.account.allImages()
@@ -104,42 +113,21 @@ const searchDataAndReply = async function (msg, replyFunc) {
 		var replyMsg = "";
 
 		replyMsg += "目前版本 v" + _version + "\n";
-		replyMsg += "資料庫內有 " + charaDataBase.length + " 筆角色資料\n";
-		replyMsg += "　　　　　 " + classDataBase.length + " 筆職業資料\n";
+		replyMsg += "資料庫內有 " + charaDataBase.data.length + " 筆角色資料\n";
+		replyMsg += "　　　　　 " + classDataBase.data.length + " 筆職業資料\n";
 		replyMsg += "　　　　　 " + imgur.dataBase.images.length + " 筆貼圖資料";
 
 		replyFunc(replyMsg);
 		return true;
 
-	} else if (command == "照片" || command == "圖片" || command == "相片") {
+	} else if (command == "照片" || command == "圖片" || command == "相片" || command == "PICTURE") {
 		// 圖片空間
 		replyFunc(createTemplateMsg("圖片空間", ["上傳新照片", "線上圖庫"],
 			["https://www.dropbox.com/request/FhIsMnWVRtv30ZL2Ty69",
 				"https://www.dropbox.com/sh/vonsrxzy79nkpah/AAD4p6TwZF44GHP5f6gdEh3ba?dl=0"]));
 		return true;
 
-	} else if (command == "上傳") {
-		// 手動保存資料庫
-		clearTimeout(uploadTaskId);
-		uploadDataBase();
-		return true;
-
-	} else if (command == "忘記") {
-		// forgot
-		if (msgs.length < 3) {
-			msgs.push("");
-		}
-		let learn = msgs[2].trim();
-		if (_debug) console.log("forgot: <" + learn + ">");
-
-		var target = searchCharacter(learn);
-		if (target.length == 1) {
-			let i = checkCharaData(target[0].trim());
-			charaDataBase[i].str_nickname = [];
-		}
-		return true;
-
-	} else if (command == "工具") {
+	} else if (command == "工具" || command == "TOOL") {
 		// tool
 		var templateMsgA, templateMsgB;
 
@@ -169,7 +157,7 @@ const searchDataAndReply = async function (msg, replyFunc) {
 		return true;
 
 	} else if (command == "職業") {
-		let classDB = classDataBase
+		let classDB = classDataBase.data
 		var replyMsgA = "";
 		var replyMsgB = "";
 		for (let i in classDB) {
@@ -187,10 +175,11 @@ const searchDataAndReply = async function (msg, replyFunc) {
 	} else if (command == "學習") {
 		// 關鍵字學習
 		if (msgs.length < 3) {
-			msgs.push("");
+			replyFunc("[學習] 要學甚麼?");
+			return true;
 		}
 		let learn = msgs[2].trim().replace("：", ":");
-		if (_debug) console.log("learn: <" + learn + ">");
+		debugLog("learn: <" + learn + ">");
 
 		let keys = learn.split(":"); // NNL:黑弓
 		if (keys.length < 2) {
@@ -203,8 +192,8 @@ const searchDataAndReply = async function (msg, replyFunc) {
 		let countA = arrayA.length;
 		let countB = arrayB.length;
 
-		if (_debug) console.log("full name: <" + arrayB + ">");
-		if (_debug) console.log("new nick: <" + keys[0] + ">");
+		debugLog("full name: <" + arrayB + ">");
+		debugLog("new nick: <" + keys[0] + ">");
 
 		if (countA == 1) {
 			replyFunc("[學習] 安娜知道的！");
@@ -224,27 +213,134 @@ const searchDataAndReply = async function (msg, replyFunc) {
 			var key = arrayB[0];
 			var nick = keys[0];
 
-			let i = checkCharaData(key);
-			charaDataBase[i].str_nickname.push(nick);
+			addNickData(key, nick);
 
 			// wait 25 min to save
-			uploadTask();
+			nickDataBase.uploadTask();
 
 			replyFunc("[學習] 嗯！記住了！");
 			return true;
 		}
+	} else if (_debug && command == "忘記") {
+		// forgot
+		if (msgs.length < 3) {
+			return false;
+		}
+		let learn = msgs[2].trim();
+		debugLog("forgot: <" + learn + ">");
+
+		let i = nickDataBase.indexOf(learn.trim());
+		if (i > -1) {
+			nickDataBase.data.splice(i, 1);
+		}
+
+		// wait 25 min to save
+		nickDataBase.uploadTask();
+
+		replyFunc("[學習] 忘記了!");
+		return true;
+
+	} else if (_debug && (command == "資料庫" || command == "DB")) {
+
+		if (msgs.length < 3) {
+			replyFunc("請選擇資料庫:\nCharaDataBase\nNickDataBase\nClassDataBase\n\n(>>資料庫 CharaDataBase NNL.ability_aw)");
+			return true;
+		} else if (msgs.length < 4) {
+			replyFunc("請輸入項目: \n(>>資料庫 CharaDataBase NNL.ability_aw)");
+			return true;
+		}
+
+		let targetString = msgs[2];
+		let indexString = msgs[3].split(".")[0];
+		let property = msgs[3].split(".")[1];
+		let index;
+
+		let targetDB;
+		if (targetString == "CharaDataBase") {
+			targetDB = charaDataBase;
+			index = charaDataBase.indexOf(searchCharacter(indexString)[0]);
+		} else if (targetString == "NickDataBase") {
+			targetDB = nickDataBase;
+			index = nickDataBase.indexOf(indexString);
+		} else if (targetString == "ClassDataBase") {
+			targetDB = classDataBase;
+			index = classDataBase.indexOf(indexString);
+		} else {
+			replyFunc("不明的資料庫!");
+			return true;
+		}
+
+		if (index == -1) {
+			replyFunc("找不到目標!");
+			return true;
+
+		} else if (typeof (property) == "undefined" || typeof (targetDB.data[index][property]) == "undefined") {
+			let reply = "成員不明! 請選擇成員:\n";
+
+			for (let key in targetDB.data[index]) {
+				if (typeof (targetDB.data[index][key]) != "function") {
+					reply += key + "\n";
+				}
+			}
+
+			replyFunc(reply.trim());
+			return true;
+
+		} else if (msg2 == "") {
+			var replyMsg = [];
+			replyMsg.push(createTextMsg("請換行輸入項目內容."));
+			replyMsg.push(createTextMsg(targetDB.data[index][property]));
+			replyFunc(replyMsg);
+			return true;
+
+		} else {
+			targetDB.data[index][property] = msg2;
+			replyFunc("修改成功");
+			targetDB.uploadTask();
+			return true;
+
+		}
+
+		return false;
+	} else if (command == "上傳" || command == "UPLOAD") {
+
+		let promiseArray;
+
+		promiseArray = [];
+		promiseArray.push(charaDataBase.saveDB());
+		promiseArray.push(nickDataBase.saveDB());
+		promiseArray.push(classDataBase.saveDB());
+		await Promise.all(promiseArray);
+
+		charaDataBase.uploadDB();
+		nickDataBase.uploadDB();
+		classDataBase.uploadDB();
+		replyFunc("上傳中, 完成將不另通知...");
+		return true;
+
+	} else if (_debug && (command == "更新" || command == "UPDATA")) {
+		allCharaDataCrawler();
+		classDataCrawler();
+		replyFunc("更新中, 完成將不另通知...");
+		return true;
+
+	} else if (_debug && (command == "初始化" || command == "INIT")) {
+		module.exports.init();
+		replyFunc("初始化中, 完成將不另通知...");
+		return true;
+
 	}
 
-	if (searchClassAndReply(command, replyFunc) > 0) {
+	if (searchClassReply(command, replyFunc) > 0) {
 		return true;
 	}
 
-	if (searchCharacterAndReply(command, true, replyFunc) > 0) {
+	if (searchCharacterReply(command, true, replyFunc) > 0) {
 		return true;
 	}
 
 	// 呼叫定型文圖片
-	if (stampReply(command, replyFunc)) {
+	if (replyStamp(command, replyFunc)) {
 		return true;
 	}
 
@@ -256,28 +352,28 @@ const searchDataAndReply = async function (msg, replyFunc) {
 }
 
 // 搜尋職業&回復
-const searchClassAndReply = function (command, replyFunc) {
+const searchClassReply = function (command, replyFunc) {
 
 	// 搜索職業
 	if (command.indexOf("金") == 0 || command.indexOf("藍") == 0 || command.indexOf("白") == 0
 		|| command.indexOf("鉑") == 0 || command.indexOf("白金") == 0 || command.indexOf("黑") == 0) {
 		// 分割命令
 		let _rarity = getRarityString(command[0]);
-		let _class = command.indexOf("白金") == 0 ? getClassString(command.substring(2).trim()) : getClassString(command.substring(1).trim());
-		if (_debug) console.log("_rarity+_class: <" + _rarity + "+" + _class + ">");
+		let _class = command.indexOf("白金") == 0 ? searchClass(command.substring(2).trim()) : searchClass(command.substring(1).trim());
+		debugLog("_rarity+_class: <" + _rarity + "+" + _class + ">");
 
 		var result = "";
 		let count = 0;
-		// 遍歷
-		for (let i in charaDataBase) {
-			var obj = charaDataBase[i];
-			if (obj.data_rarity == _rarity && obj.data_class == _class) {
-				result += obj.str_name + "\n";
+		// 遍歷腳色資料
+		for (let i in charaDataBase.data) {
+			let obj = charaDataBase.data[i];
+			if (obj.rarity == _rarity && obj.class == _class) {
+				result += obj.name + "\n";
 				count++;
 			}
 		}
 		result = result.trim()
-		if (_debug) console.log("result: <" + result + ">");
+		debugLog("result: <" + result + ">");
 
 		if (count == 1) {	// only one
 			replayCharaData(result, replyFunc);
@@ -288,16 +384,17 @@ const searchClassAndReply = function (command, replyFunc) {
 			return true;
 		}
 	}
+	return false;
 }
 
 // 搜尋腳色&回復
-const searchCharacterAndReply = function (command, blurry, replyFunc) {
+const searchCharacterReply = function (command, blurry, replyFunc) {
 	if (typeof (blurry) == "undefined") blurry = true;
 
 	// 搜索名稱
-	var resultArray = searchCharacter(command, blurry);
+	let resultArray = searchCharacter(command, blurry);
 	var count = resultArray.length;
-	if (_debug) console.log("resultArray[" + count + "]: <" + resultArray + ">");
+	debugLog("resultArray[" + count + "]: <" + resultArray + ">");
 
 	// 遍歷
 	var result = resultArray.join("\n");
@@ -314,10 +411,10 @@ const searchCharacterAndReply = function (command, blurry, replyFunc) {
 }
 // 回覆單一腳色資料
 const replayCharaData = function (charaName, replyFunc) {
-	if (_debug) console.log("replayCharaData(" + charaName + ")");
+	debugLog("replayCharaData(" + charaName + ")");
 
-	let i = checkCharaData(charaName);
-	var obj = charaDataBase[i];
+	let i = charaDataBase.indexOf(charaName);
+	let obj = charaDataBase.data[i];
 
 	var replyMsg = [];
 	replyMsg.push(createTextMsg(obj.getMessage()));
@@ -328,15 +425,15 @@ const replayCharaData = function (charaName, replyFunc) {
 		replyMsg.push(createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
 	}
 
-	replyMsg.push(createTemplateMsg("Wiki 連結", [obj.str_name], [obj.getWikiUrl()]));
+	replyMsg.push(createTemplateMsg("Wiki 連結", [obj.name], [obj.getWikiUrl()]));
 
 	replyFunc(replyMsg);
 	return;
 }
 // 定型文貼圖
-const stampReply = function (msg, replyFunc) {
+const replyStamp = function (msg, replyFunc) {
 	if (typeof (msg) == "undefined") return false;
-	if (_debug) console.log("stampReply(" + msg + ")");
+	debugLog("stampReply(" + msg + ")");
 
 	var replyMsg = [];
 
@@ -347,6 +444,14 @@ const stampReply = function (msg, replyFunc) {
 		replyFunc(replyMsg);
 		return true;
 	}
+
+	imgArray = imgur.dataBase.findImageByFileName(msg);
+	if (imgArray.length > 0) {
+		replyMsg.push(createImageMsg(imgArray[0].imageLink, imgArray[0].thumbnailLink));
+		replyFunc(replyMsg);
+		return true;
+	}
+
 	return false;
 }
 
@@ -366,13 +471,13 @@ const charaDataCrawler = function (urlPath) {
 			var html = iconv.decode(new Buffer(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
 			let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
 
-			var newData = createCharaData();
+			var newData = charaDataBase.newData();
 			let rarity = ["ゴールド", "サファイア", "プラチナ", "ブラック", "ゴ｜ルド"];
 
 			// 搜尋所有表格
 			$("div").each(function (i, iElem) {
 
-				var buffer = $(this).attr("id");
+				let buffer = $(this).attr("id");
 				if (buffer && buffer.indexOf("content_block_") != -1 && buffer.indexOf("-") != -1) {
 
 					//console.log($(this).attr("id"));
@@ -383,17 +488,17 @@ const charaDataCrawler = function (urlPath) {
 						$(this).children("table").eq(0).children("tbody").children("tr").children().children().each(function (j, jElem) {
 							// 名前
 							if ($(this).attr("href") == urlPath) {
-								newData.str_name = $(this).text().trim();
+								newData.name = $(this).text().trim();
 							}
 							// クラス
 							let temp = $(this).attr("href");
 							if (typeof (temp) != "undefined" && temp.indexOf("class") != -1) {
-								newData.data_class = $(this).text().trim();
+								newData.class = $(this).text().trim();
 							}
 							// レア
 							if (rarity.indexOf($(this).text().trim()) != -1) {
 								let temp = $(this).text().trim();
-								newData.data_rarity = temp == "ゴ｜ルド" ? "ゴールド" : temp;
+								newData.rarity = temp == "ゴ｜ルド" ? "ゴールド" : temp;
 							}
 						});
 					}
@@ -407,7 +512,7 @@ const charaDataCrawler = function (urlPath) {
 						temp = temp.replaceAll("*1", "*").replaceAll("*2", "*").replaceAll("*3", "*").replaceAll("*4", "*").replaceAll("*5", "*");
 						temp = temp.replaceAll("*6", "*").replaceAll("*7", "*").replaceAll("*8", "*").replaceAll("*9", "*").replaceAll("*0", "*").replaceAll("*", "");
 						if (temp.indexOf("説明") == -1) {
-							newData.str_ability = temp;
+							newData.ability = temp;
 						}
 					}
 
@@ -420,7 +525,7 @@ const charaDataCrawler = function (urlPath) {
 						temp = temp.replaceAll("*1", "*").replaceAll("*2", "*").replaceAll("*3", "*").replaceAll("*4", "*").replaceAll("*5", "*")
 						temp = temp.replaceAll("*6", "*").replaceAll("*7", "*").replaceAll("*8", "*").replaceAll("*9", "*").replaceAll("*0", "*").replaceAll("*", "");
 						if (temp.indexOf("説明") == -1) {
-							newData.str_ability_aw = temp;
+							newData.ability_aw = temp;
 						}
 					}
 
@@ -441,7 +546,7 @@ const charaDataCrawler = function (urlPath) {
 						}
 						// remove non-skill
 						for (let i in skilList) {
-							if (skilList[i].indexOf("スキル名") != -1 || skilList[i].indexOf("効果説明") != -1) {
+							if (skilList[i].indexOf("スキル名") != -1) {
 								skilList[i] = [];
 							}
 							let j;
@@ -468,13 +573,15 @@ const charaDataCrawler = function (urlPath) {
 							let temp = skilList[i][1].trim().replaceAll("?", "").replaceAll("？", "");
 							temp = temp.replaceAll(" ", "、").replaceAll("\s", "、").replaceAll("\r", "、").replaceAll("\n", "、").replaceAll("　", "、").replaceAll("、、", "、").replaceAll("%", "％");
 							temp = temp.replaceAll("*1", "*").replaceAll("*2", "*").replaceAll("*3", "*").replaceAll("*4", "*").replaceAll("*5", "*").replaceAll("*6", "*").replaceAll("*7", "*").replaceAll("*8", "*").replaceAll("*9", "*").replaceAll("*0", "*").replaceAll("*", "");
-							textList.push(skilList[i][0] + "\n" + temp);
+							if (temp.indexOf("効果説明") == -1) {
+								textList.push(skilList[i][0] + "\n" + temp);
+							}
 						}
-						//if (_debug) console.log(skilList);
+						//debugLog(skilList);
 
 						// put array into skill data
 						if (textList.length != 0) {
-							newData.str_skill = textList.join("\n");
+							newData.skill = textList.join("\n");
 						}
 					}
 
@@ -495,7 +602,7 @@ const charaDataCrawler = function (urlPath) {
 						}
 						// remove non-skill
 						for (let i in skilList) {
-							if (skilList[i].indexOf("スキル名") != -1 || skilList[i].indexOf("覚醒スキル名") != -1 || skilList[i].indexOf("効果説明") != -1) {
+							if (skilList[i].indexOf("スキル名") != -1 || skilList[i].indexOf("覚醒スキル名") != -1) {
 								skilList[i] = [];
 							}
 							let j;
@@ -522,56 +629,58 @@ const charaDataCrawler = function (urlPath) {
 							let temp = skilList[i][2].trim().replaceAll("?", "").replaceAll("？", "");
 							temp = temp.replaceAll(" ", "、").replaceAll("\s", "、").replaceAll("\r", "、").replaceAll("\n", "、").replaceAll("　", "、").replaceAll("、、", "、").replaceAll("%", "％");
 							temp = temp.replaceAll("*1", "*").replaceAll("*2", "*").replaceAll("*3", "*").replaceAll("*4", "*").replaceAll("*5", "*").replaceAll("*6", "*").replaceAll("*7", "*").replaceAll("*8", "*").replaceAll("*9", "*").replaceAll("*0", "*").replaceAll("*", "");
-							if (skilList[i][0] == "通常") {
-								textList.push(skilList[i][1] + "\n" + temp);
-							}
-							else if (skilList[i][0] == "覚醒") {
-								textList_aw.push(skilList[i][1] + "\n" + temp);
+							if (temp.indexOf("効果説明") == -1) {
+								if (skilList[i][0] == "通常") {
+									textList.push(skilList[i][1] + "\n" + temp);
+								}
+								else if (skilList[i][0] == "覚醒") {
+									textList_aw.push(skilList[i][1] + "\n" + temp);
+								}
 							}
 						}
 
 						// put array into skill data
 						if (textList.length != 0) {
-							newData.str_skill = textList.join("\n");
+							newData.skill = textList.join("\n");
 						}
 						if (textList_aw.length != 0) {
-							newData.str_skill_aw = textList_aw.join("\n");
+							newData.skill_aw = textList_aw.join("\n");
 						}
 					}
 
 					// 統一格式
-					newData.str_skill = newData.str_skill.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
-					newData.str_skill_aw = newData.str_skill_aw.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
-					newData.str_ability = newData.str_ability.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
-					newData.str_ability_aw = newData.str_ability_aw.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
+					newData.skill = newData.skill.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
+					newData.skill_aw = newData.skill_aw.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
+					newData.ability = newData.ability.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
+					newData.ability_aw = newData.ability_aw.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
 
-					if (newData.str_ability.indexOf("ランダム") != -1) {
-						newData.str_ability = newData.str_ability.replaceAll("、/、", "、");
-						newData.str_ability = newData.str_ability.replaceAll("発動、", "発動：");
-						newData.str_ability = newData.str_ability.replaceAll("回復、", "回復/");
-						newData.str_ability = newData.str_ability.replaceAll("回避、", "回避/");
-						newData.str_ability = newData.str_ability.replaceAll("攻撃、", "攻撃/");
-						newData.str_ability = newData.str_ability.replaceAll("連射、", "連射/");
-						newData.str_ability = newData.str_ability.replaceAll("無視、", "無視/");
-						newData.str_ability = newData.str_ability.replaceAll("入手、", "入手/");
-						newData.str_ability = newData.str_ability.replaceAll("倍、", "倍/");
-						newData.str_ability = newData.str_ability.replaceAll("硬直なし、", "硬直なし/");
+					if (newData.ability.indexOf("ランダム") != -1) {
+						newData.ability = newData.ability.replaceAll("、/、", "、");
+						newData.ability = newData.ability.replaceAll("発動、", "発動：");
+						newData.ability = newData.ability.replaceAll("回復、", "回復/");
+						newData.ability = newData.ability.replaceAll("回避、", "回避/");
+						newData.ability = newData.ability.replaceAll("攻撃、", "攻撃/");
+						newData.ability = newData.ability.replaceAll("連射、", "連射/");
+						newData.ability = newData.ability.replaceAll("無視、", "無視/");
+						newData.ability = newData.ability.replaceAll("入手、", "入手/");
+						newData.ability = newData.ability.replaceAll("倍、", "倍/");
+						newData.ability = newData.ability.replaceAll("硬直なし、", "硬直なし/");
 					}
-					if (newData.str_ability_aw.indexOf("ランダム") != -1) {
-						newData.str_ability_aw = newData.str_ability_aw.replaceAll("、/、", "、");
-						newData.str_ability_aw = newData.str_ability_aw.replaceAll("発動、", "発動：");
-						newData.str_ability_aw = newData.str_ability_aw.replaceAll("回復、", "回復/");
-						newData.str_ability_aw = newData.str_ability_aw.replaceAll("回避、", "回避/");
-						newData.str_ability_aw = newData.str_ability_aw.replaceAll("攻撃、", "攻撃/");
-						newData.str_ability_aw = newData.str_ability_aw.replaceAll("連射、", "連射/");
-						newData.str_ability_aw = newData.str_ability_aw.replaceAll("無視、", "無視/");
-						newData.str_ability_aw = newData.str_ability_aw.replaceAll("入手、", "入手/");
-						newData.str_ability_aw = newData.str_ability_aw.replaceAll("倍、", "倍/");
-						newData.str_ability_aw = newData.str_ability_aw.replaceAll("硬直なし、", "硬直なし/");
+					if (newData.ability_aw.indexOf("ランダム") != -1) {
+						newData.ability_aw = newData.ability_aw.replaceAll("、/、", "、");
+						newData.ability_aw = newData.ability_aw.replaceAll("発動、", "発動：");
+						newData.ability_aw = newData.ability_aw.replaceAll("回復、", "回復/");
+						newData.ability_aw = newData.ability_aw.replaceAll("回避、", "回避/");
+						newData.ability_aw = newData.ability_aw.replaceAll("攻撃、", "攻撃/");
+						newData.ability_aw = newData.ability_aw.replaceAll("連射、", "連射/");
+						newData.ability_aw = newData.ability_aw.replaceAll("無視、", "無視/");
+						newData.ability_aw = newData.ability_aw.replaceAll("入手、", "入手/");
+						newData.ability_aw = newData.ability_aw.replaceAll("倍、", "倍/");
+						newData.ability_aw = newData.ability_aw.replaceAll("硬直なし、", "硬直なし/");
 					}
 				}
 			});
-			if (_debug) console.log(newData);
+			//debugLog(newData);
 			// 新增腳色資料
 			addCharaData(newData);
 			resolve();
@@ -580,9 +689,9 @@ const charaDataCrawler = function (urlPath) {
 	});
 };
 // 爬所有腳色
-var allCharaUrl = [];
 const allCharaDataCrawler = function () {
 	console.log("AllCharaData Crawling...");
+	let allCharaUrl = [];
 
 	// callback
 	let requestCallBack = function (error, response, body) {
@@ -597,7 +706,7 @@ const allCharaDataCrawler = function () {
 		// 搜尋所有超連結
 		$("a").each(function (i, elem) {
 
-			var buffer = $(this).attr("href");
+			let buffer = $(this).attr("href");
 			if (buffer && $(this).parent().is("td") && $(this).prev().prev().children().is("img")) {
 				//console.log($(this).text());
 				// 延遲呼叫腳色爬蟲
@@ -614,32 +723,20 @@ const allCharaDataCrawler = function () {
 
 	setTimeout(async function () {
 		let promiseArray = [];
-		// 50 thread
-		for (let i = 0; i < 50; i++) {
-			promiseArray.push(charaDataCrawlerBot());
-		}
-		await Promise.all(promiseArray);
-
-		// save database
-		saveCharaDataBase();
-	}, 3000);
-}
-// 爬蟲BOT
-const charaDataCrawlerBot = function () {
-	return new Promise(async function (resolve, reject) {
 		while (allCharaUrl.length > 0) {
-			try {
-				var urlPath = allCharaUrl.pop();
-				await charaDataCrawler(urlPath);
+			// 50 thread
+			for (let i = 0; i < 50; i++) {
+				if (allCharaUrl.length > 0) {
+					promiseArray.push(charaDataCrawler(allCharaUrl.pop()));
+				}
 			}
-			catch (err) {
-				reject(err);
-			}
+			await Promise.all(promiseArray);
 		}
-		resolve();
-	});
-}
+		// save database
+		charaDataBase.uploadTask();
+	}, 3000);
 
+}
 // 爬職業
 const classDataCrawler = function () {
 	console.log("ClassData Crawling...");
@@ -676,8 +773,8 @@ const classDataCrawler = function () {
 							return;
 						}
 
-						var newData = createClassData();
-						newData.className = str;
+						var newData = classDataBase.newData();
+						newData.name = str;
 						newData.index.push(str);
 						if ($("title").text().indexOf("近接型") != -1)
 							newData.type = "近接型";
@@ -695,6 +792,12 @@ const classDataCrawler = function () {
 	}
 	request.get("http://seesaawiki.jp/aigis/d/class_%b6%e1%c0%dc%b7%bf_%cc%dc%bc%a1", { encoding: "binary" }, requestCallBack);
 	request.get("http://seesaawiki.jp/aigis/d/class_%b1%f3%b5%f7%ce%a5%b7%bf_%cc%dc%bc%a1", { encoding: "binary" }, requestCallBack);
+
+	setTimeout(async function () {
+		// save database
+		classDataBase.uploadTask();
+	}, 3000);
+
 };
 // 網址編碼
 const urlEncode = function (str_utf8, codePage) {
@@ -708,14 +811,14 @@ const urlEncode = function (str_utf8, codePage) {
 const urlEncodeJP = function (str_utf8) { return urlEncode(str_utf8, "EUC-JP"); }
 const urlEncodeBIG5 = function (str_utf8) { return urlEncode(str_utf8, "BIG5"); }
 const urlEncodeUTF8 = function (str_utf8) { return urlEncode(str_utf8, "UTF-8"); }
-var encodeURI_JP = function (url) {
+const encodeURI_JP = function (url) {
 	var result = "";
 
 	let jpEncode = "";
 	let big5Encode = "";
 	let uriEncode = "";
 
-	for (var i = 0; i < url.length; i++) {
+	for (let i = 0; i < url.length; i++) {
 		jpEncode = urlEncodeJP(url[i]);
 		big5Encode = urlEncodeBIG5(url[i]);
 		uriEncode = encodeURI(url[i]);
@@ -730,7 +833,7 @@ var encodeURI_JP = function (url) {
 // HTML table to array
 String.prototype.tableToArray = function () {
 	var result = [];
-	var html = this.replaceAll("<br>", "\n");
+	let html = this.replaceAll("<br>", "\n");
 	let i, j, k;
 
 	if ((i = html.indexOf("<tbody>")) != -1 && (j = html.indexOf("</tbody>")) != -1) {
@@ -805,273 +908,152 @@ String.prototype.tableToArray = function () {
 }
 
 
-
 // 資料庫
-var charaDataBase = [];
-// 建構資料函數
-const createCharaData = function () {
-	var obj = {};
-	obj.str_name = "";
-	obj.str_nickname = [];
-	obj.str_ability = "";
-	obj.str_ability_aw = "";
-	obj.str_skill = "";
-	obj.str_skill_aw = "";
 
-	obj.data_rarity = "";
-	obj.data_class = "";
+// Character
+var charaDataBase = database.createNewDataBase("CharaDataBase");
+// 建構資料函數
+charaDataBase.newData = function () {
+	var obj = {};
+	obj.name = "";
+	obj.ability = "";
+	obj.ability_aw = "";
+	obj.skill = "";
+	obj.skill_aw = "";
+
+	obj.rarity = "";
+	obj.class = "";
 
 	obj.getMessage = function () {
 		var string = "";
 
-		string += this.str_name + "　　" + this.data_rarity + "\n";
+		string += this.name + "　　" + this.rarity + "\n";
 
-		if (this.str_nickname.length > 0) {
-			//for (var i = 0; i < this.str_nickname.length; i++) {
-			let buffer = "";
-			for (let i in this.str_nickname) {
-				buffer += this.str_nickname[i] + " ";
-			}
-			buffer = buffer.trim();
-			if (buffer != "") {
-				string += buffer + "\n";
-			}
+		if (this.ability != "") {
+			string += "◇特：" + this.ability + "\n";
 		}
 
-		if (this.str_ability != "") {
-			string += "◇特：" + this.str_ability + "\n";
+		if (this.skill != "") {
+			string += "◇技：" + this.skill + "\n";
 		}
 
-		if (this.str_skill != "") {
-			string += "◇技：" + this.str_skill + "\n";
+		if (this.ability_aw != "") {
+			string += "◆特：" + this.ability_aw + "\n";
 		}
 
-		if (this.str_ability_aw != "") {
-			string += "◆特：" + this.str_ability_aw + "\n";
-		}
-
-		if (this.str_skill_aw != "") {
-			string += "◆技：" + this.str_skill_aw + "\n";
+		if (this.skill_aw != "") {
+			string += "◆技：" + this.skill_aw + "\n";
 		}
 
 		return string;
 	};
 	obj.getWikiUrl = function () {
-		if (this.str_name.indexOf("王子") != -1) {
+		if (this.name.indexOf("王子") != -1) {
 			var string = "http://seesaawiki.jp/aigis/d/王子";
 			return encodeURI_JP(string);
 		}
-		var string = "http://seesaawiki.jp/aigis/d/" + this.str_name;
+		var string = "http://seesaawiki.jp/aigis/d/" + this.name;
 		return encodeURI_JP(string);
-	};
-	obj.checkName = function (name) {
-		if (name == this.str_name) return true;
-
-		//for (let i = 0; i < this.str_nickname.length; i++) {
-		for (let i in this.str_nickname) {
-			if (name.toUpperCase() == this.str_nickname[i].toUpperCase()) return true;
-		}
-		return false;
 	};
 
 	return obj;
 }
-// 檢查資料
-const checkCharaData = function (name) {
-	//for (var i = 0; i < charaDataBase.length; i++) {
-	for (let i in charaDataBase) {
-		if (charaDataBase[i].str_name == name)
-			return i;
-	}
-	return -1;
-}
-// 儲存資料
-const saveCharaDataBase = function () {
-	console.log("CharaDataBase saving...");
-
-	// sort
-	charaDataBase.sort(function (A, B) {
-		return A.str_name.localeCompare(B.str_name)
-	})
-
-	// object to json
-	var json = JSON.stringify(charaDataBase);
-
-	// callback
-	let fsCallBack = function (error, bytesRead, buffer) {
-		if (error) {
-			console.log(error);
-			return;
-		}
-	}
-	// json to file
-	fs.writeFile("CharaDataBase_.json", json, "utf8", fsCallBack);
-
-	console.log("CharaDataBase saved!");
-}
-// 讀取資料
-const loadCharaDataBase = async function (charaDB) {
-	if (typeof (charaDB) == "undefined") charaDB = "CharaDataBase.json";
-	console.log("CharaDataBase loading...");
-	try {
-		let data = await asyncReadFile(charaDB);
-
-		let count = 0;
-		let obj = [];
-		try {
-			obj = JSON.parse(data);
-		} catch (e) {
-			obj = eval("(" + data + ")");
-		}
-
-		//for (let i = 0; i < obj.length; i++) {
-		for (let i in obj) {
-
-			if (obj[i].str_name == "") continue;
-
-			var newData = createCharaData();
-
-			newData.str_name = obj[i].str_name.trim();
-			//newData.str_nickname = obj[i].str_nickname;
-			newData.str_ability = obj[i].str_ability.trim();
-			newData.str_ability_aw = obj[i].str_ability_aw.trim();
-			newData.str_skill = obj[i].str_skill.trim();
-			newData.str_skill_aw = obj[i].str_skill_aw.trim();
-
-
-			newData.data_rarity = obj[i].data_rarity.trim();
-			newData.data_class = obj[i].data_class.trim();
-
-			//for (let j = 0; j < newData.str_nickname.length; j++) {
-			for (let j in obj[i].str_nickname) {
-				if (obj[i].str_nickname[j] != "") {
-					newData.str_nickname.push(obj[i].str_nickname[j].trim());
-				}
-			}
-
-			addCharaData(newData);
-			count++;
-		}
-		console.log(count + " CharaData loaded!");
-		return;
-	} catch (error) {
-		console.log(error);
-	}
-}
 // 新增資料
 const addCharaData = function (newData) {
-	if (newData.str_name == "") return;
+	if (newData.name == "") return;
+	//debugLog("New character <" + newData.name + "> data add...");
 
-	if (_debug) console.log("New character data add...");
-
-	if (checkCharaData(newData.str_name) == -1) {
-		charaDataBase.push(newData);
-		console.log("New character <" + newData.str_name + "> data add complete!");
+	if (charaDataBase.indexOf(newData.name) == -1) {
+		charaDataBase.data.push(newData);
+		console.log("New character <" + newData.name + "> data add complete!");
 
 	} else {
-		let i = checkCharaData(newData.str_name);
-		let obj = charaDataBase[i];
+		let i = charaDataBase.indexOf(newData.name);
 
-		// if (obj.str_nickname = [])
-		// {
-		// }
-
-		if (obj.str_ability == "") {
-			charaDataBase[i].str_ability = newData.str_ability;
+		if (charaDataBase.data[i].ability == "") {
+			charaDataBase.data[i].ability = newData.ability;
 		}
-		if (obj.str_ability_aw == "") {
-			charaDataBase[i].str_ability_aw = newData.str_ability_aw;
+		if (charaDataBase.data[i].ability_aw == "") {
+			charaDataBase.data[i].ability_aw = newData.ability_aw;
 		}
-		if (obj.str_skill == "") {
-			charaDataBase[i].str_skill = newData.str_skill;
+		if (charaDataBase.data[i].skill == "") {
+			charaDataBase.data[i].skill = newData.skill;
 		}
-		if (obj.str_skill_aw == "") {
-			charaDataBase[i].str_skill_aw = newData.str_skill_aw;
+		if (charaDataBase.data[i].skill_aw == "") {
+			charaDataBase.data[i].skill_aw = newData.skill_aw;
 		}
 
-		if (obj.data_rarity == "") {
-			charaDataBase[i].data_rarity = newData.data_rarity;
+		if (charaDataBase.data[i].rarity == "") {
+			charaDataBase.data[i].rarity = newData.rarity;
 		}
-		if (obj.data_class == "") {
-			charaDataBase[i].data_class = newData.data_class;
+		if (charaDataBase.data[i].class == "") {
+			charaDataBase.data[i].class = newData.class;
 		}
-		if (_debug) console.log("Character <" + newData.str_name + "> data is existed!");
+		console.log("Character <" + newData.name + "> data is existed!");
 	}
-}
-// 上傳備份
-const uploadDataBase = function () {
-	console.log("CharaDataBase uploading...");
-
-	// object to json
-	var binary = new Buffer(JSON.stringify(charaDataBase));
-	dbox.fileUpload("\CharaDataBase_.json", binary);
-
-	console.log("CharaDataBase uploaded!");
-}
-// 延遲上傳
-var uploadTaskId;
-const uploadTask = function () {
-	clearTimeout(uploadTaskId);
-	uploadTaskId = setTimeout(uploadDataBase, 25 * 60 * 1000);
 }
 // 模糊搜尋
 const searchCharacter = function (key, blurry) {
 	if (typeof (blurry) == "undefined") blurry = true;
+	debugLog("searchCharacter key: <" + key + ">");
+
+	let t;
+	if ((t = charaDataBase.indexOf(key)) != -1) {
+		return [key];
+	} else if ((t = nickDataBase.indexOf(key)) != -1) {
+		return [nickDataBase.data[t].target];
+	} else if (!blurry) {
+		return [];
+	}
 
 	// 加權陣列
 	let array_metrics = [];
-	//for (let charaIndex = 0; charaIndex < charaDataBase.length; charaIndex++) {
-	for (let charaIndex in charaDataBase) {
-		let obj = charaDataBase[charaIndex];
+	for (let charaIndex in charaDataBase.data) {
+		let obj = charaDataBase.data[charaIndex];
 
-		if (obj.checkName(key)) { // 精確符合
-			if (_debug) console.log("return : <" + [obj.str_name] + ">");
-			return [obj.str_name];
+		// 模糊加權
+		const metricsA = 8;	// 同字
+		const metricsB = 1;	// 同順
+		const metricsC = 2;	// 連接
+		let j = 0, k = -2, l = -1;
+		let metrics = -15;
+		//array_metrics[(metricsA + metricsB) * key.length] = [];
 
-		} else if (blurry) { // 模糊加權
-			const metricsA = 8;	// 同字
-			const metricsB = 1;	// 同順
-			const metricsC = 2;	// 連接
-			let k = -2, l = -1;
-			let metrics = -15;
-			//array_metrics[(metricsA + metricsB) * key.length] = [];
+		for (let i = 0; j < key.length; j++) {
+			l = obj.name.indexOf(key[j], Math.max(k, 0));
 
-			for (var i = 0; i < key.length; i++) {
-				l = obj.str_name.indexOf(key[i], Math.max(k, 0));
+			if (l > -1)	// find key[j] in source
+				metrics += metricsA;
 
-				if (l > -1)	// find key[j] in source
-					metrics += metricsA;
+			if (l > k)	// find key[j] after key[j - 1]
+				metrics += metricsB;
 
-				if (l > k)	// find key[j] after key[j - 1]
-					metrics += metricsB;
+			if (l == k + 1)	// find key[j] just after key[j - 1]
+				metrics += metricsC;
 
-				if (l == k + 1)	// find key[j] just after key[j - 1]
-					metrics += metricsC;
+			k = l;
+		}
 
-				k = l;
-			}
-
-			if (metrics > 0) {
-				//array_metrics.push([i, metrics]);
-				//array_metrics[i] = metrics;
-				//array_metrics[metrics].push(i);
-				if (typeof (array_metrics[metrics]) == "undefined") {
-					array_metrics[metrics] = [charaIndex];
-				} else {
-					array_metrics[metrics].push(charaIndex);
-				}
+		if (metrics > 0) {
+			//array_metrics.push([i, metrics]);
+			//array_metrics[i] = metrics;
+			//array_metrics[metrics].push(i);
+			if (typeof (array_metrics[metrics]) == "undefined") {
+				array_metrics[metrics] = [charaIndex];
+			} else {
+				array_metrics[metrics].push(charaIndex);
 			}
 		}
 	}
 
 	// 模糊加權結果
 	var result = [];
-	if (blurry && array_metrics.length > 0) {
+	if (array_metrics.length > 0) {
 		// 權值大到小
 		let metricsMax = array_metrics.length - 1;
 		let metricsMin = Math.floor(metricsMax * 0.9);
-		if (_debug) console.log("metricsMax: <" + metricsMax + ">");
-		if (_debug) console.log("metricsMin: <" + metricsMin + ">");
+		debugLog("metricsMax: <" + metricsMax + ">");
+		debugLog("metricsMin: <" + metricsMin + ">");
 
 		for (let charaIndex = metricsMax; charaIndex >= metricsMin; charaIndex--) {
 			if (typeof (array_metrics[charaIndex]) == "undefined") continue;	// 檢查搜尋結果
@@ -1080,11 +1062,9 @@ const searchCharacter = function (key, blurry) {
 			//for (let i = 0; i < array_metrics[charaIndex].length; i++) {
 			for (let i in array_metrics[charaIndex]) {
 				let index = array_metrics[charaIndex][i];
-				//result += charaDataBase[index].str_name + "\n";
-				//result += i + ": " + charaDataBase[index].str_name + "\n";
 
-				if (_debug) console.log("array_metrics : <" + charaIndex + ": " + charaDataBase[index].str_name + ">");
-				result.push(charaDataBase[index].str_name);
+				debugLog("array_metrics : <" + charaIndex + ": " + charaDataBase.data[index].name + ">");
+				result.push(charaDataBase.data[index].name);
 			}
 		}
 	}
@@ -1092,91 +1072,67 @@ const searchCharacter = function (key, blurry) {
 }
 
 
-// 職業資料庫
-var classDataBase = [];
+// Nickname
+var nickDataBase = database.createNewDataBase("NickDataBase");
 // 建構資料函數
-const createClassData = function () {
+nickDataBase.newData = function () {
 	var obj = {};
-	obj.className = "";
+	obj.name = "";
+	obj.target = "";
+
+	return obj;
+}
+// 新增資料
+const addNickData = function (name, nick) {
+	if (name == "" || nick == "") return;
+
+	if (nickDataBase.indexOf(nick) == -1) {
+		var newData = nickDataBase.newData();
+		newData.name = nick;
+		newData.target = name;
+		nickDataBase.data.push(newData);
+	}
+}
+
+
+// Class
+var classDataBase = database.createNewDataBase("ClassDataBase");
+// 建構資料函數
+classDataBase.newData = function () {
+	var obj = {};
+	obj.name = "";
 	obj.index = [];
 	obj.type = "";
 
 	return obj;
 }
-// 檢查資料
-const checkClassData = function (name) {
-	//for (var i = 0; i < classDataBase.length; i++) {
-	for (let i in classDataBase) {
-		if (classDataBase[i].className == name)
-			return i;
-	}
-	return -1;
-}
-// 儲存資料
-const saveClassDataBase = function () {
-	console.log("ClassDataBase saving...");
-
-	// sort
-	classDataBase.sort(function (A, B) {
-		return A.className.localeCompare(B.className)
-	})
-
-	// object to json
-	var json = JSON.stringify(classDataBase);
-
-	// callback
-	let fsCallBack = function (error, bytesRead, buffer) {
-		if (error) {
-			console.log(error);
-			return;
-		}
-	}
-	// json to file
-	fs.writeFile("ClassDataBase_.json", json, "utf8", fsCallBack);
-
-	console.log("ClassDataBase saved!");
-}
-// 讀取資料
-const loadClassDataBase = async function () {
-	console.log("ClassDataBase loading...");
-	try {
-		let data = await asyncReadFile("ClassDataBase.json");
-
-		let count = 0;
-		let obj = [];
-		try {
-			obj = JSON.parse(data);
-		} catch (e) {
-			obj = eval("(" + data + ")");
-		}
-
-		//for (let i = 0; i < obj.length; i++) {
-		for (let i in obj) {
-			addClassData(obj[i]);
-			count++;
-		}
-		console.log(count + " ClassData loaded!");
-		//resolve();
-		return;
-	} catch (error) {
-		//reject(error);
-		console.log(error);
-	}
-}
 // 新增資料
 const addClassData = function (newClass) {
-	if (_debug) console.log("New <" + newClass.className + "> Class data add...");
+	if (newClass.name == "") return;
+	//console.log("New <" + newClass.name + "> Class data add...");
 
-	if (checkClassData(newClass.className) == -1) {
-		classDataBase.push(newClass);
-		console.log("New Class <" + newClass.className + "> add complete!");
+	if (classDataBase.indexOf(newClass.name) == -1) {
+		classDataBase.data.push(newClass);
+		console.log("New Class <" + newClass.name + "> add complete!");
 
 	} else {
-		//var i = checkClassData(newClass.className);
-		//classDataBase[i].type = newClass.type;
-		if (_debug) console.log("Class <" + newClass.className + "> is existed!");
+		console.log("Class <" + newClass.name + "> is existed!");
 	}
 }
+// 搜尋職業
+const searchClass = function (str) {
+	//for (let i = 0; i < classDataBase.length; i++) {
+	for (let i in classDataBase.data) {
+
+		for (let j in classDataBase.data[i].index) {
+			if (str == classDataBase.data[i].index[j]) {
+				return classDataBase.data[i].name;
+			}
+		}
+	}
+	return "NULL";
+}
+
 // value to key
 const getRarityString = function (str) {
 	if (str == "金") return "ゴールド";
@@ -1184,20 +1140,6 @@ const getRarityString = function (str) {
 	else if (str == "白") return "プラチナ";
 	else if (str == "黑") return "ブラック";
 	else return "NULL";
-}
-// 搜尋職業
-const getClassString = function (str) {
-	//for (let i = 0; i < classDataBase.length; i++) {
-	for (let i in classDataBase) {
-
-		//for (let j = 0; j < classDataBase[i].index.length; j++) {
-		for (let j in classDataBase[i].index) {
-			if (str == classDataBase[i].index[j]) {
-				return classDataBase[i].className;
-			}
-		}
-	}
-	return "NULL";
 }
 
 
@@ -1221,7 +1163,7 @@ const createImageMsg = function (image, thumbnail) {
 }
 // 超連結選項
 // altText = "Wiki 連結"
-// label = str_Name
+// label = Name
 // url = "https://seesaawiki.jp/aigis/d/刻詠の風水士リンネ"	encodeURI_JP(url)
 const createTemplateMsg = function (altText, label, url) {
 	if (label.length != url.length) return "";
@@ -1248,67 +1190,86 @@ const createTemplateMsg = function (altText, label, url) {
 // DROPBOX: encodeURI(url);
 // Wiki   : encodeURI_JP(url);
 // line debug function
-const debugPush = function (pMsg) {
-	let linebot = require("linebot");
-	linebot({
-		channelId: 1612493892,
-		channelSecret: "ea71aeca4c54c6aa270df537fbab3ee3",
-		channelAccessToken: "GMunTSrUWF1vRwdNxegvepxHEQWgyaMypbtyPluxqMxoTqq8QEGJWChetLPvlV0DJrY4fvphSUT58vjVQVLhndlfk2JKQ/sbzT6teG1qUUUEVpVfqs5KGzzn3NUngYMw9/lvvU0QZVGBqPS6wKVxrQdB04t89/1O/w1cDnyilFU="
-	}).push("U9eefeba8c0e5f8ee369730c4f983346b", pMsg);
-}
+const linebot = require("linebot");
+// 登入參數
+const bot = linebot({
+	channelId: 1612493892,
+	channelSecret: "ea71aeca4c54c6aa270df537fbab3ee3",
+	channelAccessToken: "GMunTSrUWF1vRwdNxegvepxHEQWgyaMypbtyPluxqMxoTqq8QEGJWChetLPvlV0DJrY4fvphSUT58vjVQVLhndlfk2JKQ/sbzT6teG1qUUUEVpVfqs5KGzzn3NUngYMw9/lvvU0QZVGBqPS6wKVxrQdB04t89/1O/w1cDnyilFU="
+});
 
+const debugLog = function (msg) {
+	if (!_debug) {
+		return;
+	}
+	console.log(msg);
 
-
-// readfile
-const asyncReadFile = function (filePath) {
-	return new Promise(function (resolve, reject) {
-		fs.readFile(filePath, function (err, data) {
-			if (err) {
-				reject(err);
-			} else {
-				resolve(data);
-			}
-		});
-	});
+	if (_debugPush) {
+		bot.push("U9eefeba8c0e5f8ee369730c4f983346b", msg);
+	}
 }
 
 
 
 // 外部呼叫
 module.exports = {
-	init: async function (charaDB) {
+	init: async function () {
 
-		let p1 = loadClassDataBase();
-		let p2 = loadCharaDataBase(charaDB);
-		await Promise.all([p1, p2]);
+		let promiseArray;
+
+		promiseArray = [];
+		promiseArray.push(charaDataBase.downloadDB());
+		promiseArray.push(nickDataBase.downloadDB());
+		promiseArray.push(classDataBase.downloadDB());
+		await Promise.all(promiseArray);
+
+		promiseArray = [];
+		promiseArray.push(charaDataBase.loadDB());
+		promiseArray.push(nickDataBase.loadDB());
+		promiseArray.push(classDataBase.loadDB());
+		await Promise.all(promiseArray);
 
 		return;
 	},
 
-	classDataCrawler: function () { return classDataCrawler(); },
-	saveClassDataBase: function () { return saveClassDataBase(); },
+	// index,js
+	replyAI: function (msg, replyFunc) { return replyAI(msg, replyFunc); },
+	replyStamp: function (msg, replyFunc) { return replyStamp(msg, replyFunc); },
 
+	// updata.js
 	//charaDataCrawler: function (urlPath) { return charaDataCrawler(urlPath); },
 	allCharaDataCrawler: function () { return allCharaDataCrawler(); },
-	//saveCharaDataBase: function () { return saveCharaDataBase(); },
+	classDataCrawler: function () { return classDataCrawler(); },
+	_encodeURI_JP: function (url) { return encodeURI_JP(url); },
 
-	searchDataAndReply: function (msg, replyFunc) { return searchDataAndReply(msg, replyFunc); },
-	stampReply: function (msg, replyFunc) { return stampReply(msg, replyFunc); },
-
+	// debug
 	_debug: function () { return _debug; },
-	_encodeURI_JP: function (url) { return encodeURI_JP(url); }
+	debugLog: function (debugMsg) { return debugLog(debugMsg); }
 };
 
 
 
 /*
 const debugFunc = async function () {
-	await module.exports.init();
-	await imgur.init();
-	_debug = true;
-	searchDataAndReply("安娜 蛇霊の呪術師オロチヒメ", function(obj) {
-		console.log(obj);
-	});
+	//await module.exports.init();
+	//await imgur.init();
+
+
+	//_debug = true;
+	//replyAI("anna upload", debugLog);
+
+	userId = "U9eefeba8c0e5f8ee369730c4f983346b";
+	profile = await bot.getUserProfile(userId);
+	console.log(profile);
+
+	groupId = "C576ad7f8e2d943f7a6f07d043391dab3";
+	profile = await bot.getGroupMember(groupId);
+	console.log(profile);
+
+	groupId = "C906808294426cdd7d8077301b11fe95f";
+	profile = await bot.getGroupMember(groupId);
+	console.log(profile);
+
 }
 
 setTimeout(debugFunc, 1 * 100);//*/

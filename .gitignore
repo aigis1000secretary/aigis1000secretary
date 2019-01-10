@@ -2,3 +2,5 @@ node_modules/
 .vscode/
 test.js
 node.bat
+*.json
+*.txt
