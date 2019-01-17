@@ -19,67 +19,56 @@ module.exports = dboxCore;
 dboxCore.core = dbox;
 dboxCore.root = root;
 
+
 // MD
-dboxCore.makeDir = function (path) {
-	dbox.filesCreateFolder({ path: root + path, autorename: false })
-		.then(function (response) {
-			//console.log(response);
-			return true;
-		})
-		.catch(function (error) {
-			console.log(error);
-			return false;
-		});
+dboxCore.makeDir = async function (path) {
+	try {
+		let response = await dbox.filesCreateFolder({ path: root + path, autorename: false });
+		//console.log(response);
+		return true;
+	} catch (error) {
+		//console.log(error);
+		return Promise.reject(error);
+	}
 };
-
 // LS
-dboxCore.listDir = function (dirPath, filter) {
-	return new Promise(function (resolve, reject) {
-
+dboxCore.listDir = async function (dirPath, filter) {
+	try {
 		var result = [];
-		dbox.filesListFolder({ path: root + dirPath })
-			.then(function (response) {
-				//console.log(response);
-				for (let i = 0; i < response.entries.length; i++) {
-					//result.push(response.entries[i].name + ", " + response.entries[i][".tag"]); continue;
-					if (typeof (filter) == "undefined") {
-						result.push(response.entries[i].name)
+		let response = await dbox.filesListFolder({ path: root + dirPath });
+		//console.log(response);
 
-					} else if (filter == response.entries[i][".tag"]) {
-						result.push(response.entries[i].name)
-					}
-				}
-				resolve(result);
-			})
-			.catch(function (error) {
-				//console.log(error);
-				resolve([]);
-			});
-	});
+		for (let i = 0; i < response.entries.length; i++) {
+			//result.push(response.entries[i].name + ", " + response.entries[i][".tag"]); continue;
+			if (typeof (filter) == "undefined") {
+				result.push(response.entries[i].name)
+
+			} else if (filter == response.entries[i][".tag"]) {
+				result.push(response.entries[i].name)
+			}
+		}
+
+		return result;
+	} catch (error) {
+		//console.log(error);
+		return Promise.reject(error);
+	}
 };
 //listDir("").then(function(obj){console.log(obj);});
+
 
 // download
 dboxCore.fileDownload = async function (dirPath, localPath) {
 	if (typeof (localPath) == "undefined") localPath = dirPath;
 
-	await dbox.filesDownload({ path: root + dirPath })
-		.then(function (response) {
-			//console.log(response);
+	try {
+		let response = await dbox.filesDownload({ path: root + dirPath })
+		await asyncSaveFile(localPath, response.fileBinary, "Binary");
 
-			// callback
-			var fsCallBack = function (error, bytesRead, buffer) {
-				if (error) {
-					console.log(error);
-					return;
-				}
-			}
-			// binart to file
-			fs.writeFile(localPath, response.fileBinary, "Binary", fsCallBack);
-		})
-		.catch(function (error) {
-			console.log(error);
-		});
+	} catch (error) {
+		//console.log(error);
+		return Promise.reject(error);
+	}
 };
 //fileDownload("刻詠の風水士リンネ/6230667.png", "6230667.png");
 
@@ -93,13 +82,14 @@ dboxCore.fileUpload = async function (dirPath, fileBinary) {
 		autorename: false,
 		mute: true
 	};
-	await dbox.filesUpload(filesCommitInfo)
-		.then(function (response) {
-			//console.log(response);
-		})
-		.catch(function (error) {
-			console.log(error);
-		});
+
+	try {
+		await dbox.filesUpload(filesCommitInfo);
+
+	} catch (error) {
+		//console.log(error);
+		return Promise.reject(error);
+	}
 };
 
 
@@ -112,27 +102,34 @@ dboxCore.filesBackup = async function (dirPath) {
 		autorename: true,
 		allow_ownership_transfer: true
 	};
-	await dbox.filesCopy(filesRelocationArg)
-		.then(function (response) {
-			//console.log(response);
-		})
-		.catch(function (error) {
-			console.log(error);
-		});
-
 	var filesDeleteArg = {
 		path: root + dirPath
+	};
+
+	try {
+		await dbox.filesCopy(filesRelocationArg);
+		await dbox.filesDelete(filesDeleteArg);
+
+	} catch (error) {
+		//console.log(error);
+		return Promise.reject(error);
 	}
-	await dbox.filesDelete(filesDeleteArg)
-		.then(function (response) {
-			//console.log(response);
-		})
-		.catch(function (error) {
-			console.log(error);
-		});
 };
 
 
+// json to file
+const asyncSaveFile = function (filePath, data, options) {
+	if (typeof (options) == "undefined") options = "utf8";
+	return new Promise(function (resolve, reject) {
+		fs.writeFile(filePath, data, options, function (err, bytesRead, buffer) {
+			if (err) {
+				reject(err);
+			} else {
+				resolve("");
+			}
+		});
+	});
+};
 
 
 

@@ -12,7 +12,7 @@ const imgur = require("./imgur.js");
 
 var _debug = false;
 var _debugPush = false;
-var _version = "0.5.0.21";
+var _version = "0.5.1.3";
 // 主版本號：當你做了不兼容的API修改
 // 次版本號：當你做了向下兼容的功能性新增
 // 修訂號：當你做了向下兼容的問題修正
@@ -216,7 +216,7 @@ const replyAI = async function (rawMsg, replyFunc) {
 			addNickData(key, nick);
 
 			// wait 25 min to save
-			nickDataBase.uploadTask();
+			nickDataBase.uploadTask().catch(debugLog);
 
 			replyFunc("[學習] 嗯！記住了！");
 			return true;
@@ -235,7 +235,7 @@ const replyAI = async function (rawMsg, replyFunc) {
 		}
 
 		// wait 25 min to save
-		nickDataBase.uploadTask();
+		nickDataBase.uploadTask().catch(debugLog);;
 
 		replyFunc("[學習] 忘記了!");
 		return true;
@@ -305,28 +305,32 @@ const replyAI = async function (rawMsg, replyFunc) {
 	} else if (command == "上傳" || command == "UPLOAD") {
 
 		let promiseArray;
+		try {
+			promiseArray = [];
+			promiseArray.push(charaDataBase.saveDB());
+			promiseArray.push(nickDataBase.saveDB());
+			promiseArray.push(classDataBase.saveDB());
+			await Promise.all(promiseArray);
 
-		promiseArray = [];
-		promiseArray.push(charaDataBase.saveDB());
-		promiseArray.push(nickDataBase.saveDB());
-		promiseArray.push(classDataBase.saveDB());
-		await Promise.all(promiseArray);
-
-		charaDataBase.uploadDB();
-		nickDataBase.uploadDB();
-		classDataBase.uploadDB();
-		replyFunc("上傳中, 完成將不另通知...");
-		return true;
+			charaDataBase.uploadDB();
+			nickDataBase.uploadDB();
+			classDataBase.uploadDB();
+			replyFunc("上傳中, 完成將不另通知...");
+			return true;
+		} catch (error) {
+			replyFunc("上傳異常! " + error);
+			return true;
+		}
 
 	} else if (_debug && (command == "更新" || command == "UPDATA")) {
 		allCharaDataCrawler();
 		classDataCrawler();
-		replyFunc("更新中, 完成將不另通知...");
+		replyFunc("更新中...");
 		return true;
 
 	} else if (_debug && (command == "初始化" || command == "INIT")) {
-		module.exports.init();
-		replyFunc("初始化中, 完成將不另通知...");
+		await module.exports.init();
+		replyFunc("初始化完成!");
 		return true;
 
 	}
@@ -364,7 +368,7 @@ const searchClassReply = function (command, replyFunc) {
 
 		var result = "";
 		let count = 0;
-		// 遍歷腳色資料
+		// 遍歷角色資料
 		for (let i in charaDataBase.data) {
 			let obj = charaDataBase.data[i];
 			if (obj.rarity == _rarity && obj.class == _class) {
@@ -387,7 +391,7 @@ const searchClassReply = function (command, replyFunc) {
 	return false;
 }
 
-// 搜尋腳色&回復
+// 搜尋角色&回復
 const searchCharacterReply = function (command, blurry, replyFunc) {
 	if (typeof (blurry) == "undefined") blurry = true;
 
@@ -409,7 +413,7 @@ const searchCharacterReply = function (command, blurry, replyFunc) {
 	}
 	return count;
 }
-// 回覆單一腳色資料
+// 回覆單一角色資料
 const replayCharaData = function (charaName, replyFunc) {
 	debugLog("replayCharaData(" + charaName + ")");
 
@@ -681,14 +685,14 @@ const charaDataCrawler = function (urlPath) {
 				}
 			});
 			//debugLog(newData);
-			// 新增腳色資料
+			// 新增角色資料
 			addCharaData(newData);
 			resolve();
 		}
 		request.get(urlPath, { encoding: "binary" }, requestCallBack);
 	});
 };
-// 爬所有腳色
+// 爬所有角色
 const allCharaDataCrawler = function () {
 	console.log("AllCharaData Crawling...");
 	let allCharaUrl = [];
@@ -709,7 +713,7 @@ const allCharaDataCrawler = function () {
 			let buffer = $(this).attr("href");
 			if (buffer && $(this).parent().is("td") && $(this).prev().prev().children().is("img")) {
 				//console.log($(this).text());
-				// 延遲呼叫腳色爬蟲
+				// 延遲呼叫角色爬蟲
 				// setTimeout(function () { charaDataCrawler(buffer); }, delay * 50);
 				allCharaUrl.push(buffer);
 				//delay++;
@@ -732,8 +736,9 @@ const allCharaDataCrawler = function () {
 			}
 			await Promise.all(promiseArray);
 		}
+		debugLog("角色更新完成!");
 		// save database
-		charaDataBase.uploadTask();
+		charaDataBase.uploadTask().catch(debugLog);;
 	}, 3000);
 
 }
@@ -795,7 +800,7 @@ const classDataCrawler = function () {
 
 	setTimeout(async function () {
 		// save database
-		classDataBase.uploadTask();
+		classDataBase.uploadTask().catch(debugLog);;
 	}, 3000);
 
 };
@@ -1216,18 +1221,25 @@ module.exports = {
 	init: async function () {
 
 		let promiseArray;
+		charaDataBase.data = [];
+		nickDataBase.data = [];
+		classDataBase.data = [];
 
-		promiseArray = [];
-		promiseArray.push(charaDataBase.downloadDB());
-		promiseArray.push(nickDataBase.downloadDB());
-		promiseArray.push(classDataBase.downloadDB());
-		await Promise.all(promiseArray);
+		try {
+			promiseArray = [];
+			promiseArray.push(charaDataBase.downloadDB());
+			promiseArray.push(nickDataBase.downloadDB());
+			promiseArray.push(classDataBase.downloadDB());
+			await Promise.all(promiseArray);
 
-		promiseArray = [];
-		promiseArray.push(charaDataBase.loadDB());
-		promiseArray.push(nickDataBase.loadDB());
-		promiseArray.push(classDataBase.loadDB());
-		await Promise.all(promiseArray);
+			promiseArray = [];
+			promiseArray.push(charaDataBase.loadDB());
+			promiseArray.push(nickDataBase.loadDB());
+			promiseArray.push(classDataBase.loadDB());
+			await Promise.all(promiseArray);
+		} catch (err) {
+			debugLog(err);
+		}
 
 		return;
 	},
@@ -1254,21 +1266,27 @@ const debugFunc = async function () {
 	//await module.exports.init();
 	//await imgur.init();
 
+	try {
+		await charaDataBase.downloadDB()
+	} catch (err) {
+		console.log(err);
+	}
 
 	//_debug = true;
 	//replyAI("anna upload", debugLog);
 
-	userId = "U9eefeba8c0e5f8ee369730c4f983346b";
-	profile = await bot.getUserProfile(userId);
-	console.log(profile);
 
-	groupId = "C576ad7f8e2d943f7a6f07d043391dab3";
-	profile = await bot.getGroupMember(groupId);
-	console.log(profile);
+	// userId = "U9eefeba8c0e5f8ee369730c4f983346b";
+	// profile = await bot.getUserProfile(userId);
+	// console.log(profile);
 
-	groupId = "C906808294426cdd7d8077301b11fe95f";
-	profile = await bot.getGroupMember(groupId);
-	console.log(profile);
+	// groupId = "C576ad7f8e2d943f7a6f07d043391dab3";
+	// profile = await bot.getGroupMember(groupId);
+	// console.log(profile);
+
+	// groupId = "C906808294426cdd7d8077301b11fe95f";
+	// profile = await bot.getGroupMember(groupId);
+	// console.log(profile);
 
 }
 

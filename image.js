@@ -68,7 +68,7 @@ const main = async function () {
 const getFileList = async function (mainFolder) {
     let pathArray = [];
     // get AutoResponse key word
-    let dirArray = await dbox.listDir(mainFolder, "folder");
+    let dirArray = await dbox.listDir(mainFolder, "folder").catch(console.log);
     let promiseArray = [];
 
     for (let i in dirArray) {
@@ -77,17 +77,18 @@ const getFileList = async function (mainFolder) {
 
         // get AR image name
         promiseArray.push(
-            dbox.listDir(dirArray[i]).then(
-                function (fileArray) {
+            dbox.listDir(dirArray[i])
+                .then(
+                    function (fileArray) {
 
-                    for (let j in fileArray) {
-                        // set AR image full path
-                        pathArray.push(dirArray[i] + "/" + fileArray[j]);
-                        //console.log("pathArray: " + dirArray[i] + "/" + fileArray[j]);
-                        console.log("pathArray: " + pathArray[pathArray.length - 1]);
+                        for (let j in fileArray) {
+                            // set AR image full path
+                            pathArray.push(dirArray[i] + "/" + fileArray[j]);
+                            //console.log("pathArray: " + dirArray[i] + "/" + fileArray[j]);
+                            console.log("pathArray: " + pathArray[pathArray.length - 1]);
+                        }
                     }
-                }
-            )
+                ).catch(console.log)
         );
     }
 

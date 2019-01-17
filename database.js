@@ -46,7 +46,8 @@ createNewDataBase = function (dbName) {
             await asyncSaveFile(this.fileName, json);
             console.log(this.name + " saved!");
         } catch (err) {
-            console.log(err);
+            //console.log(err);
+            return Promise.reject(err);
         }
     };
 
@@ -81,7 +82,8 @@ createNewDataBase = function (dbName) {
 
             console.log(this.name + " loaded!");
         } catch (err) {
-            console.log(err);
+            //console.log(err);
+            return Promise.reject(err);
         }
     };
 
@@ -89,7 +91,12 @@ createNewDataBase = function (dbName) {
         console.log(this.name + " downloading...");
 
         // download json
-        await dbox.fileDownload(this.fileName, this.fileName);
+        try {
+            await dbox.fileDownload(this.fileName, this.fileName);
+        } catch (err) {
+            //console.log(err);
+            return Promise.reject(err);
+        }
 
         console.log(this.name + " downloaded!");
     };
@@ -99,9 +106,14 @@ createNewDataBase = function (dbName) {
         console.log(this.name + " uploading...");
 
         // object to json
-        var binary = new Buffer.from(JSON.stringify(this.data));
-        await dbox.filesBackup(this.fileName);
-        await dbox.fileUpload(this.fileName, binary);
+        try {
+            var binary = new Buffer.from(JSON.stringify(this.data));
+            await dbox.filesBackup(this.fileName);
+            await dbox.fileUpload(this.fileName, binary);
+        } catch (err) {
+            //console.log(err);
+            return Promise.reject(err);
+        }
 
         clearTimeout(this.uploadTaskId);
         console.log(this.name + " uploaded!");
@@ -109,7 +121,12 @@ createNewDataBase = function (dbName) {
 
     newDB.uploadTask = async function () {
         clearTimeout(this.uploadTaskId);
-        await this.saveDB();
+        try {
+            await this.saveDB();
+        } catch (err) {
+            //console.log(err);
+            return Promise.reject(err);
+        }
         this.uploadTaskId = setTimeout(this.uploadDB, 25 * 60 * 1000);
     };
 
