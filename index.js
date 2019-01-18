@@ -6,8 +6,8 @@
 
 // commit
 /*
-	0.5.1.3
-	updata complete message
+	0.5.2.1
+	updata message
 */
 
 // 初始化
@@ -215,6 +215,7 @@ const main = async function () {
 	// 開始監聽
 	bot_on();
 	console.log("=====*****Anna secretary online*****=====");
+	bot.push(adminstrator[0], "Anna secretary online");
 }; main();
 
 

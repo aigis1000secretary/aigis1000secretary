@@ -12,7 +12,7 @@ const imgur = require("./imgur.js");
 
 var _debug = false;
 var _debugPush = false;
-var _version = "0.5.1.3";
+var _version = "0.5.2.1";
 // 主版本號：當你做了不兼容的API修改
 // 次版本號：當你做了向下兼容的功能性新增
 // 修訂號：當你做了向下兼容的問題修正
@@ -322,7 +322,10 @@ const replyAI = async function (rawMsg, replyFunc) {
 			return true;
 		}
 
-	} else if (_debug && (command == "更新" || command == "UPDATA")) {
+	} else if (command == "更新" || command == "UPDATA") {
+		if (charaDataBase.data.length != 0) {
+			_debugPush = true;
+		}
 		allCharaDataCrawler();
 		classDataCrawler();
 		replyFunc("更新中...");
@@ -739,6 +742,7 @@ const allCharaDataCrawler = function () {
 		debugLog("角色更新完成!");
 		// save database
 		charaDataBase.uploadTask().catch(debugLog);;
+		_debugPush = _debug;
 	}, 3000);
 
 }
@@ -971,6 +975,7 @@ const addCharaData = function (newData) {
 	if (charaDataBase.indexOf(newData.name) == -1) {
 		charaDataBase.data.push(newData);
 		console.log("New character <" + newData.name + "> data add complete!");
+		debugPush("New character <" + newData.name + "> data add complete!");
 
 	} else {
 		let i = charaDataBase.indexOf(newData.name);
@@ -1119,6 +1124,7 @@ const addClassData = function (newClass) {
 	if (classDataBase.indexOf(newClass.name) == -1) {
 		classDataBase.data.push(newClass);
 		console.log("New Class <" + newClass.name + "> add complete!");
+		debugPush("New Class <" + newClass.name + "> add complete!");
 
 	} else {
 		console.log("Class <" + newClass.name + "> is existed!");
@@ -1208,10 +1214,15 @@ const debugLog = function (msg) {
 		return;
 	}
 	console.log(msg);
-
+	debugPush(msg);
+}
+const debugPush = function (msg) {
 	if (_debugPush) {
-		bot.push("U9eefeba8c0e5f8ee369730c4f983346b", msg);
+		botPush(msg);
 	}
+}
+const botPush = function (msg) {
+	bot.push("U9eefeba8c0e5f8ee369730c4f983346b", msg);
 }
 
 
