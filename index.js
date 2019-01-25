@@ -6,8 +6,7 @@
 
 // commit
 /*
-	0.5.2.1
-	updata message
+	0.5.3.6
 */
 
 // 初始化
@@ -31,7 +30,6 @@ const server = app.listen(process.env.PORT || 8080, function () {
 	let port = server.address().port;
 	console.log("App now running on port", port);
 });
-const adminstrator = ["U9eefeba8c0e5f8ee369730c4f983346b"];
 // remote system
 let botMode = "anna";
 let remoteTarget = "";
@@ -70,7 +68,7 @@ const bot_on = function () {
 			// 取出文字內容
 			var msg = event.message.text.trim()
 			// get source id
-			let userId = typeof (event.source.userId) == "undefined" ? adminstrator[0] : event.source.userId;
+			let userId = typeof (event.source.userId) == "undefined" ? anna.adminstrator : event.source.userId;	// Line API bug?
 			anna.debugLog(msg);
 			// define reply function
 			var replyFunc = function (rMsg) {
@@ -97,7 +95,7 @@ const bot_on = function () {
 				anna.debugLog(error);
 			});
 
-			if (adminstrator.indexOf(userId) != -1) {
+			if (anna.isAdmin(userId)) {
 				if (msg == "remote") {
 					// sort by ID
 					let keyList = [];
@@ -112,7 +110,9 @@ const bot_on = function () {
 						let key = keyList[i];
 						let str = key + ":\n\t" + remoteTargetList[key];
 						console.log(str);
-						await bot.push(userId, str);
+						if (key[0] == "C" || key[0] == "R") {
+							await bot.push(userId, str);
+						}
 					}
 					return;
 
@@ -154,7 +154,8 @@ const bot_on = function () {
 			}
 
 			// bot mode
-			if (botMode == "anna") {
+			//if (botMode == "anna") {
+			if (!(userId == remoter || (event.source.groupId == remoteTarget || event.source.roomId == remoteTarget))) {
 				// normal response
 				if (msg == "安娜") {
 					replyFunc("是的！王子？");
@@ -162,12 +163,8 @@ const bot_on = function () {
 				}
 
 				// 身分驗證
-				if (adminstrator.indexOf(userId) == -1) {
-					if (msg.toUpperCase().indexOf("DEBUG") != -1) {
-						msg = "";
-					}
-				} else if (adminstrator.indexOf(userId) == 0) {
-					if (msg.toUpperCase().indexOf("我婆") != -1) {
+				if (userId == "U9eefeba8c0e5f8ee369730c4f983346b") {
+					if (msg == "我婆") {
 						msg = "刻詠の風水士リンネ";
 					}
 				}
@@ -180,7 +177,7 @@ const bot_on = function () {
 				// normal auto-response
 				if (msg.toUpperCase().indexOf("ANNA ") == 0 || msg.indexOf("安娜 ") == 0) {
 					// 判讀指令
-					anna.replyAI(msg, replyFunc);
+					anna.replyAI(msg, userId, replyFunc);
 					return;
 				}
 
@@ -215,33 +212,25 @@ const main = async function () {
 	// 開始監聽
 	bot_on();
 	console.log("=====*****Anna secretary online*****=====");
-	bot.push(adminstrator[0], "Anna secretary online");
+	bot.push(anna.debugLogger, "Anna secretary online");
 }; main();
 
 
 
 /*
-const debugFunc = function() {
-	anna.stampCommand("anna debug", function(obj) {console.log(obj)});
+const debugFunc = function () {
+	let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
 
+	anna.replyAI("anna debug", userId, console.log);
 
-	var sendMsg = [];
-	sendMsg.push({
-		type: "image",
-		originalContentUrl: 'https://i.imgur.com/NX3tRXx.jpg',
-		previewImageUrl: 'https://i.imgur.com/NX3tRXx.jpg'
-	});
-	//bot.push('U9eefeba8c0e5f8ee369730c4f983346b', sendMsg);
-	bot.push('C576ad7f8e2d943f7a6f07d043391dab3', sendMsg);
-
-	anna.searchData("安娜 帝国猟兵レーゼル", function(obj) {console.log(obj)});
+	bot.push(anna.debugLogger, "Anna secretary debugFunc");
 
 }
 
 
 
 // Test function
-setTimeout(debugFunc, 3 * 1000);*/
+setTimeout(debugFunc, 5 * 1000);//*/
 
 
 

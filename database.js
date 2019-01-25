@@ -120,7 +120,7 @@ createNewDataBase = function (dbName) {
     };
 
     newDB.uploadTask = async function () {
-        clearTimeout(this.uploadTaskId);
+        await clearTimeout(this.uploadTaskId);
         try {
             await this.saveDB();
         } catch (err) {

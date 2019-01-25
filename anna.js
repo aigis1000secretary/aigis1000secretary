@@ -12,7 +12,7 @@ const imgur = require("./imgur.js");
 
 var _debug = false;
 var _debugPush = false;
-var _version = "0.5.2.1";
+var _version = "0.5.3.6";
 // 主版本號：當你做了不兼容的API修改
 // 次版本號：當你做了向下兼容的功能性新增
 // 修訂號：當你做了向下兼容的問題修正
@@ -26,12 +26,15 @@ String.prototype.replaceAll = function (s1, s2) {
 	return source.toString();
 }
 
+
+
 // line bot
 // 搜尋資料
-const replyAI = async function (rawMsg, replyFunc) {
+const replyAI = async function (rawMsg, userId, replyFunc) {
 	// 指令:
 	let msg2 = rawMsg.indexOf("\n") == -1 ? "" : rawMsg.substring(rawMsg.indexOf("\n") + 1);
 	rawMsg = rawMsg.split("\n")[0];
+	let isAdmin = module.exports.isAdmin(userId);
 
 	debugLog("rawMsg: <" + rawMsg + ">");
 
@@ -221,7 +224,7 @@ const replyAI = async function (rawMsg, replyFunc) {
 			replyFunc("[學習] 嗯！記住了！");
 			return true;
 		}
-	} else if (_debug && command == "忘記") {
+	} else if (isAdmin && command == "忘記") {
 		// forgot
 		if (msgs.length < 3) {
 			return false;
@@ -240,7 +243,7 @@ const replyAI = async function (rawMsg, replyFunc) {
 		replyFunc("[學習] 忘記了!");
 		return true;
 
-	} else if (_debug && (command == "資料庫" || command == "DB")) {
+	} else if (isAdmin && (command == "資料庫" || command == "DB")) {
 
 		if (msgs.length < 3) {
 			replyFunc("請選擇資料庫:\nCharaDataBase\nNickDataBase\nClassDataBase\n\n(>>資料庫 CharaDataBase NNL.ability_aw)");
@@ -272,6 +275,11 @@ const replyAI = async function (rawMsg, replyFunc) {
 
 		if (index == -1) {
 			replyFunc("找不到目標!");
+			return true;
+
+		} else if (msg2 = "DEL") {
+			targetDB.data.splice(index, 1);
+			replyFunc("刪除成功!");
 			return true;
 
 		} else if (typeof (property) == "undefined" || typeof (targetDB.data[index][property]) == "undefined") {
@@ -323,15 +331,12 @@ const replyAI = async function (rawMsg, replyFunc) {
 		}
 
 	} else if (command == "更新" || command == "UPDATA") {
-		if (charaDataBase.data.length != 0) {
-			_debugPush = true;
-		}
 		allCharaDataCrawler();
 		classDataCrawler();
 		replyFunc("更新中...");
 		return true;
 
-	} else if (_debug && (command == "初始化" || command == "INIT")) {
+	} else if (isAdmin && (command == "初始化" || command == "INIT")) {
 		await module.exports.init();
 		replyFunc("初始化完成!");
 		return true;
@@ -416,6 +421,7 @@ const searchCharacterReply = function (command, blurry, replyFunc) {
 	}
 	return count;
 }
+
 // 回覆單一角色資料
 const replayCharaData = function (charaName, replyFunc) {
 	debugLog("replayCharaData(" + charaName + ")");
@@ -437,6 +443,7 @@ const replayCharaData = function (charaName, replyFunc) {
 	replyFunc(replyMsg);
 	return;
 }
+
 // 定型文貼圖
 const replyStamp = function (msg, replyFunc) {
 	if (typeof (msg) == "undefined") return false;
@@ -461,6 +468,7 @@ const replyStamp = function (msg, replyFunc) {
 
 	return false;
 }
+
 
 
 // 爬蟲
@@ -739,10 +747,9 @@ const allCharaDataCrawler = function () {
 			}
 			await Promise.all(promiseArray);
 		}
-		debugLog("角色更新完成!");
+		botPush("角色更新完成!");
 		// save database
 		charaDataBase.uploadTask().catch(debugLog);;
-		_debugPush = _debug;
 	}, 3000);
 
 }
@@ -917,8 +924,8 @@ String.prototype.tableToArray = function () {
 }
 
 
-// 資料庫
 
+// 資料庫
 // Character
 var charaDataBase = database.createNewDataBase("CharaDataBase");
 // 建構資料函數
@@ -937,6 +944,16 @@ charaDataBase.newData = function () {
 		var string = "";
 
 		string += this.name + "　　" + this.rarity + "\n";
+
+		let nickList = [];
+		for (let i in nickDataBase.data) {
+			if (nickDataBase.data[i].target == this.name) {
+				nickList.push(nickDataBase.data[i].name);
+			}
+		}
+		if (nickList.length > 0) {
+			string += nickList.join(" ") + "\n";
+		}
 
 		if (this.ability != "") {
 			string += "◇特：" + this.ability + "\n";
@@ -975,7 +992,7 @@ const addCharaData = function (newData) {
 	if (charaDataBase.indexOf(newData.name) == -1) {
 		charaDataBase.data.push(newData);
 		console.log("New character <" + newData.name + "> data add complete!");
-		debugPush("New character <" + newData.name + "> data add complete!");
+		botPush("anna " + newData.name + " New character data add complete!");
 
 	} else {
 		let i = charaDataBase.indexOf(newData.name);
@@ -1081,7 +1098,6 @@ const searchCharacter = function (key, blurry) {
 	return result;
 }
 
-
 // Nickname
 var nickDataBase = database.createNewDataBase("NickDataBase");
 // 建構資料函數
@@ -1103,7 +1119,6 @@ const addNickData = function (name, nick) {
 		nickDataBase.data.push(newData);
 	}
 }
-
 
 // Class
 var classDataBase = database.createNewDataBase("ClassDataBase");
@@ -1208,7 +1223,10 @@ const bot = linebot({
 	channelSecret: "ea71aeca4c54c6aa270df537fbab3ee3",
 	channelAccessToken: "GMunTSrUWF1vRwdNxegvepxHEQWgyaMypbtyPluxqMxoTqq8QEGJWChetLPvlV0DJrY4fvphSUT58vjVQVLhndlfk2JKQ/sbzT6teG1qUUUEVpVfqs5KGzzn3NUngYMw9/lvvU0QZVGBqPS6wKVxrQdB04t89/1O/w1cDnyilFU="
 });
-
+// 管理用參數
+const adminstrator = "U9eefeba8c0e5f8ee369730c4f983346b";
+const admins = [];
+const debugLogger = "U9eefeba8c0e5f8ee369730c4f983346b";
 const debugLog = function (msg) {
 	if (!_debug) {
 		return;
@@ -1222,7 +1240,7 @@ const debugPush = function (msg) {
 	}
 }
 const botPush = function (msg) {
-	bot.push("U9eefeba8c0e5f8ee369730c4f983346b", msg);
+	bot.push(debugLogger, msg);
 }
 
 
@@ -1256,18 +1274,23 @@ module.exports = {
 	},
 
 	// index,js
-	replyAI: function (msg, replyFunc) { return replyAI(msg, replyFunc); },
-	replyStamp: function (msg, replyFunc) { return replyStamp(msg, replyFunc); },
+	replyAI: replyAI,
+	replyStamp: replyStamp,
 
 	// updata.js
 	//charaDataCrawler: function (urlPath) { return charaDataCrawler(urlPath); },
-	allCharaDataCrawler: function () { return allCharaDataCrawler(); },
-	classDataCrawler: function () { return classDataCrawler(); },
-	_encodeURI_JP: function (url) { return encodeURI_JP(url); },
+	allCharaDataCrawler: allCharaDataCrawler,
+	classDataCrawler: classDataCrawler,
+	_encodeURI_JP: encodeURI_JP,
 
 	// debug
-	_debug: function () { return _debug; },
-	debugLog: function (debugMsg) { return debugLog(debugMsg); }
+	_debug: _debug,
+	debugLog: debugLog,
+
+	isAdmin: function (userId) { return (userId == adminstrator || admins.indexOf(userId) != -1) },
+	adminstrator: adminstrator,
+	//admins: function () { return admins },
+	debugLogger: debugLogger
 };
 
 
