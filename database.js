@@ -120,14 +120,32 @@ createNewDataBase = function (dbName) {
     };
 
     newDB.uploadTask = async function () {
-        await clearTimeout(this.uploadTaskId);
+        /*await clearTimeout(this.uploadTaskId);
         try {
             await this.saveDB();
         } catch (err) {
             //console.log(err);
             return Promise.reject(err);
         }
-        this.uploadTaskId = setTimeout(this.uploadDB, 25 * 60 * 1000);
+        this.uploadTaskId = setTimeout(this.uploadDB, 20 * 60 * 1000);*/
+
+        await clearTimeout(this.uploadTaskId);
+
+        return new Promise(function (resolve, reject) {
+            this.uploadTaskId = setTimeout(
+                async function () {
+
+                    try {
+                        await this.saveDB();
+                        await this.uploadDB();
+                        resolve();
+                    } catch (err) {
+                        console.log(err);
+                        reject(err);
+                    }
+
+                }, 20 * 60 * 1000);
+        });
     };
 
     return newDB;

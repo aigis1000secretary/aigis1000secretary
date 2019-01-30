@@ -12,7 +12,7 @@ const imgur = require("./imgur.js");
 
 var _debug = false;
 var _debugPush = false;
-var _version = "0.5.3.6";
+var _version = "0.5.5.0";
 // 主版本號：當你做了不兼容的API修改
 // 次版本號：當你做了向下兼容的功能性新增
 // 修訂號：當你做了向下兼容的問題修正
@@ -304,7 +304,7 @@ const replyAI = async function (rawMsg, userId, replyFunc) {
 		} else {
 			targetDB.data[index][property] = msg2;
 			replyFunc("修改成功");
-			targetDB.uploadTask();
+			targetDB.uploadTask().catch(debugLog);;
 			return true;
 
 		}
@@ -312,21 +312,22 @@ const replyAI = async function (rawMsg, userId, replyFunc) {
 		return false;
 	} else if (command == "上傳" || command == "UPLOAD") {
 
-		let promiseArray;
 		try {
-			promiseArray = [];
-			promiseArray.push(charaDataBase.saveDB());
-			promiseArray.push(nickDataBase.saveDB());
-			promiseArray.push(classDataBase.saveDB());
-			await Promise.all(promiseArray);
+			replyFunc("上傳中...");
 
-			charaDataBase.uploadDB();
-			nickDataBase.uploadDB();
-			classDataBase.uploadDB();
-			replyFunc("上傳中, 完成將不另通知...");
+			await charaDataBase.saveDB();
+			await charaDataBase.uploadDB();
+
+			await nickDataBase.saveDB();
+			await nickDataBase.uploadDB();
+
+			await classDataBase.saveDB();
+			await classDataBase.uploadDB();
+
+			botPush("上傳完成!");
 			return true;
 		} catch (error) {
-			replyFunc("上傳異常! " + error);
+			botPush("上傳異常! " + error);
 			return true;
 		}
 
@@ -1249,23 +1250,20 @@ const botPush = function (msg) {
 module.exports = {
 	init: async function () {
 
-		let promiseArray;
 		charaDataBase.data = [];
 		nickDataBase.data = [];
 		classDataBase.data = [];
 
 		try {
-			promiseArray = [];
-			promiseArray.push(charaDataBase.downloadDB());
-			promiseArray.push(nickDataBase.downloadDB());
-			promiseArray.push(classDataBase.downloadDB());
-			await Promise.all(promiseArray);
+			await charaDataBase.downloadDB();
+			await charaDataBase.loadDB();
 
-			promiseArray = [];
-			promiseArray.push(charaDataBase.loadDB());
-			promiseArray.push(nickDataBase.loadDB());
-			promiseArray.push(classDataBase.loadDB());
-			await Promise.all(promiseArray);
+			await nickDataBase.downloadDB();
+			await nickDataBase.loadDB();
+
+			await classDataBase.downloadDB();
+			await classDataBase.loadDB();
+
 		} catch (err) {
 			debugLog(err);
 		}

@@ -334,42 +334,44 @@ imgur.dataBase.createImage = function (newData) {
 	return newImage;
 }
 // find image from database
-imgur.dataBase.findImageByMd5 = function (imageMd5) {
+imgur.dataBase.findImageByMd5 = function (keyMd5) {
 	// search album by md5
 	for (let i in imgur.dataBase.images) {
-		if (imgur.dataBase.images[i].md5 == imageMd5)
+		if (imgur.dataBase.images[i].md5 == keyMd5)
 			return imgur.dataBase.images[i];
 	}
 	return null;
 }
-imgur.dataBase.findImageByTag = function (imageTag) {
+imgur.dataBase.findImageByTag = function (keyTag) {
 	// search album by tag
 	var result = [];
-	imageTag = imageTag.toUpperCase().trim()
+	keyTag = keyTag.toUpperCase().trim();
 	for (let i in imgur.dataBase.images) {
-		if (imgur.dataBase.images[i].tags.indexOf(imageTag) != -1) {
+		if (imgur.dataBase.images[i].tags.indexOf(keyTag) != -1) {
 			result.push(imgur.dataBase.images[i]);
 		}
 	}
 	return result;
 }
-imgur.dataBase.findImageByNameTag = function (imageName, imageTag) {
+imgur.dataBase.findImageByNameTag = function (keyName, keyTag) {
 	// search album by tag
 	var result = [];
+	keyName = keyName.toUpperCase().trim();
 	for (let i in imgur.dataBase.images) {
-		if (imgur.dataBase.images[i].fileName == imageName) {
-			if (imgur.dataBase.images[i].tags.indexOf(imageTag) != -1) {
-				result.push(imgur.dataBase.images[i]);
-			}
+		if (imgur.dataBase.images[i].fileName.toUpperCase().trim() == keyName &&
+			imgur.dataBase.images[i].tags.indexOf(keyTag) != -1) {
+			result.push(imgur.dataBase.images[i]);
+
 		}
 	}
 	return result;
 }
-imgur.dataBase.findImageByFileName = function (imageName) {
+imgur.dataBase.findImageByFileName = function (keyName) {
 	// search album by tag
 	var result = [];
+	keyName = keyName.toUpperCase().trim();
 	for (let i in imgur.dataBase.images) {
-		if (imgur.dataBase.images[i].fileName == imageName) {
+		if (imgur.dataBase.images[i].fileName.toUpperCase().trim() == keyName) {
 			result.push(imgur.dataBase.images[i]);
 		}
 	}

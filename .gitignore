@@ -4,3 +4,4 @@ test.js
 node.bat
 *.json
 *.txt
+*.log
