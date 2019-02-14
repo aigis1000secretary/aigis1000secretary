@@ -43,7 +43,7 @@ const main = async function () {
                 let fileMd5 = md5(fileBinary);  // get MD5 for check
 
                 let onlineImage = imgur.dataBase.findImageByMd5(fileMd5);
-                if (onlineImage != null) {
+                if (onlineImage.length != 0) {
                     console.log("file already existed(md5): " + pathArray[i]);
                     // return "file already existed";
 

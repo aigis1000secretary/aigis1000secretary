@@ -298,7 +298,7 @@ imgur.dataBase.loadImages = function (jsonResponse) {
 		var newImage = imgur.dataBase.createImage(jsonResponse[i]);
 
 		let onlineImage = imgur.dataBase.findImageByMd5(newImage.md5);
-		if (onlineImage != null) {
+		if (onlineImage.length != 0) {
 			imgur.image.ImageDeletion(newImage.id)
 		} else {
 			imgur.dataBase.images.push(newImage);
@@ -338,9 +338,9 @@ imgur.dataBase.findImageByMd5 = function (keyMd5) {
 	// search album by md5
 	for (let i in imgur.dataBase.images) {
 		if (imgur.dataBase.images[i].md5 == keyMd5)
-			return imgur.dataBase.images[i];
+			return [imgur.dataBase.images[i]];
 	}
-	return null;
+	return [];
 }
 imgur.dataBase.findImageByTag = function (keyTag) {
 	// search album by tag

@@ -12,7 +12,7 @@ const imgur = require("./imgur.js");
 
 var _debug = false;
 var _debugPush = false;
-var _version = "0.5.5.0";
+var _version = "0.5.6.0";
 // 主版本號：當你做了不兼容的API修改
 // 次版本號：當你做了向下兼容的功能性新增
 // 修訂號：當你做了向下兼容的問題修正
@@ -460,7 +460,8 @@ const replyStamp = function (msg, replyFunc) {
 		return true;
 	}
 
-	imgArray = imgur.dataBase.findImageByFileName(msg);
+	imgArray = imgArray.concat(imgur.dataBase.findImageByFileName(msg));
+	imgArray = imgArray.concat(imgur.dataBase.findImageByMd5(msg));
 	if (imgArray.length > 0) {
 		replyMsg.push(createImageMsg(imgArray[0].imageLink, imgArray[0].thumbnailLink));
 		replyFunc(replyMsg);
