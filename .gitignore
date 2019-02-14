@@ -1,6 +1,7 @@
 node_modules/
 .vscode/
 test.js
+hotfix.js
 node.bat
 *.json
 *.txt

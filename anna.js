@@ -12,7 +12,7 @@ const imgur = require("./imgur.js");
 
 var _debug = false;
 var _debugPush = false;
-var _version = "0.5.6.0";
+var _version = "0.5.7.2";
 // 主版本號：當你做了不兼容的API修改
 // 次版本號：當你做了向下兼容的功能性新增
 // 修訂號：當你做了向下兼容的問題修正

