@@ -5,7 +5,7 @@
 
 // commit
 /*
-	0.6.0.5
+	0.6.0.6
 */
 
 // 初始化
@@ -99,7 +99,7 @@ const bot_on = function () {
 			let sourceId =
 				event.source.type == "group" ? event.source.groupId :
 					event.source.type == "room" ? event.source.roomId : userId;
-			if (userId[0] != "U") {
+			if (sourceId[0] != "U") {
 				addGroupData(sourceId, msg.split("\n")[0].trim());
 			}
 
