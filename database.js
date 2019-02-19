@@ -47,7 +47,9 @@ createNewDataBase = function (dbName) {
             console.log(this.name + " saved!");
         } catch (err) {
             //console.log(err);
-            return Promise.reject(err);
+            botPush(this.name + " saving...");
+            botPush(err);
+            //return Promise.reject(err);
         }
     };
 
@@ -83,7 +85,9 @@ createNewDataBase = function (dbName) {
             console.log(this.name + " loaded!");
         } catch (err) {
             //console.log(err);
-            return Promise.reject(err);
+            botPush(this.name + " loading...");
+            botPush(err);
+            //return Promise.reject(err);
         }
     };
 
@@ -95,7 +99,9 @@ createNewDataBase = function (dbName) {
             await dbox.fileDownload(this.fileName, this.fileName);
         } catch (err) {
             //console.log(err);
-            return Promise.reject(err);
+            botPush(this.name + " downloading...");
+            botPush(err);
+            //return Promise.reject(err);
         }
 
         console.log(this.name + " downloaded!");
@@ -112,7 +118,9 @@ createNewDataBase = function (dbName) {
             await dbox.fileUpload(this.fileName, binary);
         } catch (err) {
             //console.log(err);
-            return Promise.reject(err);
+            botPush(this.name + " uploading...");
+            botPush(err);
+            //return Promise.reject(err);
         }
 
         clearTimeout(this.uploadTaskId);
@@ -120,38 +128,33 @@ createNewDataBase = function (dbName) {
     };
 
     newDB.uploadTask = async function () {
-        /*await clearTimeout(this.uploadTaskId);
-        try {
-            await this.saveDB();
-        } catch (err) {
-            //console.log(err);
-            return Promise.reject(err);
-        }
-        this.uploadTaskId = setTimeout(this.uploadDB, 20 * 60 * 1000);*/
-
         await clearTimeout(this.uploadTaskId);
 
-        return new Promise(function (resolve, reject) {
-            this.uploadTaskId = setTimeout(
-                async function () {
-
-                    try {
-                        await this.saveDB();
-                        await this.uploadDB();
-                        resolve();
-                    } catch (err) {
-                        console.log(err);
-                        reject(err);
-                    }
-
-                }, 20 * 60 * 1000);
-        });
+        try {
+            await this.saveDB();
+            this.uploadTaskId = setTimeout(this.uploadDB, 10 * 60 * 1000);
+        } catch (err) {
+            //console.log(err);
+            botPush(this.name + " uploadTask...");
+            botPush(err);
+            //return Promise.reject(err);
+        }
     };
 
     return newDB;
 }
 
 
+const linebot = require("linebot");
+const bot = linebot({
+    channelId: 1612493892,
+    channelSecret: "ea71aeca4c54c6aa270df537fbab3ee3",
+    channelAccessToken: "GMunTSrUWF1vRwdNxegvepxHEQWgyaMypbtyPluxqMxoTqq8QEGJWChetLPvlV0DJrY4fvphSUT58vjVQVLhndlfk2JKQ/sbzT6teG1qUUUEVpVfqs5KGzzn3NUngYMw9/lvvU0QZVGBqPS6wKVxrQdB04t89/1O/w1cDnyilFU="
+});
+const debugLogger = "U9eefeba8c0e5f8ee369730c4f983346b";
+const botPush = function (msg) {
+    bot.push(debugLogger, msg);
+}
 
 
 

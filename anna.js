@@ -12,7 +12,7 @@ const imgur = require("./imgur.js");
 
 var _debug = false;
 var _debugPush = false;
-var _version = "0.5.7.2";
+var _version = "0.6.0.5";
 // 主版本號：當你做了不兼容的API修改
 // 次版本號：當你做了向下兼容的功能性新增
 // 修訂號：當你做了向下兼容的問題修正
@@ -27,329 +27,314 @@ String.prototype.replaceAll = function (s1, s2) {
 }
 
 
-
 // line bot
 // 搜尋資料
 const replyAI = async function (rawMsg, userId, replyFunc) {
-	// 指令:
-	let msg2 = rawMsg.indexOf("\n") == -1 ? "" : rawMsg.substring(rawMsg.indexOf("\n") + 1);
-	rawMsg = rawMsg.split("\n")[0];
-	let isAdmin = module.exports.isAdmin(userId);
 
 	debugLog("rawMsg: <" + rawMsg + ">");
+	// flag
+	let isAdmin = module.exports.isAdmin(userId);
+	let callAnna = (rawMsg.toUpperCase().indexOf("ANNA ") == 0 || rawMsg.indexOf("安娜 ") == 0);
+	if (!callAnna) {
+		rawMsg = "ANNA " + rawMsg;
+	}
 
 	// 分析命令
-	let msgs = rawMsg.split(" ");
-	if (msgs.length < 2) {
+	let msg1 = ("" + rawMsg.split("\n")[0]).trim();
+	let msg2 = rawMsg.indexOf("\n") != -1 ? rawMsg.substring(rawMsg.indexOf("\n") + 1).trim() : "";
+	let msgs = msg1.split(" ");
+	// >> ANNA <command>	<arg1>			<arg2>
+	// >> ANNA 學習			NNL:黑弓
+	// >> ANNA 資料庫		CharaDataBase	NNL.ability_aw
+	let command = ("" + msgs[1].toUpperCase()).trim();
+	let arg1 = ("" + msgs[2]).trim();
+	let arg2 = ("" + msgs[3]).trim();
+
+	// <command>
+	if (command == "undefined") {
 		return false;
 	}
-	let command = msgs[1].toUpperCase().trim();
 	debugLog("Command: <" + command + ">");
 
-	// debug switch
-	if (command == "DEBUG") {
-		_debug = !_debug;
-		_debugPush = !_debugPush;
-		replyFunc("_debug = " + (_debug ? "on" : "off"));
-		return true;
-	}
+	// reply
+	if (callAnna) {
+		if (command == "DEBUG") {		// debug switch
+			_debug = !_debug;
+			_debugPush = !_debugPush;
+			return replyFunc("_debug = " + (_debug ? "on" : "off"));
 
-	// 定型文
-	if (command.length == 1) {
-		if (searchCharacterReply(command, false, replyFunc) == 1) {
-			return true;
-		} else if (replyStamp(command, replyFunc)) {
-			// 呼叫定型文圖片
-			return true;
-		} else {
-			replyFunc("王子太短了，找不到...");
-			return true;
-		}
-
-	} else if (command == "巨根") {
-		replyFunc("王子太小了，找不到...");
-		return true;
-
-	} else if (command == "醒醒" || command == "WAKE") {
-		// wake
-		replyFunc("呣喵~?");
-		return true;
-
-	} else if (command == "指令" || command == "HELP") {
-		// help
-		var replyMsg = "";
-
-		replyMsg += "狀態: 確認目前版本，資料庫資料筆數。\n(>>安娜 狀態)\n\n";
-		replyMsg += "照片: 上傳角色附圖的網路空間(DropBox)。\n(>>安娜 照片)\n\n";
-		replyMsg += "工具: 千年戰爭Aigis實用工具。\n(>>安娜 工具)\n\n";
-		replyMsg += "職業: 列出資料庫現有職業。\n\n";
-		replyMsg += "學習: 用來教會安娜角色的暱稱。\n(>>安娜 學習 NNL:射手ナナリー)\n\n";
-
-		replyMsg += "\n";
-		replyMsg += "直接輸入稀有度+職業可以搜索角色\n(>>安娜 黑弓) *推薦使用\n\n";
-		replyMsg += "輸入關鍵字可進行暱稱搜索&模糊搜索\n(>>安娜 NNL)\n(>>安娜 射手ナナリー)";
-
-		if (!_debug) {
-			replyFunc(replyMsg);
-			return true;
-		}
-
-		replyMsg += "\n";
-		replyMsg += "忘記: 刪除特定暱稱。\n(>>安娜 忘記 NNL)\n\n";
-		replyMsg += "資料庫: 直接修改資料庫內容。\n(>>資料庫 CharaDataBase NNL.ability_aw)\n\n";
-		replyMsg += "上傳: 手動上傳資料庫更新。\n\n";
-		replyMsg += "更新: 手動上傳資料庫更新。\n\n";
-
-		replyFunc(replyMsg);
-		return true;
-
-	} else if (command == "狀態" || command == "STATU") {
-		// status
-		//loadAutoResponseList();
-		await imgur.account.allImages()
-			.then(imgur.dataBase.loadImages)
-			.catch(function (error) {
-				console.log("Imgur images load error!");
-				console.log(error);
-			});
-
-		var replyMsg = "";
-
-		replyMsg += "目前版本 v" + _version + "\n";
-		replyMsg += "資料庫內有 " + charaDataBase.data.length + " 筆角色資料\n";
-		replyMsg += "　　　　　 " + classDataBase.data.length + " 筆職業資料\n";
-		replyMsg += "　　　　　 " + imgur.dataBase.images.length + " 筆貼圖資料";
-
-		replyFunc(replyMsg);
-		return true;
-
-	} else if (command == "照片" || command == "圖片" || command == "相片" || command == "PICTURE") {
-		// 圖片空間
-		replyFunc(createTemplateMsg("圖片空間", ["上傳新照片", "線上圖庫"],
-			["https://www.dropbox.com/request/FhIsMnWVRtv30ZL2Ty69",
-				"https://www.dropbox.com/sh/vonsrxzy79nkpah/AAD4p6TwZF44GHP5f6gdEh3ba?dl=0"]));
-		return true;
-
-	} else if (command == "工具" || command == "TOOL") {
-		// tool
-		var templateMsgA, templateMsgB;
-
-		var laleArray = [];
-		var urlArray = [];
-		laleArray.push("特殊合成表");
-		urlArray.push("https://seesaawiki.jp/aigis/d/%C6%C3%BC%EC%B9%E7%C0%AE%C9%BD");
-		laleArray.push("經驗值計算機");
-		urlArray.push("http://aigistool.html.xdomain.jp/EXP.html");
-		laleArray.push("體魅計算機");
-		urlArray.push("http://aigistool.html.xdomain.jp/ChariSta.html");
-		templateMsgA = createTemplateMsg("實用工具 (1)", laleArray, urlArray);
-
-		laleArray = [];
-		urlArray = [];
-		laleArray.push("DPS一覽表 (日)");
-		urlArray.push("http://www116.sakura.ne.jp/~kuromoji/aigis_dps.htm");
-		laleArray.push("攻略頻道: Sennen");
-		urlArray.push("https://www.youtube.com/channel/UC8RlGt22URJuM0yM0pUyWBA");
-		laleArray.push("千年戦争アイギス攻略ブログ");
-		urlArray.push("http://sennenaigis.blog.fc2.com/");
-		templateMsgB = createTemplateMsg("實用工具 (2)", laleArray, urlArray);
-
-		var replyMsg = [templateMsgA, templateMsgB];
-
-		replyFunc(replyMsg);
-		return true;
-
-	} else if (command == "職業") {
-		let classDB = classDataBase.data
-		var replyMsgA = "";
-		var replyMsgB = "";
-		for (let i in classDB) {
-			if (classDB[i].type == "近接型") {
-				replyMsgA += classDB[i].index.join(",\t") + "\n";
-			} else if (classDB[i].type == "遠距離型") {
-				replyMsgB += classDB[i].index.join(",\t") + "\n";
+		} else if (command.length == 1) {		// 定型文
+			if (!replyStamp(command, replyFunc)) {
+				return replyFunc("王子太短了，找不到...");
 			}
-		}
-		replyMsgA = replyMsgA.trim();
-		replyMsgB = replyMsgB.trim();
-		replyFunc(replyMsgA + "\n" + replyMsgB);
-		return true;
 
-	} else if (command == "學習") {
-		// 關鍵字學習
-		if (msgs.length < 3) {
-			replyFunc("[學習] 要學甚麼?");
-			return true;
-		}
-		let learn = msgs[2].trim().replace("：", ":");
-		debugLog("learn: <" + learn + ">");
+		} else if (command == "巨根") {
+			return replyFunc("王子太小了，找不到...");
 
-		let keys = learn.split(":"); // NNL:黑弓
-		if (keys.length < 2) {
-			replyFunc("[學習] 看不懂...");
-			return true;
-		}
+		} else if (command == "醒醒" || command == "WAKE") {
+			// wake
+			return replyFunc("呣喵~?");
 
-		let arrayA = searchCharacter(keys[0].trim(), false);	// 精確搜索 Nickname
-		let arrayB = searchCharacter(keys[1].trim());
-		let countA = arrayA.length;
-		let countB = arrayB.length;
+		} else if (command == "指令" || command == "HELP") {
+			// help
+			var replyMsg = "";
 
-		debugLog("full name: <" + arrayB + ">");
-		debugLog("new nick: <" + keys[0] + ">");
+			replyMsg += "狀態: 確認目前版本，資料庫資料筆數。\n(>>安娜 狀態)\n\n";
+			replyMsg += "照片: 上傳角色附圖的網路空間(DropBox)。\n(>>安娜 照片)\n\n";
+			replyMsg += "工具: 千年戰爭Aigis實用工具。\n(>>安娜 工具)\n\n";
+			replyMsg += "職業: 列出資料庫現有職業。\n\n";
+			replyMsg += "學習: 用來教會安娜角色的暱稱。\n(>>安娜 學習 NNL:射手ナナリー)\n\n";
 
-		if (countA == 1) {
-			replyFunc("[學習] 安娜知道的！");
-			return true;
+			replyMsg += "\n";
+			replyMsg += "直接輸入稀有度+職業可以搜索角色\n(>>安娜 黑弓) *推薦使用\n\n";
+			replyMsg += "輸入關鍵字可進行暱稱搜索&模糊搜索\n(>>安娜 NNL)\n(>>安娜 射手ナナリー)";
 
-		} else if (countB == 0) {
-			let replyMsgs = ["不認識的人呢...", "那是誰？"];
-			var replyMsg = "[學習] " + replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
-			replyFunc(replyMsg);
-			return true;
+			if (!_debug) {
+				return replyFunc(replyMsg);
+			}
 
-		} else if (countB > 1) {
-			replyFunc("[學習] 太多人了，不知道是誰");
-			return true;
+			replyMsg += "\n";
+			replyMsg += "忘記: 刪除特定暱稱。\n(>>安娜 忘記 NNL)\n\n";
+			replyMsg += "資料庫: 直接修改資料庫內容。\n(>>資料庫 CharaDataBase NNL.ability_aw)\n\n";
+			replyMsg += "上傳: 手動上傳資料庫更新。\n\n";
+			replyMsg += "更新: 手動上傳資料庫更新。\n\n";
 
-		} else {
-			var key = arrayB[0];
-			var nick = keys[0];
+			return replyFunc(replyMsg);
 
-			addNickData(key, nick);
+		} else if (command == "狀態" || command == "STATU") {
+			// status
+			//loadAutoResponseList();
+			await imgur.account.allImages()
+				.then(imgur.dataBase.loadImages)
+				.catch(function (error) {
+					console.log("Imgur images load error!");
+					console.log(error);
+				});
 
-			// wait 25 min to save
-			nickDataBase.uploadTask().catch(debugLog);
+			var replyMsg = "";
 
-			replyFunc("[學習] 嗯！記住了！");
-			return true;
-		}
-	} else if (isAdmin && command == "忘記") {
-		// forgot
-		if (msgs.length < 3) {
-			return false;
-		}
-		let learn = msgs[2].trim();
-		debugLog("forgot: <" + learn + ">");
+			replyMsg += "目前版本 v" + _version + "\n";
+			replyMsg += "資料庫內有 " + charaDataBase.data.length + " 筆角色資料\n";
+			replyMsg += "　　　　　 " + classDataBase.data.length + " 筆職業資料\n";
+			replyMsg += "　　　　　 " + imgur.dataBase.images.length + " 筆貼圖資料";
 
-		let i = nickDataBase.indexOf(learn.trim());
-		if (i > -1) {
-			nickDataBase.data.splice(i, 1);
-		}
+			return replyFunc(replyMsg);
 
-		// wait 25 min to save
-		nickDataBase.uploadTask().catch(debugLog);;
+		} else if (command == "照片" || command == "圖片" || command == "相片" || command == "PICTURE") {
+			// 圖片空間
+			return replyFunc(createTemplateMsg("圖片空間", ["上傳新照片", "線上圖庫"],
+				["https://www.dropbox.com/request/FhIsMnWVRtv30ZL2Ty69",
+					"https://www.dropbox.com/sh/vonsrxzy79nkpah/AAD4p6TwZF44GHP5f6gdEh3ba?dl=0"]));
 
-		replyFunc("[學習] 忘記了!");
-		return true;
+		} else if (command == "工具" || command == "TOOL") {
+			// tool
+			var templateMsgA, templateMsgB;
 
-	} else if (isAdmin && (command == "資料庫" || command == "DB")) {
+			var tagArray = [];
+			var urlArray = [];
+			tagArray.push("特殊合成表");
+			urlArray.push("https://seesaawiki.jp/aigis/d/%C6%C3%BC%EC%B9%E7%C0%AE%C9%BD");
+			tagArray.push("經驗值計算機");
+			urlArray.push("http://aigistool.html.xdomain.jp/EXP.html");
+			tagArray.push("體魅計算機");
+			urlArray.push("http://aigistool.html.xdomain.jp/ChariSta.html");
+			templateMsgA = createTemplateMsg("實用工具 (1)", tagArray, urlArray);
 
-		if (msgs.length < 3) {
-			replyFunc("請選擇資料庫:\nCharaDataBase\nNickDataBase\nClassDataBase\n\n(>>資料庫 CharaDataBase NNL.ability_aw)");
-			return true;
-		} else if (msgs.length < 4) {
-			replyFunc("請輸入項目: \n(>>資料庫 CharaDataBase NNL.ability_aw)");
-			return true;
-		}
+			tagArray = [];
+			urlArray = [];
+			tagArray.push("DPS一覽表 (日)");
+			urlArray.push("http://www116.sakura.ne.jp/~kuromoji/aigis_dps.htm");
+			tagArray.push("千年戦争アイギス バフ試算表");
+			urlArray.push("https://aki-m.github.io/aigistools/buff.html");
+			tagArray.push("攻略頻道: Sennen");
+			urlArray.push("https://www.youtube.com/channel/UC8RlGt22URJuM0yM0pUyWBA");
+			//tagArray.push("千年戦争アイギス攻略ブログ");
+			//urlArray.push("http://sennenaigis.blog.fc2.com/");
+			templateMsgB = createTemplateMsg("實用工具 (2)", tagArray, urlArray);
 
-		let targetString = msgs[2];
-		let indexString = msgs[3].split(".")[0];
-		let property = msgs[3].split(".")[1];
-		let index;
+			var replyMsg = [templateMsgA, templateMsgB];
 
-		let targetDB;
-		if (targetString == "CharaDataBase") {
-			targetDB = charaDataBase;
-			index = charaDataBase.indexOf(searchCharacter(indexString)[0]);
-		} else if (targetString == "NickDataBase") {
-			targetDB = nickDataBase;
-			index = nickDataBase.indexOf(indexString);
-		} else if (targetString == "ClassDataBase") {
-			targetDB = classDataBase;
-			index = classDataBase.indexOf(indexString);
-		} else {
-			replyFunc("不明的資料庫!");
-			return true;
-		}
+			return replyFunc(replyMsg);
 
-		if (index == -1) {
-			replyFunc("找不到目標!");
-			return true;
-
-		} else if (msg2 = "DEL") {
-			targetDB.data.splice(index, 1);
-			replyFunc("刪除成功!");
-			return true;
-
-		} else if (typeof (property) == "undefined" || typeof (targetDB.data[index][property]) == "undefined") {
-			let reply = "成員不明! 請選擇成員:\n";
-
-			for (let key in targetDB.data[index]) {
-				if (typeof (targetDB.data[index][key]) != "function") {
-					reply += key + "\n";
+		} else if (command == "職業") {
+			let classDB = classDataBase.data
+			var replyMsgA = "";
+			var replyMsgB = "";
+			for (let i in classDB) {
+				if (classDB[i].type == "近接型") {
+					replyMsgA += classDB[i].index.join(",\t") + "\n";
+				} else if (classDB[i].type == "遠距離型") {
+					replyMsgB += classDB[i].index.join(",\t") + "\n";
 				}
 			}
+			replyMsgA = replyMsgA.trim();
+			replyMsgB = replyMsgB.trim();
+			return replyFunc(replyMsgA + "\n" + replyMsgB);
 
-			replyFunc(reply.trim());
-			return true;
+		} else if (command == "學習") {
+			// 關鍵字學習
+			// <arg1>
+			if (arg1 == "undefined") {
+				return replyFunc("[學習] 要學甚麼?");
+			}
+			let learn = arg1.replace("：", ":");
+			debugLog("learn: <" + learn + ">");
 
-		} else if (msg2 == "") {
-			var replyMsg = [];
-			replyMsg.push(createTextMsg("請換行輸入項目內容."));
-			replyMsg.push(createTextMsg(targetDB.data[index][property]));
-			replyFunc(replyMsg);
-			return true;
+			let keys = learn.split(":"); // NNL:黑弓
+			if (keys.length < 2) {
+				return replyFunc("[學習] 看不懂...");
+			}
 
-		} else {
-			targetDB.data[index][property] = msg2;
-			replyFunc("修改成功");
-			targetDB.uploadTask().catch(debugLog);;
-			return true;
+			let arrayA = searchCharacter(keys[0].trim(), false);	// 精確搜索 Nickname
+			let arrayB = searchCharacter(keys[1].trim(), true);
+			let countA = arrayA.length;
+			let countB = arrayB.length;
+
+			debugLog("full name: <" + arrayB + ">");
+			debugLog("new nick: <" + keys[0] + ">");
+
+			if (countA == 1) {
+				return replyFunc("[學習] 安娜知道的！");
+
+			} else if (countB == 0) {
+				let replyMsgs = ["不認識的人呢...", "那是誰？"];
+				var replyMsg = "[學習] " + replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
+				return replyFunc(replyMsg);
+
+			} else if (countB > 1) {
+				return replyFunc("[學習] 太多人了，不知道是誰");
+
+			} else {
+				var key = arrayB[0];
+				var nick = keys[0];
+
+				addNickData(key, nick);
+
+				// wait 10 min to save
+				nickDataBase.uploadTask();
+
+				return replyFunc("[學習] 嗯！記住了！");
+			}
+		} else if (isAdmin && command == "忘記") {
+			// forgot
+			// <arg1>
+			if (arg1 == "undefined") {
+				return false;
+			}
+			let learn = arg1;
+			debugLog("forgot: <" + learn + ">");
+
+			let i = nickDataBase.indexOf(learn.trim());
+			if (i > -1) {
+				nickDataBase.data.splice(i, 1);
+			}
+
+			// wait 10 min to save
+			nickDataBase.uploadTask();
+
+			return replyFunc("[學習] 忘記了!");
+
+		} else if (isAdmin && (command == "資料庫" || command == "DB")) {
+
+			// >> ANNA <command>	<arg1>			<arg2>
+			// >> ANNA 資料庫		CharaDataBase	NNL.ability_aw
+
+			if (arg1 == "undefined") {
+				return replyFunc("請選擇資料庫:\nCharaDataBase\nNickDataBase\nClassDataBase\n\n(>>資料庫 CharaDataBase NNL.ability_aw)");
+			} else if (arg2 == "undefined") {
+				return replyFunc("請輸入項目: \n(>>資料庫 CharaDataBase NNL.ability_aw)");
+			}
+
+			let targetDBName = arg1;
+			let indexStr = arg2.split(".")[0];
+			let propertyStr = arg2.split(".")[1];
+			let index;
+
+			let targetDB;
+			if (targetDBName == "CharaDataBase") {
+				targetDB = charaDataBase;
+				index = charaDataBase.indexOf(searchCharacter(indexStr)[0]);
+			} else if (targetDBName == "NickDataBase") {
+				targetDB = nickDataBase;
+				index = nickDataBase.indexOf(indexStr);
+			} else if (targetDBName == "ClassDataBase") {
+				targetDB = classDataBase;
+				index = classDataBase.indexOf(indexStr);
+			} else {
+				return replyFunc("不明的資料庫!");
+			}
+
+			if (index == -1) {
+				return replyFunc("不明的目標!");
+			}
+			if (msg2 == "DEL") {
+				targetDB.data.splice(index, 1);
+				return replyFunc(targetDB.name + "." + searchCharacter(indexStr)[0] + " 刪除成功!");
+			}
+
+			if (typeof (targetDB.data[index][propertyStr]) == "undefined") {
+				let reply = "不明的成員! 請選擇成員:\n";
+				for (let key in targetDB.data[index]) {
+					if (typeof (targetDB.data[index][key]) != "function") {
+						reply += key + "\n";
+					}
+				}
+
+				return replyFunc(reply.trim());
+			}
+			if (msg2 == "undefined" || msg2 == "") {
+				var replyMsg = [];
+				replyMsg.push(createTextMsg("請換行輸入項目內容."));
+				replyMsg.push(createTextMsg(targetDB.data[index][propertyStr]));
+				return replyFunc(replyMsg);
+
+			} else {
+				targetDB.data[index][propertyStr] = (msg2 == "CLEAR" ? "" : msg2);
+				targetDB.uploadTask();
+				return replyFunc("修改成功");
+
+			}
+
+			return false;
+		} else if (command == "上傳" || command == "UPLOAD") {
+
+			try {
+				replyFunc("上傳中...");
+
+				await charaDataBase.saveDB();
+				await charaDataBase.uploadDB();
+
+				await nickDataBase.saveDB();
+				await nickDataBase.uploadDB();
+
+				await classDataBase.saveDB();
+				await classDataBase.uploadDB();
+
+				botPush("上傳完成!");
+				return true;
+			} catch (error) {
+				botPush("上傳異常! " + error);
+				return true;
+			}
+
+		} else if (command == "更新" || command == "UPDATA") {
+			allCharaDataCrawler();
+			classDataCrawler();
+			return replyFunc("更新中...");
+
+		} else if (isAdmin && (command == "初始化" || command == "INIT")) {
+			await module.exports.init();
+			return replyFunc("初始化完成!");
 
 		}
 
-		return false;
-	} else if (command == "上傳" || command == "UPLOAD") {
-
-		try {
-			replyFunc("上傳中...");
-
-			await charaDataBase.saveDB();
-			await charaDataBase.uploadDB();
-
-			await nickDataBase.saveDB();
-			await nickDataBase.uploadDB();
-
-			await classDataBase.saveDB();
-			await classDataBase.uploadDB();
-
-			botPush("上傳完成!");
-			return true;
-		} catch (error) {
-			botPush("上傳異常! " + error);
+		if (searchClassReply(command, replyFunc) > 0) {
 			return true;
 		}
 
-	} else if (command == "更新" || command == "UPDATA") {
-		allCharaDataCrawler();
-		classDataCrawler();
-		replyFunc("更新中...");
-		return true;
-
-	} else if (isAdmin && (command == "初始化" || command == "INIT")) {
-		await module.exports.init();
-		replyFunc("初始化完成!");
-		return true;
-
-	}
-
-	if (searchClassReply(command, replyFunc) > 0) {
-		return true;
-	}
-
-	if (searchCharacterReply(command, true, replyFunc) > 0) {
-		return true;
+		if (searchCharacterReply(command, true, replyFunc) > 0) {
+			return true;
+		}
 	}
 
 	// 呼叫定型文圖片
@@ -357,10 +342,12 @@ const replyAI = async function (rawMsg, userId, replyFunc) {
 		return true;
 	}
 
-	// 404
-	let replyMsgs = ["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"];
-	var replyMsg = replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
-	replyFunc(replyMsg);
+	if (callAnna) {
+		// 404
+		let replyMsgs = ["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"];
+		var replyMsg = replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
+		return replyFunc(replyMsg);
+	}
 	return false;
 }
 
@@ -389,12 +376,10 @@ const searchClassReply = function (command, replyFunc) {
 		debugLog("result: <" + result + ">");
 
 		if (count == 1) {	// only one
-			replayCharaData(result, replyFunc);
-			return true;
+			return replyCharaData(result, replyFunc);
 
 		} else if (count > 0) {	// list
-			replyFunc(result);
-			return true;
+			return replyFunc(result);
 		}
 	}
 	return false;
@@ -414,7 +399,7 @@ const searchCharacterReply = function (command, blurry, replyFunc) {
 
 	// only one
 	if (count == 1) {
-		replayCharaData(result, replyFunc);
+		replyCharaData(result, replyFunc);
 	}
 	else if (count > 0) // list
 	{
@@ -424,8 +409,8 @@ const searchCharacterReply = function (command, blurry, replyFunc) {
 }
 
 // 回覆單一角色資料
-const replayCharaData = function (charaName, replyFunc) {
-	debugLog("replayCharaData(" + charaName + ")");
+const replyCharaData = function (charaName, replyFunc) {
+	debugLog("replyCharaData(" + charaName + ")");
 
 	let i = charaDataBase.indexOf(charaName);
 	let obj = charaDataBase.data[i];
@@ -441,8 +426,7 @@ const replayCharaData = function (charaName, replyFunc) {
 
 	replyMsg.push(createTemplateMsg("Wiki 連結", [obj.name], [obj.getWikiUrl()]));
 
-	replyFunc(replyMsg);
-	return;
+	return replyFunc(replyMsg);
 }
 
 // 定型文貼圖
@@ -456,16 +440,14 @@ const replyStamp = function (msg, replyFunc) {
 	if (imgArray.length > 0) {
 		let i = Math.floor(Math.random() * imgArray.length);
 		replyMsg.push(createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
-		replyFunc(replyMsg);
-		return true;
+		return replyFunc(replyMsg);
 	}
 
 	imgArray = imgArray.concat(imgur.dataBase.findImageByFileName(msg));
 	imgArray = imgArray.concat(imgur.dataBase.findImageByMd5(msg));
 	if (imgArray.length > 0) {
 		replyMsg.push(createImageMsg(imgArray[0].imageLink, imgArray[0].thumbnailLink));
-		replyFunc(replyMsg);
-		return true;
+		return replyFunc(replyMsg);
 	}
 
 	return false;
@@ -751,7 +733,7 @@ const allCharaDataCrawler = function () {
 		}
 		botPush("角色更新完成!");
 		// save database
-		charaDataBase.uploadTask().catch(debugLog);;
+		charaDataBase.uploadTask();
 	}, 3000);
 
 }
@@ -813,7 +795,7 @@ const classDataCrawler = function () {
 
 	setTimeout(async function () {
 		// save database
-		classDataBase.uploadTask().catch(debugLog);;
+		classDataBase.uploadTask();
 	}, 3000);
 
 };

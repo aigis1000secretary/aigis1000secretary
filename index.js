@@ -5,8 +5,7 @@
 
 // commit
 /*
-	0.5.7.2
-	hotfix test
+	0.6.0.5
 */
 
 // 初始化
@@ -33,19 +32,47 @@ const server = app.listen(process.env.PORT || 8080, function () {
 // remote system
 let botMode = "anna";
 let remoteTarget = "";
-let remoteTargetList = [];
 let remoter = "";
+// groupDataBase
+const database = require("./database.js");
+var groupDataBase = database.createNewDataBase("GroupDataBase");
+groupDataBase.newData = function () {
+	var obj = {};
+	obj.name = "";
+	obj.text = "";
+	obj.alarm = "";
+
+	return obj;
+}
+// 新增資料
+const addGroupData = function (groupId, text) {
+	if (groupId == "" || text == "") return;
+
+	if (groupDataBase.indexOf(groupId) == -1) {
+		var newData = groupDataBase.newData();
+		newData.name = groupId;
+		newData.text = text;
+		newData.alarm = true;
+		groupDataBase.data.push(newData);
+
+		// sort
+		groupDataBase.data.sort(function (A, B) {
+			return A.name.localeCompare(B.name)
+		})
+		groupDataBase.uploadTask();
+	}
+}
+
 
 // bot監聽
 const bot_on = function () {
 
 	// wellcome msg
-	bot.on("memberJoined", function (event) {
+	/*bot.on("memberJoined", function (event) {
 		anna.debugLog(event);
 		// push
 		var pushFunc = function (pMsg) {
 			anna.debugLog(pMsg);
-
 			if (event.source.type == "group") {
 				bot.push(event.source.groupId, pMsg);
 			} else if (event.source.type == "room") {
@@ -56,8 +83,7 @@ const bot_on = function () {
 		if (anna.replyStamp("新人", pushFunc)) {
 			return;
 		}
-
-	});
+	});//*/
 
 	// normal msg
 	bot.on("message", async function (event) {
@@ -67,9 +93,16 @@ const bot_on = function () {
 		if (event.message.type == "text") {
 			// 取出文字內容
 			var msg = event.message.text.trim()
+			anna.debugLog(msg);
 			// get source id
 			let userId = typeof (event.source.userId) == "undefined" ? anna.adminstrator : event.source.userId;	// Line API bug?
-			anna.debugLog(msg);
+			let sourceId =
+				event.source.type == "group" ? event.source.groupId :
+					event.source.type == "room" ? event.source.roomId : userId;
+			if (userId[0] != "U") {
+				addGroupData(sourceId, msg.split("\n")[0].trim());
+			}
+
 			// define reply function
 			var replyFunc = function (rMsg) {
 				anna.debugLog(rMsg);
@@ -80,39 +113,21 @@ const bot_on = function () {
 					.catch(function (error) {
 						anna.debugLog(error);
 					});
+				return true;
 			};
 
-
-			// remote system
-			await event.source.profile().then(function (profile) {
-				remoteTargetList[userId] = profile.displayName;
-				if (event.source.type == "group") {
-					remoteTargetList[event.source.groupId] = msg.split("\n");
-				} else if (event.source.type == "room") {
-					remoteTargetList[event.source.roomId] = msg.split("\n");
-				}
-			}).catch(function (error) {
-				anna.debugLog(error);
-			});
-
+			// remote func
 			if (anna.isAdmin(userId)) {
 				if (msg == "remote") {
-					// sort by ID
-					let keyList = [];
-					for (let key in remoteTargetList) {
-						keyList.push(key);
-					}
-					keyList.sort(function (A, B) {
-						return A.localeCompare(B);
-					});
+					// list group
+					for (let i in groupDataBase.data) {
+						let groupId = groupDataBase.data[i].name;
+						let text = groupDataBase.data[i].text;
 
-					for (let i in keyList) {
-						let key = keyList[i];
-						let str = key + ":\n\t" + remoteTargetList[key];
+						let str = groupId + " :\n\t" + text;
 						console.log(str);
-						if (key[0] == "C" || key[0] == "R") {
-							await bot.push(userId, str);
-						}
+						await bot.push(userId, str);
+
 					}
 					return;
 
@@ -124,65 +139,49 @@ const bot_on = function () {
 					return;
 
 				} else if (msg.indexOf("remote ") == 0) {
-					let _target = msg.split(" ")[1];
-					for (let uID in remoteTargetList) {
-						if (remoteTargetList[uID].indexOf(_target) != -1 || _target == uID) {
-							botMode = "remote";
-							remoteTarget = uID;
-							remoter = userId;
-							replyFunc("remote on " + remoteTargetList[uID]);
-							break;
-						}
+					let target = msg.split(" ")[1];
+					let i = groupDataBase.indexOf(target);
+					if (i != -1) {
+						botMode = "remote";
+						remoteTarget = groupDataBase.data[i].name;
+						remoter = userId;
+						replyFunc("remote on " + groupDataBase.data[i].text);
 					}
 					return;
 				}
 			}
 			// remote mode
 			if (botMode == "remote") {
-				if (event.source.type == "user") {
-					if (userId == remoter) {
-						bot.push(remoteTarget, msg);
-						return;
-					} else if (userId == remoteTarget) {
-						bot.push(remoter, msg);
-						return;
-					}
-				} else if (event.source.groupId == remoteTarget || event.source.roomId == remoteTarget) {
-					bot.push(remoter, remoteTargetList[userId] + ": " + msg);
+				if (sourceId == remoteTarget) {
+					bot.push(remoter, msg);
+					return;
+				} else if (sourceId == remoter) {
+					bot.push(remoteTarget, msg);
 					return;
 				}
 			}
 
 			// bot mode
 			//if (botMode == "anna") {
-			if (!(userId == remoter || (event.source.groupId == remoteTarget || event.source.roomId == remoteTarget))) {
+			if (sourceId != remoter && sourceId != remoteTarget) {
 				// normal response
 				if (msg == "安娜") {
 					replyFunc("是的！王子？");
 					return;
 				}
-
 				// 身分驗證
 				if (userId == "U9eefeba8c0e5f8ee369730c4f983346b") {
 					if (msg == "我婆") {
 						msg = "刻詠の風水士リンネ";
 					}
 				}
-
 				// in user chat
 				if (event.source.type == "user" && msg.toUpperCase().indexOf("ANNA ") == -1 && msg.indexOf("安娜 ") == -1) {
 					msg = "ANNA " + msg;
 				}
 
-				// normal auto-response
-				if (msg.toUpperCase().indexOf("ANNA ") == 0 || msg.indexOf("安娜 ") == 0) {
-					// 判讀指令
-					anna.replyAI(msg, userId, replyFunc);
-					return;
-				}
-
-				// 呼叫定型文圖片
-				if (anna.replyStamp(msg, replyFunc)) {
+				// 				
+				if (anna.replyAI(msg, userId, replyFunc)) {
 					return;
 				}
 
@@ -201,24 +200,31 @@ const bot_on = function () {
 	});
 }
 
+/*
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms))
+}
 const request = require("request");
 const fs = require("fs");
-const hotfix = async function(object){
+const hotfix = async function (object) {
 	await new Promise(function (resolve, reject) {
 		request.get("http://36.225.136.202:26080/hotfix_src.js")
 			.pipe(fs.createWriteStream('hotfix.js').on('finish', resolve));
 	});
-	
+
 	let hoitfixTest = require("./hotfix.js");
 	hoitfixTest(object);
 	delete require.cache[require.resolve("./hotfix.js")]
-}
+}*/
+
+
 
 const main = async function () {
 	// 讀取資料
-	let p1 = anna.init();
-	let p2 = imgur.init();
-	await Promise.all([p1, p2]);
+	let pArray = [];
+	pArray.push(anna.init());
+	pArray.push(imgur.init());
+	await Promise.all(pArray);
 
 	// 開始監聽
 	bot_on();
@@ -229,19 +235,20 @@ const main = async function () {
 
 
 /*
-const debugFunc = function () {
+const debugFunc = async function () {
 	let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
 
-	anna.replyAI("anna debug", userId, console.log);
+	//anna.replyAI("anna debug", userId, console.log);
 
-	bot.push(anna.debugLogger, "Anna secretary debugFunc");
+	anna.replyAI("anna 黑弓", userId, function (str) { console.log(">>" + str + "<<"); });
+	await sleep(1000);
 
 }
 
 
 
 // Test function
-setTimeout(debugFunc, 5 * 1000);//*/
+setTimeout(debugFunc, 1 * 1000);//*/
 
 
 
