@@ -49,7 +49,7 @@ createNewDataBase = function (dbName) {
             console.log(err);
             botPush(this.name + " saving...");
             botPush(err);
-            //return Promise.reject(err);
+            // return Promise.reject(err);
         }
     };
 
@@ -87,7 +87,7 @@ createNewDataBase = function (dbName) {
             console.log(err);
             botPush(this.name + " loading...");
             botPush(err);
-            //return Promise.reject(err);
+            // return Promise.reject(err);
         }
     };
 
@@ -101,33 +101,33 @@ createNewDataBase = function (dbName) {
             console.log(err);
             botPush(this.name + " downloading...");
             botPush(err);
-            //return Promise.reject(err);
+            // return Promise.reject(err);
         }
 
         console.log(this.name + " downloaded!");
     };
 
     // 上傳備份
-    newDB.uploadDB = async function () {
+    newDB.uploadDB = async function (backup) {
         console.log(this.name + " uploading...");
 
         // object to json
         try {
             var binary = new Buffer.from(JSON.stringify(this.data));
-            await dbox.filesBackup(this.fileName);
+            if (backup) { await dbox.filesBackup(this.fileName); }
             await dbox.fileUpload(this.fileName, binary);
         } catch (err) {
             console.log(err);
             botPush(this.name + " uploading...");
             botPush(err);
-            //return Promise.reject(err);
+            // return Promise.reject(err);
         }
 
         console.log(this.name + " uploaded!");
     };
 
-    let uploadCount = 1;
-    newDB.uploadTask = async function () {
+    let uploadCount = 15 * 60;
+    newDB.uploadTask = async function (backup) {
 
         try {
 
@@ -145,14 +145,14 @@ createNewDataBase = function (dbName) {
                 }
 
                 await this.saveDB();
-                this.uploadDB();
+                this.uploadDB(backup);
             }
 
         } catch (err) {
             console.log(err);
             botPush(this.name + " uploadTask...");
             botPush(err);
-            //return Promise.reject(err);
+            // return Promise.reject(err);
         }
     };
 
@@ -167,8 +167,12 @@ const bot = linebot({
     channelAccessToken: "GMunTSrUWF1vRwdNxegvepxHEQWgyaMypbtyPluxqMxoTqq8QEGJWChetLPvlV0DJrY4fvphSUT58vjVQVLhndlfk2JKQ/sbzT6teG1qUUUEVpVfqs5KGzzn3NUngYMw9/lvvU0QZVGBqPS6wKVxrQdB04t89/1O/w1cDnyilFU="
 });
 const debugLogger = "U9eefeba8c0e5f8ee369730c4f983346b";
-const botPush = function (msg) {
-    bot.push(debugLogger, msg.toString());
+const botPush = async function (msg) {
+    if (typeof (msg) == "string") {
+        await bot.push(debugLogger, "@" + msg);
+    } else /*if (typeof (msg) == "object") */ {
+        await bot.push(debugLogger, "@" + msg.toString() + JSON.stringify(msg, null, 2));
+    }
 }
 
 
@@ -222,4 +226,4 @@ const debugFunc = async function () {
 
 }
 
-setTimeout(debugFunc, 1 * 100);//*/
+setTimeout(debugFunc, 1 * 100);// */

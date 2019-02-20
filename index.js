@@ -5,7 +5,7 @@
 
 // commit
 /*
-	0.6.1.2
+	0.6.2.4
 */
 
 // 初始化
@@ -25,7 +25,7 @@ const app = express();
 const linebotParser = bot.parser();
 app.post("/", linebotParser);
 const server = app.listen(process.env.PORT || 8080, function () {
-	//因為 express 預設走 port 3000，而 heroku 上預設卻不是，要透過下列程式轉換
+	// 因為 express 預設走 port 3000，而 heroku 上預設卻不是，要透過下列程式轉換
 	let port = server.address().port;
 	console.log("App now running on port", port);
 });
@@ -59,7 +59,10 @@ const addGroupData = function (groupId, text) {
 		groupDataBase.data.sort(function (A, B) {
 			return A.name.localeCompare(B.name)
 		})
-		groupDataBase.uploadTask();
+		groupDataBase.uploadTask(false);
+	} else {
+		let i = groupDataBase.indexOf(groupId);
+		groupDataBase.data[i].text = text;
 	}
 }
 
@@ -69,7 +72,7 @@ const bot_on = function () {
 
 	// wellcome msg
 	/*bot.on("memberJoined", function (event) {
-		anna.debugLog(event);
+		// anna.debugLog(event);
 		// push
 		var pushFunc = function (pMsg) {
 			anna.debugLog(pMsg);
@@ -83,11 +86,11 @@ const bot_on = function () {
 		if (anna.replyStamp("新人", pushFunc)) {
 			return;
 		}
-	});//*/
+	});// */
 
 	// normal msg
 	bot.on("message", async function (event) {
-		anna.debugLog(event);
+		// anna.debugLog(event);
 
 		// 文字事件
 		if (event.message.type == "text") {
@@ -162,7 +165,7 @@ const bot_on = function () {
 			}
 
 			// bot mode
-			//if (botMode == "anna") {
+			// if (botMode == "anna") {
 			if (sourceId != remoter && sourceId != remoteTarget) {
 				// normal response
 				if (msg == "安娜") {
@@ -234,24 +237,24 @@ const main = async function () {
 
 
 
-
+/*
 const debugFunc = async function () {
 	let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
 	var replyFunc = function (str) { console.log(">>" + str + "<<"); return str != "" && typeof (str) != "undefined" && str != "undefined" };
-	//anna.debug = true;
+	// anna.debug = true;
 
-	//anna.replyAI("anna UPLOAD", userId, replyFunc);
-	//anna.replyAI("anna 學習 NNLK:黑弓", userId, replyFunc);
-	//anna.replyAI("anna 黑弓", userId, replyFunc);
+	// anna.replyAI("anna UPLOAD", userId, replyFunc);
+	// anna.replyAI("anna 學習 NNLK:黑弓", userId, replyFunc);
+	// anna.replyAI("anna 黑弓", userId, replyFunc);
 	anna.replyAI("anna debug", userId, replyFunc);
-	//await sleep(1000);
+	// await sleep(1000);
 
 }
 
 
 
 // Test function
-setTimeout(debugFunc, 5 * 1000);//*/
+setTimeout(debugFunc, 5 * 1000);// */
 
 
 

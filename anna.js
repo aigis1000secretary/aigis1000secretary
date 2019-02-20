@@ -5,12 +5,12 @@ const request = require("request");
 const iconv = require("iconv-lite");
 const cheerio = require("cheerio");
 // 資料庫
-//const fs = require("fs");
-//const dbox = require("./dbox.js");
+// const fs = require("fs");
+// const dbox = require("./dbox.js");
 const database = require("./database.js");
 const imgur = require("./imgur.js");
 
-var _version = "0.6.1.2";
+var _version = "0.6.2.4";
 // 主版本號：當你做了不兼容的API修改
 // 次版本號：當你做了向下兼容的功能性新增
 // 修訂號：當你做了向下兼容的問題修正
@@ -59,7 +59,7 @@ const replyAI = async function (rawMsg, userId, replyFunc) {
 	if (callAnna) {
 		if (command == "DEBUG") {		// debug switch
 			module.exports.debug = !module.exports.debug;
-			module.exports.debugPush = !module.exports.debugPush;
+			module.exports.debugPush = module.exports.debug;
 			return replyFunc("debug = " + (module.exports.debug ? "on" : "off"));
 
 		} else if (command.length == 1) {		// 定型文
@@ -102,7 +102,7 @@ const replyAI = async function (rawMsg, userId, replyFunc) {
 
 		} else if (command == "狀態" || command == "STATU") {
 			// status
-			//loadAutoResponseList();
+			// loadAutoResponseList();
 			await imgur.account.allImages()
 				.then(imgur.dataBase.loadImages)
 				.catch(function (error) {
@@ -147,8 +147,8 @@ const replyAI = async function (rawMsg, userId, replyFunc) {
 			urlArray.push("https://aki-m.github.io/aigistools/buff.html");
 			tagArray.push("攻略頻道: Sennen");
 			urlArray.push("https://www.youtube.com/channel/UC8RlGt22URJuM0yM0pUyWBA");
-			//tagArray.push("千年戦争アイギス攻略ブログ");
-			//urlArray.push("http://sennenaigis.blog.fc2.com/");
+			// tagArray.push("千年戦争アイギス攻略ブログ");
+			// urlArray.push("http://sennenaigis.blog.fc2.com/");
 			templateMsgB = createTemplateMsg("實用工具 (2)", tagArray, urlArray);
 
 			var replyMsg = [templateMsgA, templateMsgB];
@@ -371,7 +371,7 @@ const searchByClass = function (command) {
 	// 搜索職業
 	if (command.indexOf("金") != 0 && command.indexOf("藍") != 0 && command.indexOf("白") != 0 &&
 		command.indexOf("鉑") != 0 && command.indexOf("白金") != 0 && command.indexOf("黑") != 0) {
-		return 0;
+		return [];
 	}
 	// 分割命令
 	let _rarity = getRarityString(command[0]);
@@ -479,8 +479,8 @@ const charaDataCrawler = function (urlPath) {
 				let buffer = $(this).attr("id");
 				if (buffer && buffer.indexOf("content_block_") != -1 && buffer.indexOf("-") != -1) {
 
-					//console.log($(this).attr("id"));
-					//console.log($(this).children("table").eq(0).attr("id"));
+					// console.log($(this).attr("id"));
+					// console.log($(this).children("table").eq(0).attr("id"));
 
 					// ステータス
 					if ($(this).prev().children().text().trim() == "ステータス") {
@@ -576,7 +576,7 @@ const charaDataCrawler = function (urlPath) {
 								textList.push(skilList[i][0] + "\n" + temp);
 							}
 						}
-						//debugLog(skilList);
+						// debugLog(skilList);
 
 						// put array into skill data
 						if (textList.length != 0) {
@@ -631,8 +631,7 @@ const charaDataCrawler = function (urlPath) {
 							if (temp.indexOf("効果説明") == -1) {
 								if (skilList[i][0] == "通常") {
 									textList.push(skilList[i][1] + "\n" + temp);
-								}
-								else if (skilList[i][0] == "覚醒") {
+								} else if (skilList[i][0] == "覚醒") {
 									textList_aw.push(skilList[i][1] + "\n" + temp);
 								}
 							}
@@ -679,7 +678,7 @@ const charaDataCrawler = function (urlPath) {
 					}
 				}
 			});
-			//debugLog(newData);
+			// debugLog(newData);
 			// 新增角色資料
 			addCharaData(newData);
 			resolve();
@@ -707,11 +706,11 @@ const allCharaDataCrawler = function () {
 
 			let buffer = $(this).attr("href");
 			if (buffer && $(this).parent().is("td") && $(this).prev().prev().children().is("img")) {
-				//console.log($(this).text());
+				// console.log($(this).text());
 				// 延遲呼叫角色爬蟲
 				// setTimeout(function () { charaDataCrawler(buffer); }, delay * 50);
 				allCharaUrl.push(buffer);
-				//delay++;
+				// delay++;
 			}
 		});
 	}
@@ -776,12 +775,13 @@ const classDataCrawler = function () {
 						var newData = classDataBase.newData();
 						newData.name = str;
 						newData.index.push(str);
-						if ($("title").text().indexOf("近接型") != -1)
+						if ($("title").text().indexOf("近接型") != -1) {
 							newData.type = "近接型";
-						else if ($("title").text().indexOf("遠距離型") != -1)
+						} else if ($("title").text().indexOf("遠距離型") != -1) {
 							newData.type = "遠距離型";
-						else
+						} else {
 							newData.type = "UNKNOWN";
+						}
 
 						// 新增職業資料
 						addClassData(newData);
@@ -823,10 +823,11 @@ const encodeURI_JP = function (url) {
 		big5Encode = urlEncodeBIG5(url[i]);
 		uriEncode = encodeURI(url[i]);
 
-		if (jpEncode == big5Encode)
+		if (jpEncode == big5Encode) {
 			result += uriEncode;
-		else
+		} else {
 			result += jpEncode;
+		}
 	}
 	return result;
 }
@@ -879,7 +880,7 @@ String.prototype.tableToArray = function () {
 					if (style[l].indexOf("rowspan") != -1) {
 						let rowspan = parseInt(style[l].replaceAll("\"", "").replace("rowspan=", ""));
 						for (let span = 1; span < rowspan; span++) {
-							//result[col][row] = cellBody;
+							// result[col][row] = cellBody;
 							result[col + span][row] = "@";
 						}
 					}
@@ -971,7 +972,7 @@ charaDataBase.newData = function () {
 // 新增資料
 const addCharaData = function (newData) {
 	if (newData.name == "") return;
-	//debugLog("New character <" + newData.name + "> data add...");
+	// debugLog("New character <" + newData.name + "> data add...");
 
 	if (charaDataBase.indexOf(newData.name) == -1) {
 		charaDataBase.data.push(newData);
@@ -1028,7 +1029,7 @@ const searchCharacter = function (key, blurry) {
 		const metricsC = 2;	// 連接
 		let j = 0, k = -2, l = -1;
 		let metrics = -15;
-		//array_metrics[(metricsA + metricsB) * key.length] = [];
+		// array_metrics[(metricsA + metricsB) * key.length] = [];
 
 		for (let i = 0; j < key.length; j++) {
 			l = obj.name.indexOf(key[j], Math.max(k, 0));
@@ -1046,9 +1047,9 @@ const searchCharacter = function (key, blurry) {
 		}
 
 		if (metrics > 0) {
-			//array_metrics.push([i, metrics]);
-			//array_metrics[i] = metrics;
-			//array_metrics[metrics].push(i);
+			// array_metrics.push([i, metrics]);
+			// array_metrics[i] = metrics;
+			// array_metrics[metrics].push(i);
 			if (typeof (array_metrics[metrics]) == "undefined") {
 				array_metrics[metrics] = [charaIndex];
 			} else {
@@ -1070,7 +1071,7 @@ const searchCharacter = function (key, blurry) {
 			if (typeof (array_metrics[charaIndex]) == "undefined") continue;	// 檢查搜尋結果
 
 			// 遍歷搜尋結果
-			//for (let i = 0; i < array_metrics[charaIndex].length; i++) {
+			// for (let i = 0; i < array_metrics[charaIndex].length; i++) {
 			for (let i in array_metrics[charaIndex]) {
 				let index = array_metrics[charaIndex][i];
 
@@ -1118,7 +1119,7 @@ classDataBase.newData = function () {
 // 新增資料
 const addClassData = function (newClass) {
 	if (newClass.name == "") return;
-	//console.log("New <" + newClass.name + "> Class data add...");
+	// console.log("New <" + newClass.name + "> Class data add...");
 
 	if (classDataBase.indexOf(newClass.name) == -1) {
 		classDataBase.data.push(newClass);
@@ -1131,7 +1132,7 @@ const addClassData = function (newClass) {
 }
 // 搜尋職業
 const searchClass = function (str) {
-	//for (let i = 0; i < classDataBase.length; i++) {
+	// for (let i = 0; i < classDataBase.length; i++) {
 	for (let i in classDataBase.data) {
 
 		for (let j in classDataBase.data[i].index) {
@@ -1223,7 +1224,11 @@ const debugPush = function (msg) {
 	}
 }
 const botPush = async function (msg) {
-	await bot.push(debugLogger, "@" + msg);
+	if (typeof (msg) == "string") {
+		await bot.push(debugLogger, "@" + msg);
+	} else /*if (typeof (msg) == "object") */ {
+		await bot.push(debugLogger, "@" + msg.toString() + JSON.stringify(msg, null, 2));
+	}
 }
 const isAdmin = function (userId) {
 	return (userId == adminstrator || admins.indexOf(userId) != -1)
@@ -1261,7 +1266,7 @@ module.exports = {
 	replyStamp: replyStamp,
 
 	// updata.js
-	//charaDataCrawler: charaDataCrawler,
+	// charaDataCrawler: charaDataCrawler,
 	allCharaDataCrawler: allCharaDataCrawler,
 	classDataCrawler: classDataCrawler,
 	_encodeURI_JP: encodeURI_JP,
@@ -1273,7 +1278,7 @@ module.exports = {
 
 	isAdmin: isAdmin,
 	adminstrator: adminstrator,
-	//admins: function () { return admins },
+	// admins: function () { return admins },
 	debugLogger: debugLogger
 };
 
@@ -1281,8 +1286,8 @@ module.exports = {
 
 /*
 const debugFunc = async function () {
-	//await module.exports.init();
-	//await imgur.init();
+	// await module.exports.init();
+	// await imgur.init();
 
 	try {
 		await charaDataBase.downloadDB()
@@ -1290,8 +1295,8 @@ const debugFunc = async function () {
 		console.log(err);
 	}
 
-	//module.exports.debug = true;
-	//replyAI("anna upload", debugLog);
+	// module.exports.debug = true;
+	// replyAI("anna upload", debugLog);
 
 
 	// userId = "U9eefeba8c0e5f8ee369730c4f983346b";
@@ -1308,7 +1313,7 @@ const debugFunc = async function () {
 
 }
 
-setTimeout(debugFunc, 1 * 100);//*/
+setTimeout(debugFunc, 1 * 100);// */
 
 
 
