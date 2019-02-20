@@ -11,7 +11,7 @@ createNewDataBase = function (dbName) {
     newDB.name = dbName;
     newDB.fileName = dbName + ".json";
     newDB.data = [];
-    newDB.uploadTaskId = null;
+    newDB.uploadTaskCount = -1;
 
     newDB.newData = function () {
         return {};
@@ -46,7 +46,7 @@ createNewDataBase = function (dbName) {
             await asyncSaveFile(this.fileName, json);
             console.log(this.name + " saved!");
         } catch (err) {
-            //console.log(err);
+            console.log(err);
             botPush(this.name + " saving...");
             botPush(err);
             //return Promise.reject(err);
@@ -84,7 +84,7 @@ createNewDataBase = function (dbName) {
 
             console.log(this.name + " loaded!");
         } catch (err) {
-            //console.log(err);
+            console.log(err);
             botPush(this.name + " loading...");
             botPush(err);
             //return Promise.reject(err);
@@ -98,7 +98,7 @@ createNewDataBase = function (dbName) {
         try {
             await dbox.fileDownload(this.fileName, this.fileName);
         } catch (err) {
-            //console.log(err);
+            console.log(err);
             botPush(this.name + " downloading...");
             botPush(err);
             //return Promise.reject(err);
@@ -117,24 +117,39 @@ createNewDataBase = function (dbName) {
             await dbox.filesBackup(this.fileName);
             await dbox.fileUpload(this.fileName, binary);
         } catch (err) {
-            //console.log(err);
+            console.log(err);
             botPush(this.name + " uploading...");
             botPush(err);
             //return Promise.reject(err);
         }
 
-        clearTimeout(this.uploadTaskId);
         console.log(this.name + " uploaded!");
     };
 
+    let uploadCount = 1;
     newDB.uploadTask = async function () {
-        await clearTimeout(this.uploadTaskId);
 
         try {
-            await this.saveDB();
-            this.uploadTaskId = setTimeout(this.uploadDB, 10 * 60 * 1000);
+
+            if (this.uploadTaskCount > 0) {
+                // counting
+                this.uploadTaskCount = uploadCount;
+            } else {
+                // start count
+                this.uploadTaskCount = uploadCount;
+
+                // count down and upload
+                while (this.uploadTaskCount > 0) {
+                    await sleep(1000);
+                    this.uploadTaskCount--;
+                }
+
+                await this.saveDB();
+                this.uploadDB();
+            }
+
         } catch (err) {
-            //console.log(err);
+            console.log(err);
             botPush(this.name + " uploadTask...");
             botPush(err);
             //return Promise.reject(err);
@@ -153,7 +168,7 @@ const bot = linebot({
 });
 const debugLogger = "U9eefeba8c0e5f8ee369730c4f983346b";
 const botPush = function (msg) {
-    bot.push(debugLogger, msg);
+    bot.push(debugLogger, msg.toString());
 }
 
 
@@ -188,7 +203,10 @@ const asyncSaveFile = function (filePath, data) {
         });
     });
 }
-
+// sleep
+const sleep = function (ms) {
+    return new Promise(resolve => setTimeout(resolve, ms))
+}
 
 
 /*

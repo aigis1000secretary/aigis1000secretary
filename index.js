@@ -5,7 +5,7 @@
 
 // commit
 /*
-	0.6.0.6
+	0.6.1.2
 */
 
 // 初始化
@@ -234,21 +234,24 @@ const main = async function () {
 
 
 
-/*
+
 const debugFunc = async function () {
 	let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
+	var replyFunc = function (str) { console.log(">>" + str + "<<"); return str != "" && typeof (str) != "undefined" && str != "undefined" };
+	//anna.debug = true;
 
-	//anna.replyAI("anna debug", userId, console.log);
-
-	anna.replyAI("anna 黑弓", userId, function (str) { console.log(">>" + str + "<<"); });
-	await sleep(1000);
+	//anna.replyAI("anna UPLOAD", userId, replyFunc);
+	//anna.replyAI("anna 學習 NNLK:黑弓", userId, replyFunc);
+	//anna.replyAI("anna 黑弓", userId, replyFunc);
+	anna.replyAI("anna debug", userId, replyFunc);
+	//await sleep(1000);
 
 }
 
 
 
 // Test function
-setTimeout(debugFunc, 1 * 1000);//*/
+setTimeout(debugFunc, 5 * 1000);//*/
 
 
 
