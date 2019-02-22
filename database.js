@@ -1,6 +1,7 @@
 
 const fs = require("fs");
 const dbox = require("./dbox.js");
+const line = require("./line.js");
 
 module.exports = {
     createNewDataBase: function (dbName) { return createNewDataBase(dbName); },
@@ -17,13 +18,9 @@ createNewDataBase = function (dbName) {
         return {};
     }
 
-    newDB.indexOf = function (key) {
-        if (typeof (key) == "undefined") {
-            return -1;
-        }
-
+    newDB.indexOf = function (key) {        
         for (let i in newDB.data) {
-            if (newDB.data[i].name.toUpperCase() == key.toUpperCase()) {
+            if (key && newDB.data[i].name.toUpperCase() == key.toUpperCase()) {
                 return i;
             }
         }
@@ -47,8 +44,8 @@ createNewDataBase = function (dbName) {
             console.log(this.name + " saved!");
         } catch (err) {
             console.log(err);
-            botPush(this.name + " saving...");
-            botPush(err);
+            botPushError(this.name + " saving error...");
+            botPushError(err);
             // return Promise.reject(err);
         }
     };
@@ -85,8 +82,8 @@ createNewDataBase = function (dbName) {
             console.log(this.name + " loaded!");
         } catch (err) {
             console.log(err);
-            botPush(this.name + " loading...");
-            botPush(err);
+            botPushError(this.name + " loading error...");
+            botPushError(err);
             // return Promise.reject(err);
         }
     };
@@ -97,14 +94,13 @@ createNewDataBase = function (dbName) {
         // download json
         try {
             await dbox.fileDownload(this.fileName, this.fileName);
+            console.log(this.name + " downloaded!");
         } catch (err) {
             console.log(err);
-            botPush(this.name + " downloading...");
-            botPush(err);
+            botPushError(this.name + " downloading error...");
+            botPushError(err);
             // return Promise.reject(err);
         }
-
-        console.log(this.name + " downloaded!");
     };
 
     // 上傳備份
@@ -114,19 +110,20 @@ createNewDataBase = function (dbName) {
         // object to json
         try {
             var binary = new Buffer.from(JSON.stringify(this.data));
-            if (backup) { await dbox.filesBackup(this.fileName); }
+            if (backup) {
+                await dbox.filesBackup(this.fileName);
+            }
             await dbox.fileUpload(this.fileName, binary);
+            console.log(this.name + " uploaded!");
         } catch (err) {
             console.log(err);
-            botPush(this.name + " uploading...");
-            botPush(err);
+            botPushError(this.name + " uploading error...");
+            botPushError(err);
             // return Promise.reject(err);
         }
-
-        console.log(this.name + " uploaded!");
     };
 
-    let uploadCount = 15 * 60;
+    let uploadCount = 28 * 60;
     newDB.uploadTask = async function (backup) {
 
         try {
@@ -150,36 +147,14 @@ createNewDataBase = function (dbName) {
 
         } catch (err) {
             console.log(err);
-            botPush(this.name + " uploadTask...");
-            botPush(err);
+            botPushError(this.name + " uploadTask error...");
+            botPushError(err);
             // return Promise.reject(err);
         }
     };
 
     return newDB;
 }
-
-
-const linebot = require("linebot");
-const bot = linebot({
-    channelId: 1612493892,
-    channelSecret: "ea71aeca4c54c6aa270df537fbab3ee3",
-    channelAccessToken: "GMunTSrUWF1vRwdNxegvepxHEQWgyaMypbtyPluxqMxoTqq8QEGJWChetLPvlV0DJrY4fvphSUT58vjVQVLhndlfk2JKQ/sbzT6teG1qUUUEVpVfqs5KGzzn3NUngYMw9/lvvU0QZVGBqPS6wKVxrQdB04t89/1O/w1cDnyilFU="
-});
-const debugLogger = "U9eefeba8c0e5f8ee369730c4f983346b";
-const botPush = async function (msg) {
-    if (typeof (msg) == "string") {
-        await bot.push(debugLogger, "@" + msg);
-    } else /*if (typeof (msg) == "object") */ {
-        await bot.push(debugLogger, "@" + msg.toString() + JSON.stringify(msg, null, 2));
-    }
-}
-
-
-
-
-
-
 
 
 
@@ -211,7 +186,8 @@ const asyncSaveFile = function (filePath, data) {
 const sleep = function (ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
-
+// botPush
+const botPushError = line.botPushError;
 
 /*
 const debugFunc = async function () {
@@ -221,7 +197,7 @@ const debugFunc = async function () {
     let a = ClassDataBase.indexOf("アコライト");
     console.log(a);
     await ClassDataBase.saveDB();
-    await ClassDataBase.uploadDB();
+    await ClassDataBase.uploadDB(true);
 
 
 }

@@ -402,13 +402,13 @@ imgur.dataBase.saveDatabase = function () {
 
 module.exports = imgur;
 imgur.init = async function () {
-	// access token updata
+	// access token update
 	await imgur.oauth2.token()
 		.then(function (jsonResponse) {
-			console.log("IMGUR_ACCESS_TOKEN updata complete!");
+			console.log("IMGUR_ACCESS_TOKEN update complete!");
 		})
 		.catch(function (error) {
-			console.log("IMGUR_ACCESS_TOKEN updata error!");
+			console.log("IMGUR_ACCESS_TOKEN update error!");
 			console.log(error);
 		});
 

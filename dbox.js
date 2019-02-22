@@ -40,9 +40,8 @@ dboxCore.listDir = async function (dirPath, filter) {
 
 		for (let i = 0; i < response.entries.length; i++) {
 			//result.push(response.entries[i].name + ", " + response.entries[i][".tag"]); continue;
-			if (typeof (filter) == "undefined") {
+			if (!filter) {
 				result.push(response.entries[i].name)
-
 			} else if (filter == response.entries[i][".tag"]) {
 				result.push(response.entries[i].name)
 			}
@@ -59,7 +58,7 @@ dboxCore.listDir = async function (dirPath, filter) {
 
 // download
 dboxCore.fileDownload = async function (dirPath, localPath) {
-	if (typeof (localPath) == "undefined") localPath = dirPath;
+	if (!localPath) localPath = dirPath;
 
 	try {
 		let response = await dbox.filesDownload({ path: root + dirPath })
@@ -78,7 +77,7 @@ dboxCore.fileUpload = async function (dirPath, fileBinary) {
 	var filesCommitInfo = {
 		path: root + dirPath,
 		contents: fileBinary,
-		mode: "add",
+		mode: { ".tag": "overwrite" },
 		autorename: false,
 		mute: true
 	};
@@ -102,16 +101,16 @@ dboxCore.filesBackup = async function (dirPath) {
 		autorename: true,
 		allow_ownership_transfer: true
 	};
-	var filesDeleteArg = {
-		path: root + dirPath
-	};
+	// var filesDeleteArg = {
+	// 	path: root + dirPath
+	// };
 
 	try {
 		await dbox.filesCopy(filesRelocationArg);
-		await dbox.filesDelete(filesDeleteArg);
+		// await dbox.filesDelete(filesDeleteArg);
 
 	} catch (error) {
-		//console.log(error);
+		// console.log(error);
 		return Promise.reject(error);
 	}
 };
@@ -119,7 +118,7 @@ dboxCore.filesBackup = async function (dirPath) {
 
 // json to file
 const asyncSaveFile = function (filePath, data, options) {
-	if (typeof (options) == "undefined") options = "utf8";
+	if (!options) options = "utf8";
 	return new Promise(function (resolve, reject) {
 		fs.writeFile(filePath, data, options, function (err, bytesRead, buffer) {
 			if (err) {
