@@ -11,7 +11,7 @@ const database = require("./database.js");
 const imgur = require("./imgur.js");
 const line = require("./line.js");
 
-var _version = "0.6.3.13";
+var _version = "0.6.4.0";
 // 主版本號：當你做了不兼容的API修改
 // 次版本號：當你做了向下兼容的功能性新增
 // 修訂號：當你做了向下兼容的問題修正

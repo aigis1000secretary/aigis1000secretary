@@ -5,8 +5,8 @@
 
 // commit
 /*
-	0.6.3.13
-	twitter bot test
+	0.6.4.0
+	http host
 */
 
 // 初始化
@@ -16,14 +16,16 @@ const express = require("express");
 const line = require("./line.js");
 const twitter = require("./twitter.js");
 
-// line bot
+// host
 const app = express();
-const linebotParser = line.bot.parser();
-app.post("/", linebotParser);
+app.post("/", line.bot.parser());
 const server = app.listen(process.env.PORT || 8080, function () {
 	// 因為 express 預設走 port 3000，而 heroku 上預設卻不是，要透過下列程式轉換
 	let port = server.address().port;
 	console.log("App now running on port", port);
+});
+app.get('/', function (req, res) {
+	res.send('Anna say hello to you!')
 });
 
 // remote system
