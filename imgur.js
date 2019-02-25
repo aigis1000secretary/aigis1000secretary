@@ -286,28 +286,28 @@ imgur.image.ImageDeletion = function (imageHash) {
 
 
 // DB
-imgur.dataBase = {};
+imgur.database = {};
 // cteate image data from response.data
-imgur.dataBase.images = [];
+imgur.database.images = [];
 // get image from response.data
-imgur.dataBase.loadImages = function (jsonResponse) {
+imgur.database.loadImages = function (jsonResponse) {
 	// response.data to album
-	imgur.dataBase.images = [];	// clear database
+	imgur.database.images = [];	// clear Database
 	for (let i in jsonResponse) {
 		//console.log(jsonResponse[i]);
-		var newImage = imgur.dataBase.createImage(jsonResponse[i]);
+		var newImage = imgur.database.createImage(jsonResponse[i]);
 
-		let onlineImage = imgur.dataBase.findImageByMd5(newImage.md5);
+		let onlineImage = imgur.database.findImageByMd5(newImage.md5);
 		if (onlineImage.length != 0) {
 			imgur.image.ImageDeletion(newImage.id)
 		} else {
-			imgur.dataBase.images.push(newImage);
+			imgur.database.images.push(newImage);
 		}
 	}
-	console.log("Imgur account images load complete (" + imgur.dataBase.images.length + " images)!");
+	console.log("Imgur account images load complete (" + imgur.database.images.length + " images)!");
 	return;
 }
-imgur.dataBase.createImage = function (newData) {
+imgur.database.createImage = function (newData) {
 	// set new image data
 	var newImage = {};
 	newImage.fileName = newData.name;
@@ -333,57 +333,57 @@ imgur.dataBase.createImage = function (newData) {
 
 	return newImage;
 }
-// find image from database
-imgur.dataBase.findImageByMd5 = function (keyMd5) {
+// find image from Database
+imgur.database.findImageByMd5 = function (keyMd5) {
 	// search album by md5
-	for (let i in imgur.dataBase.images) {
-		if (imgur.dataBase.images[i].md5 == keyMd5)
-			return [imgur.dataBase.images[i]];
+	for (let i in imgur.database.images) {
+		if (imgur.database.images[i].md5 == keyMd5)
+			return [imgur.database.images[i]];
 	}
 	return [];
 }
-imgur.dataBase.findImageByTag = function (keyTag) {
+imgur.database.findImageByTag = function (keyTag) {
 	// search album by tag
 	var result = [];
 	keyTag = keyTag.toUpperCase().trim();
-	for (let i in imgur.dataBase.images) {
-		if (imgur.dataBase.images[i].tags.indexOf(keyTag) != -1) {
-			result.push(imgur.dataBase.images[i]);
+	for (let i in imgur.database.images) {
+		if (imgur.database.images[i].tags.indexOf(keyTag) != -1) {
+			result.push(imgur.database.images[i]);
 		}
 	}
 	return result;
 }
-imgur.dataBase.findImageByNameTag = function (keyName, keyTag) {
+imgur.database.findImageByNameTag = function (keyName, keyTag) {
 	// search album by tag
 	var result = [];
 	keyName = keyName.toUpperCase().trim();
-	for (let i in imgur.dataBase.images) {
-		if (imgur.dataBase.images[i].fileName.toUpperCase().trim() == keyName &&
-			imgur.dataBase.images[i].tags.indexOf(keyTag) != -1) {
-			result.push(imgur.dataBase.images[i]);
+	for (let i in imgur.database.images) {
+		if (imgur.database.images[i].fileName.toUpperCase().trim() == keyName &&
+			imgur.database.images[i].tags.indexOf(keyTag) != -1) {
+			result.push(imgur.database.images[i]);
 
 		}
 	}
 	return result;
 }
-imgur.dataBase.findImageByFileName = function (keyName) {
+imgur.database.findImageByFileName = function (keyName) {
 	// search album by tag
 	var result = [];
 	keyName = keyName.toUpperCase().trim();
-	for (let i in imgur.dataBase.images) {
-		if (imgur.dataBase.images[i].fileName.toUpperCase().trim() == keyName) {
-			result.push(imgur.dataBase.images[i]);
+	for (let i in imgur.database.images) {
+		if (imgur.database.images[i].fileName.toUpperCase().trim() == keyName) {
+			result.push(imgur.database.images[i]);
 		}
 	}
 	return result;
 }
 
 // 儲存資料
-imgur.dataBase.saveDatabase = function () {
-	console.log("Imgur dataBase saving...");
+imgur.database.saveDatabase = function () {
+	console.log("Imgur Database saving...");
 
 	// object to json
-	var json = JSON.stringify(imgur.dataBase.images);
+	var json = JSON.stringify(imgur.database.images);
 
 	// callback
 	let fsCallBack = function (error, bytesRead, buffer) {
@@ -393,9 +393,9 @@ imgur.dataBase.saveDatabase = function () {
 		}
 	}
 	// json to file
-	fs.writeFile("ImgurDataBase.log", json, "utf8", fsCallBack);
+	fs.writeFile("ImgurDatabase.log", json, "utf8", fsCallBack);
 
-	console.log("Imgur dataBase saved!");
+	console.log("Imgur Database saved!");
 }
 
 
@@ -413,7 +413,7 @@ imgur.init = async function () {
 		});
 
 	await imgur.account.allImages()
-		.then(imgur.dataBase.loadImages)
+		.then(imgur.database.loadImages)
 		.catch(function (error) {
 			console.log("Imgur images load error!");
 			console.log(error);
@@ -446,7 +446,7 @@ const debugFunc = function() {
 }//*/
 /*
 const debugFunc = function() {
-	var tmp = imgur.dataBase.albums;
+	var tmp = imgur.Database.albums;
 	var str = JSON.stringify(tmp);
 	console.log(str);
 }//*/

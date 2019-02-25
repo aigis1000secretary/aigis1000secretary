@@ -5,65 +5,29 @@
 
 // commit
 /*
-	0.6.4.0
-	http host
+	0.6.5.0
+	Database 物件化
 */
 
 // 初始化
 const anna = require("./anna.js");
 const imgur = require("./imgur.js");
-const express = require("express");
-const line = require("./line.js");
-const twitter = require("./twitter.js");
+const express = require("./express.js");
 
-// host
-const app = express();
-app.post("/", line.bot.parser());
-const server = app.listen(process.env.PORT || 8080, function () {
-	// 因為 express 預設走 port 3000，而 heroku 上預設卻不是，要透過下列程式轉換
-	let port = server.address().port;
-	console.log("App now running on port", port);
-});
-app.get('/', function (req, res) {
-	res.send('Anna say hello to you!')
-});
+const line = require("./line.js");
+const botPush = line.botPush;
+const botPushLog = line.botPushLog;
+
+const twitter = require("./twitter.js");
 
 // remote system
 let botMode = "anna";
 let remoteTarget = "";
 let remoter = "";
-// groupDataBase
+// groupDatabase
 const database = require("./database.js");
-var groupDataBase = database.createNewDataBase("GroupDataBase");
-groupDataBase.newData = function () {
-	var obj = {};
-	obj.name = "";
-	obj.text = "";
-	obj.alarm = "";
+var groupDatabase = database.groupDatabase;
 
-	return obj;
-}
-// 新增資料
-const addGroupData = function (groupId, text) {
-	if (groupId == "" || text == "") return;
-
-	if (groupDataBase.indexOf(groupId) == -1) {
-		var newData = groupDataBase.newData();
-		newData.name = groupId;
-		newData.text = text;
-		newData.alarm = true;
-		groupDataBase.data.push(newData);
-
-		// sort
-		groupDataBase.data.sort(function (A, B) {
-			return A.name.localeCompare(B.name)
-		})
-	} else {
-		let i = groupDataBase.indexOf(groupId);
-		groupDataBase.data[i].text = text;
-	}
-	groupDataBase.uploadTask(false);
-}
 
 
 // line bot 監聽
@@ -102,7 +66,7 @@ const lineBotOn = function () {
 				event.source.type == "group" ? event.source.groupId :
 					event.source.type == "room" ? event.source.roomId : userId;
 			if (sourceId[0] != "U") {
-				addGroupData(sourceId, msg.split("\n")[0].trim());
+				groupDatabase.addData(sourceId, msg.split("\n")[0].trim());
 			}
 
 			// define reply function
@@ -122,9 +86,9 @@ const lineBotOn = function () {
 			if (anna.isAdmin(userId)) {
 				if (msg == "remote") {
 					// list group
-					for (let i in groupDataBase.data) {
-						let groupId = groupDataBase.data[i].name;
-						let text = groupDataBase.data[i].text;
+					for (let i in groupDatabase.data) {
+						let groupId = groupDatabase.data[i].name;
+						let text = groupDatabase.data[i].text;
 
 						let str = groupId + " :\n\t" + text;
 						console.log(str);
@@ -142,12 +106,12 @@ const lineBotOn = function () {
 
 				} else if (msg.indexOf("remote ") == 0) {
 					let target = msg.split(" ")[1];
-					let i = groupDataBase.indexOf(target);
+					let i = groupDatabase.indexOf(target);
 					if (i != -1) {
 						botMode = "remote";
-						remoteTarget = groupDataBase.data[i].name;
+						remoteTarget = groupDatabase.data[i].name;
 						remoter = userId;
-						replyFunc("remote on " + groupDataBase.data[i].text);
+						replyFunc("remote on " + groupDatabase.data[i].text);
 					}
 					return;
 				}
@@ -223,11 +187,11 @@ const twitterBotOn = function () {
 	twitter.get("Aigis1000", callback);
 }
 
-const botPush = line.botPush;
-const botPushLog = line.botPushLog;
 
 
 const main = async function () {
+	express.init();
+
 	// 讀取資料
 	let pArray = [];
 	pArray.push(anna.init());
@@ -235,8 +199,7 @@ const main = async function () {
 	await Promise.all(pArray);
 
 	// 開始監聽
-	await groupDataBase.downloadDB();
-	await groupDataBase.loadDB();
+	await groupDatabase.init();
 	lineBotOn();
 	twitterBotOn();
 
@@ -254,9 +217,10 @@ const debugFunc = async function () {
 
 	// anna.replyAI("anna UPLOAD", userId, replyFunc);
 	// anna.replyAI("anna 學習 NNLK:黑弓", userId, replyFunc);
-	//anna.replyAI("anna 黑弓", userId, replyFunc);
+	anna.replyAI("anna 黑弓", userId, replyFunc);
+	//anna.replyAI("anna 狀態", userId, replyFunc);
 	// anna.replyAI("anna 學習 あて：酒吞童子", userId, replyFunc);
-	anna.replyAI("anna 學習 V武王：一途な武王姫アリス", userId, replyFunc);
+	//anna.replyAI("anna 學習 V武王：一途な武王姫アリス", userId, replyFunc);
 	// anna.replyAI("anna 忘記 あて ：酒吞童子", userId, replyFunc);
 
 }

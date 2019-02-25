@@ -2,25 +2,29 @@
 const fs = require("fs");
 const dbox = require("./dbox.js");
 const line = require("./line.js");
+const botPushLog = line.botPushLog;
+const botPushError = line.botPushError;
 
-module.exports = {
-    createNewDataBase: function (dbName) { return createNewDataBase(dbName); },
-};
+class Database {
+    constructor(dbName) {
+        this.name = dbName;
+        this.fileName = dbName + ".json";
+        this.data = [];
+        this.uploadTaskCount = -1;
 
-createNewDataBase = function (dbName) {
-    var newDB = {};
-    newDB.name = dbName;
-    newDB.fileName = dbName + ".json";
-    newDB.data = [];
-    newDB.uploadTaskCount = -1;
+        this.uploadCount = (28 * 60);
+    };
 
-    newDB.newData = function () {
-        return {};
-    }
+    newData() { };
+    addData() { };
 
-    newDB.indexOf = function (key) {        
-        for (let i in newDB.data) {
-            if (key && newDB.data[i].name.toUpperCase() == key.toUpperCase()) {
+    toString() {
+        return "Database: " + this.name + ", upload timer: " + this.uploadCount;
+    };
+
+    indexOf(key) {
+        for (let i in this.data) {
+            if (key && this.data[i].name.toUpperCase() == key.toUpperCase()) {
                 return i;
             }
         }
@@ -28,7 +32,7 @@ createNewDataBase = function (dbName) {
     };
 
     // 儲存資料
-    newDB.saveDB = async function () {
+    async saveDB() {
         console.log(this.name + " saving...");
 
         // sort
@@ -51,7 +55,7 @@ createNewDataBase = function (dbName) {
     };
 
     // 讀取資料
-    newDB.loadDB = async function () {
+    async loadDB() {
         console.log(this.name + " loading...");
 
         let obj = [];
@@ -88,7 +92,8 @@ createNewDataBase = function (dbName) {
         }
     };
 
-    newDB.downloadDB = async function () {
+    // 下載
+    async downloadDB() {
         console.log(this.name + " downloading...");
 
         // download json
@@ -104,7 +109,7 @@ createNewDataBase = function (dbName) {
     };
 
     // 上傳備份
-    newDB.uploadDB = async function (backup) {
+    async uploadDB(backup) {
         console.log(this.name + " uploading...");
 
         // object to json
@@ -123,17 +128,17 @@ createNewDataBase = function (dbName) {
         }
     };
 
-    let uploadCount = 28 * 60;
-    newDB.uploadTask = async function (backup) {
+    // 延時上傳
+    async uploadTask(backup) {
 
         try {
 
             if (this.uploadTaskCount > 0) {
                 // counting
-                this.uploadTaskCount = uploadCount;
+                this.uploadTaskCount = this.uploadCount;
             } else {
                 // start count
-                this.uploadTaskCount = uploadCount;
+                this.uploadTaskCount = this.uploadCount;
 
                 // count down and upload
                 while (this.uploadTaskCount > 0) {
@@ -153,10 +158,190 @@ createNewDataBase = function (dbName) {
         }
     };
 
-    return newDB;
+    // init
+    async init() {
+        await this.downloadDB();
+        await this.loadDB();
+    };
 }
 
 
+
+
+
+class CharaDatabase extends Database {
+    newData() {
+        var data = {};
+        data.name = "";
+        data.ability = "";
+        data.ability_aw = "";
+        data.skill = "";
+        data.skill_aw = "";
+
+        data.rarity = "";
+        data.class = "";
+
+        data.getMessage = function () {
+            var string = "";
+
+            string += this.name + "　　" + this.rarity + "\n";
+
+            let nickList = [];
+            for (let i in nickDatabase.data) {
+                if (nickDatabase.data[i].target == this.name) {
+                    nickList.push(nickDatabase.data[i].name);
+                }
+            }
+            if (nickList.length > 0) {
+                string += nickList.join(" ") + "\n";
+            }
+
+            if (this.ability != "") {
+                string += "◇特：" + this.ability + "\n";
+            }
+
+            if (this.skill != "") {
+                string += "◇技：" + this.skill + "\n";
+            }
+
+            if (this.ability_aw != "") {
+                string += "◆特：" + this.ability_aw + "\n";
+            }
+
+            if (this.skill_aw != "") {
+                string += "◆技：" + this.skill_aw + "\n";
+            }
+
+            return string;
+        };
+        data.getWikiUrl = function () {
+            if (this.name.indexOf("王子") != -1) {
+                var string = "http://seesaawiki.jp/aigis/d/王子";
+                return encodeURI_JP(string);
+            }
+            var string = "http://seesaawiki.jp/aigis/d/" + this.name;
+            return encodeURI_JP(string);
+        };
+
+        return data;
+    };
+
+    addData(newData) {
+        if (newData.name == "") return;
+        // debugLog("New character <" + newData.name + "> data add...");
+
+        if (this.indexOf(newData.name) == -1) {
+            this.data.push(newData);
+            console.log("New character <" + newData.name + "> data add complete!");
+            botPushLog("anna " + newData.name + " New character data add complete!");
+
+        } else {
+            let i = this.indexOf(newData.name);
+
+            if (this.data[i].ability == "") {
+                this.data[i].ability = newData.ability;
+            }
+            if (this.data[i].ability_aw == "") {
+                this.data[i].ability_aw = newData.ability_aw;
+            }
+            if (this.data[i].skill == "") {
+                this.data[i].skill = newData.skill;
+            }
+            if (this.data[i].skill_aw == "") {
+                this.data[i].skill_aw = newData.skill_aw;
+            }
+
+            if (this.data[i].rarity == "") {
+                this.data[i].rarity = newData.rarity;
+            }
+            if (this.data[i].class == "") {
+                this.data[i].class = newData.class;
+            }
+            console.log("Character <" + newData.name + "> data is existed!");
+        };
+    };
+}
+
+// Nickname Database
+class NickDatabase extends Database {
+    newData() {
+        var data = {};
+        data.name = "";
+        data.target = "";
+
+        return data;
+    };
+
+    addData(name, nick) {
+        if (name == "" || nick == "") return;
+
+        if (this.indexOf(nick) == -1) {
+            var newData = this.newData();
+            newData.name = nick;
+            newData.target = name;
+            this.data.push(newData);
+        }
+    };
+}
+
+// Class Database
+class ClassDatabase extends Database {
+    newData() {
+        var data = {};
+        data.name = "";
+        data.index = [];
+        data.type = "";
+
+        return data;
+    };
+
+    addData(newClass) {
+        if (newClass.name == "") return;
+        // console.log("New <" + newClass.name + "> Class data add...");
+
+        if (this.indexOf(newClass.name) == -1) {
+            this.data.push(newClass);
+            console.log("New Class <" + newClass.name + "> add complete!");
+            debugPush("New Class <" + newClass.name + "> add complete!");
+
+        } else {
+            console.log("Class <" + newClass.name + "> is existed!");
+        }
+    };
+}
+
+// Group Database
+class GroupDatabase extends Database {
+    newData() {
+        var data = {};
+        data.name = "";
+        data.text = "";
+        data.alarm = "";
+
+        return data;
+    };
+
+    addData(groupId, text) {
+        if (groupId == "" || text == "") return;
+
+        if (this.indexOf(groupId) == -1) {
+            var newData = this.newData();
+            newData.name = groupId;
+            newData.text = text;
+            newData.alarm = true;
+            this.data.push(newData);
+
+            // sort
+            this.data.sort(function (A, B) {
+                return A.name.localeCompare(B.name)
+            })
+        } else {
+            let i = this.indexOf(groupId);
+            this.data[i].text = text;
+        }
+        this.uploadTask(false);
+    };
+}
 
 // readfile
 const asyncReadFile = function (filePath) {
@@ -186,18 +371,35 @@ const asyncSaveFile = function (filePath, data) {
 const sleep = function (ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
-// botPush
-const botPushError = line.botPushError;
+
+var groupDatabase = new GroupDatabase("GroupDatabase");
+var charaDatabase = new CharaDatabase("CharaDatabase");
+var nickDatabase = new NickDatabase("NickDatabase");
+var classDatabase = new ClassDatabase("ClassDatabase");
+
+module.exports = {
+    /*init() {
+
+    },*/
+
+
+    groupDatabase: groupDatabase,
+    charaDatabase: charaDatabase,
+    nickDatabase: nickDatabase,
+    classDatabase: classDatabase
+};
+
+
 
 /*
 const debugFunc = async function () {
-    let ClassDataBase = createNewDataBase("ClassDataBase");
-    await ClassDataBase.downloadDB();
-    await ClassDataBase.loadDB();
-    let a = ClassDataBase.indexOf("アコライト");
+    let ClassDatabase = createNewDatabase("ClassDatabase");
+    await ClassDatabase.downloadDB();
+    await ClassDatabase.loadDB();
+    let a = ClassDatabase.indexOf("アコライト");
     console.log(a);
-    await ClassDataBase.saveDB();
-    await ClassDataBase.uploadDB(true);
+    await ClassDatabase.saveDB();
+    await ClassDatabase.uploadDB(true);
 
 
 }

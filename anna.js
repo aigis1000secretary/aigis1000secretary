@@ -7,9 +7,11 @@ const cheerio = require("cheerio");
 // 資料庫
 // const fs = require("fs");
 // const dbox = require("./dbox.js");
-const database = require("./database.js");
+
 const imgur = require("./imgur.js");
 const line = require("./line.js");
+const botPushLog = line.botPushLog;
+const botPushError = line.botPushError;
 
 var _version = "0.6.4.0";
 // 主版本號：當你做了不兼容的API修改
@@ -45,7 +47,7 @@ const replyAI = async function (rawMsg, userId, replyFunc) {
 	let msgs = msg1.split(" ");
 	// >> ANNA <command>	<arg1>			<arg2>
 	// >> ANNA 學習			NNL:黑弓
-	// >> ANNA 資料庫		CharaDataBase	NNL.ability_aw
+	// >> ANNA 資料庫		CharaDatabase	NNL.ability_aw
 	let command = ("" + msgs[1].toUpperCase()).trim();
 	let arg1 = ("" + msgs[2]).trim();
 	let arg2 = ("" + msgs[3]).trim();
@@ -95,7 +97,7 @@ const replyAI = async function (rawMsg, userId, replyFunc) {
 
 			replyMsg += "\n";
 			replyMsg += "忘記: 刪除特定暱稱。\n(>>安娜 忘記 NNL)\n\n";
-			replyMsg += "資料庫: 直接修改資料庫內容。\n(>>資料庫 CharaDataBase NNL.ability_aw)\n\n";
+			replyMsg += "資料庫: 直接修改資料庫內容。\n(>>資料庫 CharaDatabase NNL.ability_aw)\n\n";
 			replyMsg += "上傳: 手動上傳資料庫更新。\n\n";
 			replyMsg += "更新: 手動上傳資料庫更新。\n\n";
 
@@ -105,7 +107,7 @@ const replyAI = async function (rawMsg, userId, replyFunc) {
 			// status
 			// loadAutoResponseList();
 			await imgur.account.allImages()
-				.then(imgur.dataBase.loadImages)
+				.then(imgur.database.loadImages)
 				.catch(function (error) {
 					console.log("Imgur images load error!");
 					console.log(error);
@@ -114,9 +116,9 @@ const replyAI = async function (rawMsg, userId, replyFunc) {
 			var replyMsg = "";
 
 			replyMsg += "目前版本 v" + _version + "\n";
-			replyMsg += "資料庫內有 " + charaDataBase.data.length + " 筆角色資料\n";
-			replyMsg += "　　　　　 " + classDataBase.data.length + " 筆職業資料\n";
-			replyMsg += "　　　　　 " + imgur.dataBase.images.length + " 筆貼圖資料";
+			replyMsg += "資料庫內有 " + charaDatabase.data.length + " 筆角色資料\n";
+			replyMsg += "　　　　　 " + classDatabase.data.length + " 筆職業資料\n";
+			replyMsg += "　　　　　 " + imgur.database.images.length + " 筆貼圖資料";
 
 			return replyFunc(replyMsg);
 
@@ -157,7 +159,7 @@ const replyAI = async function (rawMsg, userId, replyFunc) {
 			return replyFunc(replyMsg);
 
 		} else if (command == "職業") {
-			let classDB = classDataBase.data
+			let classDB = classDatabase.data;
 			var replyMsgA = "";
 			var replyMsgB = "";
 			for (let i in classDB) {
@@ -208,10 +210,10 @@ const replyAI = async function (rawMsg, userId, replyFunc) {
 				var key = arrayB[0];
 				var nick = keys[0];
 
-				addNickData(key, nick);
+				nickDatabase.addData(key, nick);
 
 				// wait 10 min to save
-				nickDataBase.uploadTask();
+				nickDatabase.uploadTask();
 
 				return replyFunc("[學習] 嗯！記住了！");
 			}
@@ -224,25 +226,25 @@ const replyAI = async function (rawMsg, userId, replyFunc) {
 			let learn = arg1;
 			debugLog("forgot: <" + learn + ">");
 
-			let i = nickDataBase.indexOf(learn.trim());
+			let i = nickDatabase.indexOf(learn.trim());
 			if (i > -1) {
-				nickDataBase.data.splice(i, 1);
+				nickDatabase.data.splice(i, 1);
 			}
 
 			// wait 10 min to save
-			nickDataBase.uploadTask();
+			nickDatabase.uploadTask();
 
 			return replyFunc("[學習] 忘記了!");
 
 		} else if (_isAdmin && (command == "資料庫" || command == "DB")) {
 
 			// >> ANNA <command>	<arg1>			<arg2>
-			// >> ANNA 資料庫		CharaDataBase	NNL.ability_aw
+			// >> ANNA 資料庫		CharaDatabase	NNL.ability_aw
 
 			if (arg1 == "undefined") {
-				return replyFunc("請選擇資料庫:\nCharaDataBase\nNickDataBase\nClassDataBase\n\n(>>資料庫 CharaDataBase NNL.ability_aw)");
+				return replyFunc("請選擇資料庫:\nCharaDatabase\nNickDatabase\nClassDatabase\n\n(>>資料庫 CharaDatabase NNL.ability_aw)");
 			} else if (arg2 == "undefined") {
-				return replyFunc("請輸入項目: \n(>>資料庫 CharaDataBase NNL.ability_aw)");
+				return replyFunc("請輸入項目: \n(>>資料庫 CharaDatabase NNL.ability_aw)");
 			}
 
 			let targetDBName = arg1;
@@ -251,15 +253,15 @@ const replyAI = async function (rawMsg, userId, replyFunc) {
 			let index;
 
 			let targetDB;
-			if (targetDBName == "CharaDataBase") {
-				targetDB = charaDataBase;
-				index = charaDataBase.indexOf(searchCharacter(indexStr)[0]);
-			} else if (targetDBName == "NickDataBase") {
-				targetDB = nickDataBase;
-				index = nickDataBase.indexOf(indexStr);
-			} else if (targetDBName == "ClassDataBase") {
-				targetDB = classDataBase;
-				index = classDataBase.indexOf(indexStr);
+			if (targetDBName == "CharaDatabase") {
+				targetDB = charaDatabase;
+				index = charaDatabase.indexOf(searchCharacter(indexStr)[0]);
+			} else if (targetDBName == "NickDatabase") {
+				targetDB = nickDatabase;
+				index = nickDatabase.indexOf(indexStr);
+			} else if (targetDBName == "ClassDatabase") {
+				targetDB = classDatabase;
+				index = classDatabase.indexOf(indexStr);
 			} else {
 				return replyFunc("不明的資料庫!");
 			}
@@ -302,14 +304,14 @@ const replyAI = async function (rawMsg, userId, replyFunc) {
 			try {
 				replyFunc("上傳中...");
 
-				await charaDataBase.saveDB();
-				await charaDataBase.uploadDB(true);
+				await charaDatabase.saveDB();
+				await charaDatabase.uploadDB(true);
 
-				await nickDataBase.saveDB();
-				await nickDataBase.uploadDB(true);
+				await nickDatabase.saveDB();
+				await nickDatabase.uploadDB(true);
 
-				await classDataBase.saveDB();
-				await classDataBase.uploadDB(true);
+				await classDatabase.saveDB();
+				await classDatabase.uploadDB(true);
 
 				botPushLog("上傳完成!");
 				return true;
@@ -382,8 +384,8 @@ const searchByClass = function (command) {
 
 	var result = [];
 	// 遍歷角色資料
-	for (let i in charaDataBase.data) {
-		let obj = charaDataBase.data[i];
+	for (let i in charaDatabase.data) {
+		let obj = charaDatabase.data[i];
 		if (obj.rarity == _rarity && obj.class == _class) {
 			result.push(obj.name);
 		}
@@ -414,13 +416,13 @@ const searchCharacterReply = function (command, accurate, replyFunc) {
 const replyCharaData = function (charaName, replyFunc) {
 	debugLog("replyCharaData(" + charaName + ")");
 
-	let i = charaDataBase.indexOf(charaName);
-	let obj = charaDataBase.data[i];
+	let i = charaDatabase.indexOf(charaName);
+	let obj = charaDatabase.data[i];
 
 	var replyMsg = [];
 	replyMsg.push(createTextMsg(obj.getMessage()));
 
-	let imgArray = imgur.dataBase.findImageByTag(charaName);
+	let imgArray = imgur.database.findImageByTag(charaName);
 	if (imgArray.length > 0) {
 		let i = Math.floor(Math.random() * imgArray.length);
 		replyMsg.push(createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
@@ -436,15 +438,15 @@ const replyStamp = function (msg, replyFunc) {
 
 	var replyMsg = [];
 
-	let imgArray = imgur.dataBase.findImageByTag(msg);
+	let imgArray = imgur.database.findImageByTag(msg);
 	if (imgArray.length > 0) {
 		let i = Math.floor(Math.random() * imgArray.length);
 		replyMsg.push(createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
 		return replyFunc(replyMsg);
 	}
 
-	imgArray = imgArray.concat(imgur.dataBase.findImageByFileName(msg));
-	imgArray = imgArray.concat(imgur.dataBase.findImageByMd5(msg));
+	imgArray = imgArray.concat(imgur.database.findImageByFileName(msg));
+	imgArray = imgArray.concat(imgur.database.findImageByMd5(msg));
 	if (imgArray.length > 0) {
 		replyMsg.push(createImageMsg(imgArray[0].imageLink, imgArray[0].thumbnailLink));
 		return replyFunc(replyMsg);
@@ -470,7 +472,7 @@ const charaDataCrawler = function (urlPath) {
 			var html = iconv.decode(new Buffer(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
 			let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
 
-			var newData = charaDataBase.newData();
+			var newData = charaDatabase.newData();
 			let rarity = ["ゴールド", "サファイア", "プラチナ", "ブラック", "ゴ｜ルド"];
 
 			// 搜尋所有表格
@@ -680,7 +682,7 @@ const charaDataCrawler = function (urlPath) {
 			});
 			// debugLog(newData);
 			// 新增角色資料
-			addCharaData(newData);
+			charaDatabase.addData(newData);
 			resolve();
 		}
 		request.get(urlPath, { encoding: "binary" }, requestCallBack);
@@ -731,8 +733,8 @@ const allCharaDataCrawler = function () {
 			await Promise.all(promiseArray);
 		}
 		botPushLog("角色更新完成!");
-		// save database
-		charaDataBase.uploadTask();
+		// save Database
+		charaDatabase.uploadTask();
 	}, 3000);
 
 }
@@ -772,7 +774,7 @@ const classDataCrawler = function () {
 							return;
 						}
 
-						var newData = classDataBase.newData();
+						var newData = classDatabase.newData();
 						newData.name = str;
 						newData.index.push(str);
 						if ($("title").text().indexOf("近接型") != -1) {
@@ -784,7 +786,7 @@ const classDataCrawler = function () {
 						}
 
 						// 新增職業資料
-						addClassData(newData);
+						classDatabase.addData(newData);
 					});
 				}
 			}
@@ -794,8 +796,8 @@ const classDataCrawler = function () {
 	request.get("http://seesaawiki.jp/aigis/d/class_%b1%f3%b5%f7%ce%a5%b7%bf_%cc%dc%bc%a1", { encoding: "binary" }, requestCallBack);
 
 	setTimeout(async function () {
-		// save database
-		classDataBase.uploadTask();
+		// save Database
+		classDatabase.uploadTask();
 	}, 3000);
 
 };
@@ -911,117 +913,27 @@ String.prototype.tableToArray = function () {
 
 
 // 資料庫
+const database = require("./database.js");
 // Character
-var charaDataBase = database.createNewDataBase("CharaDataBase");
-// 建構資料函數
-charaDataBase.newData = function () {
-	var obj = {};
-	obj.name = "";
-	obj.ability = "";
-	obj.ability_aw = "";
-	obj.skill = "";
-	obj.skill_aw = "";
-
-	obj.rarity = "";
-	obj.class = "";
-
-	obj.getMessage = function () {
-		var string = "";
-
-		string += this.name + "　　" + this.rarity + "\n";
-
-		let nickList = [];
-		for (let i in nickDataBase.data) {
-			if (nickDataBase.data[i].target == this.name) {
-				nickList.push(nickDataBase.data[i].name);
-			}
-		}
-		if (nickList.length > 0) {
-			string += nickList.join(" ") + "\n";
-		}
-
-		if (this.ability != "") {
-			string += "◇特：" + this.ability + "\n";
-		}
-
-		if (this.skill != "") {
-			string += "◇技：" + this.skill + "\n";
-		}
-
-		if (this.ability_aw != "") {
-			string += "◆特：" + this.ability_aw + "\n";
-		}
-
-		if (this.skill_aw != "") {
-			string += "◆技：" + this.skill_aw + "\n";
-		}
-
-		return string;
-	};
-	obj.getWikiUrl = function () {
-		if (this.name.indexOf("王子") != -1) {
-			var string = "http://seesaawiki.jp/aigis/d/王子";
-			return encodeURI_JP(string);
-		}
-		var string = "http://seesaawiki.jp/aigis/d/" + this.name;
-		return encodeURI_JP(string);
-	};
-
-	return obj;
-}
-// 新增資料
-const addCharaData = function (newData) {
-	if (newData.name == "") return;
-	// debugLog("New character <" + newData.name + "> data add...");
-
-	if (charaDataBase.indexOf(newData.name) == -1) {
-		charaDataBase.data.push(newData);
-		console.log("New character <" + newData.name + "> data add complete!");
-		botPushLog("anna " + newData.name + " New character data add complete!");
-
-	} else {
-		let i = charaDataBase.indexOf(newData.name);
-
-		if (charaDataBase.data[i].ability == "") {
-			charaDataBase.data[i].ability = newData.ability;
-		}
-		if (charaDataBase.data[i].ability_aw == "") {
-			charaDataBase.data[i].ability_aw = newData.ability_aw;
-		}
-		if (charaDataBase.data[i].skill == "") {
-			charaDataBase.data[i].skill = newData.skill;
-		}
-		if (charaDataBase.data[i].skill_aw == "") {
-			charaDataBase.data[i].skill_aw = newData.skill_aw;
-		}
-
-		if (charaDataBase.data[i].rarity == "") {
-			charaDataBase.data[i].rarity = newData.rarity;
-		}
-		if (charaDataBase.data[i].class == "") {
-			charaDataBase.data[i].class = newData.class;
-		}
-		console.log("Character <" + newData.name + "> data is existed!");
-	}
-}
+var charaDatabase = database.charaDatabase;
 // 模糊搜尋
 const searchCharacter = function (key, accurate) {
 	accurate = !!accurate;
 	debugLog("searchCharacter(" + key + ", " + accurate + ")");
 
 	let t;
-	if ((t = charaDataBase.indexOf(key)) != -1) {
+	if ((t = charaDatabase.indexOf(key)) != -1) {
 		return [key];
-	} else if ((t = nickDataBase.indexOf(key)) != -1) {
-		return [nickDataBase.data[t].target];
+	} else if ((t = nickDatabase.indexOf(key)) != -1) {
+		return [nickDatabase.data[t].target];
 	} else if (accurate) {
 		return [];
 	}
 
 	// 加權陣列
 	let array_metrics = [];
-	for (let charaIndex in charaDataBase.data) {
-		let obj = charaDataBase.data[charaIndex];
+	for (let charaIndex in charaDatabase.data) {
+		let obj = charaDatabase.data[charaIndex];
 
 		// 模糊加權
 		const metricsA = 8;	// 同字
@@ -1075,8 +987,8 @@ const searchCharacter = function (key, accurate) {
 			for (let i in array_metrics[charaIndex]) {
 				let index = array_metrics[charaIndex][i];
 
-				debugLog("_array_metrics : <" + charaIndex + ": " + charaDataBase.data[index].name + ">");
-				result.push(charaDataBase.data[index].name);
+				debugLog("_array_metrics : <" + charaIndex + ": " + charaDatabase.data[index].name + ">");
+				result.push(charaDatabase.data[index].name);
 			}
 		}
 	}
@@ -1084,61 +996,19 @@ const searchCharacter = function (key, accurate) {
 }
 
 // Nickname
-var nickDataBase = database.createNewDataBase("NickDataBase");
-// 建構資料函數
-nickDataBase.newData = function () {
-	var obj = {};
-	obj.name = "";
-	obj.target = "";
-
-	return obj;
-}
-// 新增資料
-const addNickData = function (name, nick) {
-	if (name == "" || nick == "") return;
-
-	if (nickDataBase.indexOf(nick) == -1) {
-		var newData = nickDataBase.newData();
-		newData.name = nick;
-		newData.target = name;
-		nickDataBase.data.push(newData);
-	}
-}
+var nickDatabase = database.nickDatabase;
 
 // Class
-var classDataBase = database.createNewDataBase("ClassDataBase");
-// 建構資料函數
-classDataBase.newData = function () {
-	var obj = {};
-	obj.name = "";
-	obj.index = [];
-	obj.type = "";
-
-	return obj;
-}
-// 新增資料
-const addClassData = function (newClass) {
-	if (newClass.name == "") return;
-	// console.log("New <" + newClass.name + "> Class data add...");
-
-	if (classDataBase.indexOf(newClass.name) == -1) {
-		classDataBase.data.push(newClass);
-		console.log("New Class <" + newClass.name + "> add complete!");
-		debugPush("New Class <" + newClass.name + "> add complete!");
-
-	} else {
-		console.log("Class <" + newClass.name + "> is existed!");
-	}
-}
+var classDatabase = database.classDatabase;
 // 搜尋職業
 const searchClass = function (str) {
 	debugLog("searchClass(" + str + ")");
-	// for (let i = 0; i < classDataBase.length; i++) {
-	for (let i in classDataBase.data) {
+	// for (let i = 0; i < classDatabase.length; i++) {
+	for (let i in classDatabase.data) {
 
-		for (let j in classDataBase.data[i].index) {
-			if (str == classDataBase.data[i].index[j]) {
-				return classDataBase.data[i].name;
+		for (let j in classDatabase.data[i].index) {
+			if (str == classDatabase.data[i].index[j]) {
+				return classDatabase.data[i].name;
 			}
 		}
 	}
@@ -1217,8 +1087,6 @@ const debugPush = function (msg) {
 		botPushError(msg);
 	}
 }
-const botPushLog = line.botPushLog;
-const botPushError = line.botPushError;
 const isAdmin = function (userId) {
 	return (userId == adminstrator || admins.indexOf(userId) != -1)
 }
@@ -1229,19 +1097,14 @@ const isAdmin = function (userId) {
 module.exports = {
 	init: async function () {
 
-		charaDataBase.data = [];
-		nickDataBase.data = [];
-		classDataBase.data = [];
+		charaDatabase.data = [];
+		nickDatabase.data = [];
+		classDatabase.data = [];
 
 		try {
-			await charaDataBase.downloadDB();
-			await charaDataBase.loadDB();
-
-			await nickDataBase.downloadDB();
-			await nickDataBase.loadDB();
-
-			await classDataBase.downloadDB();
-			await classDataBase.loadDB();
+			await charaDatabase.init();
+			await nickDatabase.init();
+			await classDatabase.init();
 
 		} catch (err) {
 			debugLog(err);
@@ -1279,7 +1142,7 @@ const debugFunc = async function () {
 	// await imgur.init();
 
 	try {
-		await charaDataBase.downloadDB()
+		await charaDatabase.downloadDB()
 	} catch (err) {
 		console.log(err);
 	}
