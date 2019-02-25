@@ -9,6 +9,8 @@ const bot = linebot({
 const debugLogger = "U9eefeba8c0e5f8ee369730c4f983346b";
 
 
+
+
 module.exports = {
     bot: bot,
     botPush: async function (userId, msg) {

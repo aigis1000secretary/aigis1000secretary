@@ -1,6 +1,9 @@
 ﻿
 const express = require("express");
 const line = require("./line.js");
+const twitter = require("./twitter.js");
+const bodyParser = require('body-parser');
+var jsonParser = bodyParser.json()
 
 const app = express();
 const server = app.listen(process.env.PORT || 8080, function () {
@@ -11,12 +14,25 @@ const server = app.listen(process.env.PORT || 8080, function () {
 
 module.exports = {
     init: function () {
-        // line webhook
-        app.post("/", line.bot.parser());
-        
+
         // http host
-        app.get('/', function (req, res) {
-            res.send('Anna say hello to you!')
+        app.get("/", function (request, response) {
+            response.send("Anna say hello to you!")
         });
-    }
+
+        // uptimerobot
+        app.get("/uptimerobot/", function (request, response) {
+            response.send("Hello uptimerobot!")
+        });
+
+        // line webhook
+        app.post("/linebot/", line.bot.parser());
+
+        // twitter
+        app.get("/twitterbot/:function", twitter.webhook.crcFunction);
+        app.get("/twitterbot/", twitter.webhook.get);
+        app.post("/twitterbot/", jsonParser, twitter.webhook.post);
+    },
+    app: app
 }
+module.exports.init();

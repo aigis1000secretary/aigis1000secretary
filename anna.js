@@ -4,16 +4,13 @@
 const request = require("request");
 const iconv = require("iconv-lite");
 const cheerio = require("cheerio");
-// 資料庫
-// const fs = require("fs");
-// const dbox = require("./dbox.js");
 
 const imgur = require("./imgur.js");
 const line = require("./line.js");
 const botPushLog = line.botPushLog;
 const botPushError = line.botPushError;
 
-var _version = "0.6.4.0";
+var _version = "0.6.6.8";
 // 主版本號：當你做了不兼容的API修改
 // 次版本號：當你做了向下兼容的功能性新增
 // 修訂號：當你做了向下兼容的問題修正
@@ -801,38 +798,6 @@ const classDataCrawler = function () {
 	}, 3000);
 
 };
-// 網址編碼
-const urlEncode = function (str_utf8, codePage) {
-	let buffer = iconv.encode(str_utf8, codePage);
-	let str = "";
-	for (let i = 0; i < buffer.length; i++) {
-		str += "%" + buffer[i].toString(16);
-	}
-	return str.toUpperCase();
-}
-const urlEncodeJP = function (str_utf8) { return urlEncode(str_utf8, "EUC-JP"); }
-const urlEncodeBIG5 = function (str_utf8) { return urlEncode(str_utf8, "BIG5"); }
-const urlEncodeUTF8 = function (str_utf8) { return urlEncode(str_utf8, "UTF-8"); }
-const encodeURI_JP = function (url) {
-	var result = "";
-
-	let jpEncode = "";
-	let big5Encode = "";
-	let uriEncode = "";
-
-	for (let i = 0; i < url.length; i++) {
-		jpEncode = urlEncodeJP(url[i]);
-		big5Encode = urlEncodeBIG5(url[i]);
-		uriEncode = encodeURI(url[i]);
-
-		if (jpEncode == big5Encode) {
-			result += uriEncode;
-		} else {
-			result += jpEncode;
-		}
-	}
-	return result;
-}
 // HTML table to array
 String.prototype.tableToArray = function () {
 	var result = [];
@@ -1121,7 +1086,6 @@ module.exports = {
 	// charaDataCrawler: charaDataCrawler,
 	allCharaDataCrawler: allCharaDataCrawler,
 	classDataCrawler: classDataCrawler,
-	_encodeURI_JP: encodeURI_JP,
 
 	// debug
 	debug: false,

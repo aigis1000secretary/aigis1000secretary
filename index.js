@@ -5,8 +5,8 @@
 
 // commit
 /*
-	0.6.5.0
-	Database 物件化
+	0.6.6.8
+	Twitter webhook test
 */
 
 // 初始化
@@ -18,7 +18,7 @@ const line = require("./line.js");
 const botPush = line.botPush;
 const botPushLog = line.botPushLog;
 
-const twitter = require("./twitter.js");
+//const twitter = require("./twitter.js");
 
 // remote system
 let botMode = "anna";
@@ -167,7 +167,7 @@ const lineBotOn = function () {
 }
 // twitter bot 監聽
 const twitterBotOn = function () {
-
+/*
 	var callback = function (tweet_data) {
 		// 送信する情報の定義
 		// var tweet_data = {
@@ -184,7 +184,7 @@ const twitterBotOn = function () {
 		}
 	}
 
-	twitter.get("Aigis1000", callback);
+	twitter.get("Aigis1000", callback);*/
 }
 
 
