@@ -73,11 +73,11 @@ dboxCore.fileDownload = async function (dirPath, localPath) {
 
 
 // upload
-dboxCore.fileUpload = async function (dirPath, fileBinary) {
+dboxCore.fileUpload = async function (dirPath, fileBinary, mode) {
 	var filesCommitInfo = {
 		path: root + dirPath,
 		contents: fileBinary,
-		mode: { ".tag": "overwrite" },
+		mode: { ".tag": ((mode) ? mode : "overwrite") },
 		autorename: false,
 		mute: true
 	};

@@ -10,7 +10,7 @@ const line = require("./line.js");
 const botPushLog = line.botPushLog;
 const botPushError = line.botPushError;
 
-var _version = "0.6.6.8";
+var _version = "0.6.7.13";
 // 主版本號：當你做了不兼容的API修改
 // 次版本號：當你做了向下兼容的功能性新增
 // 修訂號：當你做了向下兼容的問題修正
@@ -28,11 +28,11 @@ String.prototype.replaceAll = function (s1, s2) {
 
 // bot
 // 搜尋資料
-const replyAI = async function (rawMsg, userId, replyFunc) {
+const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 	debugLog("rawMsg: <" + rawMsg + ">");
 
 	// flag
-	let _isAdmin = isAdmin(userId);
+	let _isAdmin = isAdmin(sourceId);
 	let callAnna = (rawMsg.toUpperCase().indexOf("ANNA ") == 0 || rawMsg.indexOf("安娜 ") == 0);
 	if (!callAnna) {
 		rawMsg = "ANNA " + rawMsg;
@@ -76,12 +76,13 @@ const replyAI = async function (rawMsg, userId, replyFunc) {
 
 		} else if (command == "指令" || command == "HELP") {
 			// help
-			var replyMsg = "";
+			var replyMsg = "歡迎使用政務官小安娜 v" + _version + "\n\n";
 
 			replyMsg += "狀態: 確認目前版本，資料庫資料筆數。\n(>>安娜 狀態)\n\n";
 			replyMsg += "照片: 上傳角色附圖的網路空間(DropBox)。\n(>>安娜 照片)\n\n";
 			replyMsg += "工具: 千年戰爭Aigis實用工具。\n(>>安娜 工具)\n\n";
 			replyMsg += "職業: 列出資料庫現有職業。\n\n";
+			replyMsg += "廣播: 開關廣播功能，廣播內容有官方推特即時轉播以及週四定期維護前提醒。\n\n";
 			replyMsg += "學習: 用來教會安娜角色的暱稱。\n(>>安娜 學習 NNL:射手ナナリー)\n\n";
 
 			replyMsg += "\n";
@@ -96,7 +97,7 @@ const replyAI = async function (rawMsg, userId, replyFunc) {
 			replyMsg += "忘記: 刪除特定暱稱。\n(>>安娜 忘記 NNL)\n\n";
 			replyMsg += "資料庫: 直接修改資料庫內容。\n(>>資料庫 CharaDatabase NNL.ability_aw)\n\n";
 			replyMsg += "上傳: 手動上傳資料庫更新。\n\n";
-			replyMsg += "更新: 手動上傳資料庫更新。\n\n";
+			replyMsg += "更新: 手動上傳資料庫更新。";
 
 			return replyFunc(replyMsg);
 
@@ -169,6 +170,22 @@ const replyAI = async function (rawMsg, userId, replyFunc) {
 			replyMsgA = replyMsgA.trim();
 			replyMsgB = replyMsgB.trim();
 			return replyFunc(replyMsgA + "\n" + replyMsgB);
+
+		} else if (command == "廣播") {
+
+			let i = database.groupDatabase.indexOf(sourceId)
+			if (i != -1) {
+				var alarm = !database.groupDatabase.data[i].alarm;
+				database.groupDatabase.data[i].alarm = alarm;
+
+				let func = async function () {
+					await database.groupDatabase.saveDB();
+					database.groupDatabase.uploadDB(false);
+				}; func();
+
+				return replyFunc("切換廣播開關，目前為: " + (alarm ? "開" : "關"));
+			}
+			return false;
 
 		} else if (command == "學習") {
 			// 關鍵字學習

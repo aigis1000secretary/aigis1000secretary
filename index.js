@@ -5,8 +5,8 @@
 
 // commit
 /*
-	0.6.6.8
-	Twitter webhook test
+	0.6.7.13
+	twitter test
 */
 
 // 初始化
@@ -17,8 +17,7 @@ const express = require("./express.js");
 const line = require("./line.js");
 const botPush = line.botPush;
 const botPushLog = line.botPushLog;
-
-//const twitter = require("./twitter.js");
+const twitter = require("./twitter.js");
 
 // remote system
 let botMode = "anna";
@@ -34,21 +33,24 @@ var groupDatabase = database.groupDatabase;
 const lineBotOn = function () {
 
 	// wellcome msg
-	/*bot.on("memberJoined", function (event) {
+	line.bot.on("memberJoined", function (event) {
 		// anna.debugLog(event);
+		let userId = !event.source.userId ? anna.adminstrator : event.source.userId;	// Line API bug?
+		let sourceId =
+			event.source.type == "group" ? event.source.groupId :
+				event.source.type == "room" ? event.source.roomId : userId;
 		// push
 		var pushFunc = function (pMsg) {
 			anna.debugLog(pMsg);
-			if (event.source.type == "group") {
-				bot.push(event.source.groupId, pMsg);
-			} else if (event.source.type == "room") {
-				bot.push(event.source.roomId, pMsg);
-			}
+			bot.push(sourceId, pMsg);
+			return true;
 		};
 		// 呼叫定型文
-		if (anna.replyStamp("新人", pushFunc)) {
+		if (anna.replyStamp("新人", pushFunc)) { }
+		if (anna.replyAI("anna help", sourceId, userId, pushFunc)) {
 			return;
 		}
+
 	});// */
 
 	// normal msg
@@ -59,14 +61,14 @@ const lineBotOn = function () {
 		if (event.message.type == "text") {
 			// 取出文字內容
 			var msg = event.message.text.trim()
-			anna.debugLog(msg);
+			anna.debugLog(event);
 			// get source id
 			let userId = !event.source.userId ? anna.adminstrator : event.source.userId;	// Line API bug?
 			let sourceId =
 				event.source.type == "group" ? event.source.groupId :
 					event.source.type == "room" ? event.source.roomId : userId;
 			if (sourceId[0] != "U") {
-				groupDatabase.addData(sourceId, msg.split("\n")[0].trim());
+				groupDatabase.addData(sourceId, msg.split("\n")[0].trim(), event.timestamp);
 			}
 
 			// define reply function
@@ -83,7 +85,7 @@ const lineBotOn = function () {
 			};
 
 			// remote func
-			if (anna.isAdmin(userId)) {
+			if (anna.isAdmin(sourceId)) {
 				if (msg == "remote") {
 					// list group
 					for (let i in groupDatabase.data) {
@@ -146,8 +148,8 @@ const lineBotOn = function () {
 					msg = "ANNA " + msg;
 				}
 
-				// 				
-				if (anna.replyAI(msg, userId, replyFunc)) {
+				//
+				if (anna.replyAI(msg, sourceId, userId, replyFunc)) {
 					return;
 				}
 
@@ -167,24 +169,53 @@ const lineBotOn = function () {
 }
 // twitter bot 監聽
 const twitterBotOn = function () {
-/*
-	var callback = function (tweet_data) {
+
+	var callback = async function (tweet_data) {
 		// 送信する情報の定義
 		// var tweet_data = {
-		// 	screen_name: data.user.screen_name,
+		// 	name: tweet.user.name,
+		// 	screen_name: tweet.user.screen_name,
 		// 	created_at: data.created_at,
 		// 	text: data.text,
 		// 	geo: data.geo,
 		// };
 
-		if (tweet_data.screen_name == "Aigis1000") {
-			botPushLog(tweet_data.text);
-		} else if (tweet_data.screen_name == "Aigis1000Anna") {
-			botPushLog("@" + tweet_data.text);
+		for (let i in groupDatabase.data) {
+			if (groupDatabase.data[i].alarm) {
+				botPush(groupDatabase.data[i].name, tweet_data.text);
+			}
 		}
 	}
 
-	twitter.get("Aigis1000", callback);*/
+	twitter.stream.litsen("Aigis1000", "", callback);
+}
+
+const sleep = function (ms) {
+	return new Promise(resolve => setTimeout(resolve, ms))
+}
+const timerBotOn = function () {
+
+	var timer = async function () {
+		let nd = new Date(Date.now());
+		if (nd.getMinutes() < 5) {
+
+			let dayList = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"]
+			let str = "";
+			str += nd.getFullYear() + "/";
+			str += (nd.getMonth() + 1) + "/";
+			str += nd.getDate() + " ";
+			str += dayList[nd.getDay()] + " ";
+
+			str += nd.getHours() + ":";
+			str += nd.getMinutes() + ":";
+			str += nd.getSeconds();
+
+			botPushLog(str);
+			await sleep(2 * 60 * 1000);
+		}
+		setTimeout(timer, 3 * 60 * 1000);
+	};
+	timer();
 }
 
 
@@ -202,6 +233,7 @@ const main = async function () {
 	await groupDatabase.init();
 	lineBotOn();
 	twitterBotOn();
+	timerBotOn();
 
 	console.log("=====*****Anna secretary online*****=====");
 	botPushLog("Anna secretary online");
@@ -211,17 +243,19 @@ const main = async function () {
 
 /*
 const debugFunc = async function () {
+	let sourceId = "U9eefeba8c0e5f8ee369730c4f983346b";
 	let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
 	var replyFunc = function (str) { console.log(">>" + str + "<<"); return str != "" && str && str != "undefined" };
 	anna.debug = true;
 
-	// anna.replyAI("anna UPLOAD", userId, replyFunc);
-	// anna.replyAI("anna 學習 NNLK:黑弓", userId, replyFunc);
-	anna.replyAI("anna 黑弓", userId, replyFunc);
-	//anna.replyAI("anna 狀態", userId, replyFunc);
-	// anna.replyAI("anna 學習 あて：酒吞童子", userId, replyFunc);
-	//anna.replyAI("anna 學習 V武王：一途な武王姫アリス", userId, replyFunc);
-	// anna.replyAI("anna 忘記 あて ：酒吞童子", userId, replyFunc);
+	// anna.replyAI("anna UPLOAD", sourceId, userId, replyFunc);
+	// anna.replyAI("anna 學習 NNLK:黑弓", sourceId, userId, replyFunc);
+	// anna.replyAI("anna 黑弓", sourceId, userId, replyFunc);
+	// anna.replyAI("anna 狀態", sourceId, userId, replyFunc);
+	// anna.replyAI("anna 學習 あて：酒吞童子", sourceId, userId, replyFunc);
+	// anna.replyAI("anna 學習 V武王：一途な武王姫アリス", sourceId, userId, replyFunc);
+	// anna.replyAI("anna 忘記 あて ：酒吞童子", sourceId, userId, replyFunc);
+	// anna.replyAI("647051929ed6333312951134c63323a1", sourceId, userId, replyFunc);
 
 }
 // sleep

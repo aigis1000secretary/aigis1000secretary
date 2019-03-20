@@ -1,5 +1,6 @@
 ﻿
 const express = require("express");
+const dbox = require("./dbox.js");
 const line = require("./line.js");
 const twitter = require("./twitter.js");
 const bodyParser = require('body-parser');
@@ -13,7 +14,7 @@ const server = app.listen(process.env.PORT || 8080, function () {
 });
 
 module.exports = {
-    init: function () {
+    init: async function () {
 
         // http host
         app.get("/", function (request, response) {
@@ -28,10 +29,19 @@ module.exports = {
         // line webhook
         app.post("/linebot/", line.bot.parser());
 
-        // twitter
-        app.get("/twitterbot/:function", twitter.webhook.crcFunction);
+        // twitter webhook
+        app.get("/twitterbot/:function", twitter.webhook.crcFunctions);
         app.get("/twitterbot/", twitter.webhook.get);
         app.post("/twitterbot/", jsonParser, twitter.webhook.post);
+
+        // hotfix
+        try {
+            await dbox.fileDownload("hotfix.js", "./hotfix.js");
+            hotfix = require("./hotfix.js");
+            app.get("/hotfix/:function", hotfix.hotfix);
+        } catch (err) {
+            console.log("hotfix error ", err);
+        }
     },
     app: app
 }

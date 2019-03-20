@@ -8,35 +8,35 @@ const botPushError = line.botPushError;
 // 網址編碼
 const iconv = require("iconv-lite");
 const urlEncode = function (str_utf8, codePage) {
-	let buffer = iconv.encode(str_utf8, codePage);
-	let str = "";
-	for (let i = 0; i < buffer.length; i++) {
-		str += "%" + buffer[i].toString(16);
-	}
-	return str.toUpperCase();
+    let buffer = iconv.encode(str_utf8, codePage);
+    let str = "";
+    for (let i = 0; i < buffer.length; i++) {
+        str += "%" + buffer[i].toString(16);
+    }
+    return str.toUpperCase();
 }
 const urlEncodeJP = function (str_utf8) { return urlEncode(str_utf8, "EUC-JP"); }
 const urlEncodeBIG5 = function (str_utf8) { return urlEncode(str_utf8, "BIG5"); }
 const urlEncodeUTF8 = function (str_utf8) { return urlEncode(str_utf8, "UTF-8"); }
 const encodeURI_JP = function (url) {
-	var result = "";
+    var result = "";
 
-	let jpEncode = "";
-	let big5Encode = "";
-	let uriEncode = "";
+    let jpEncode = "";
+    let big5Encode = "";
+    let uriEncode = "";
 
-	for (let i = 0; i < url.length; i++) {
-		jpEncode = urlEncodeJP(url[i]);
-		big5Encode = urlEncodeBIG5(url[i]);
-		uriEncode = encodeURI(url[i]);
+    for (let i = 0; i < url.length; i++) {
+        jpEncode = urlEncodeJP(url[i]);
+        big5Encode = urlEncodeBIG5(url[i]);
+        uriEncode = encodeURI(url[i]);
 
-		if (jpEncode == big5Encode) {
-			result += uriEncode;
-		} else {
-			result += jpEncode;
-		}
-	}
-	return result;
+        if (jpEncode == big5Encode) {
+            result += uriEncode;
+        } else {
+            result += jpEncode;
+        }
+    }
+    return result;
 }
 
 class Database {
@@ -199,6 +199,7 @@ class Database {
     };
 }
 
+// Character Database
 class CharaDatabase extends Database {
     newData() {
         var data = {};
@@ -342,23 +343,30 @@ class ClassDatabase extends Database {
 
 // Group Database
 class GroupDatabase extends Database {
+    constructor(dbName) {
+        super(dbName);
+        this.uploadCount = (10 * 60);
+    };
+
     newData() {
         var data = {};
         data.name = "";
         data.text = "";
         data.alarm = "";
+        data.timestamp = "";
 
         return data;
     };
 
-    addData(groupId, text) {
-        if (groupId == "" || text == "") return;
+    addData(groupId, text, timestamp) {
+        if (groupId == "" || text == "" || timestamp == "") return;
 
         if (this.indexOf(groupId) == -1) {
             var newData = this.newData();
             newData.name = groupId;
             newData.text = text;
             newData.alarm = true;
+            newData.timestamp = timestamp;
             this.data.push(newData);
 
             // sort
@@ -368,6 +376,7 @@ class GroupDatabase extends Database {
         } else {
             let i = this.indexOf(groupId);
             this.data[i].text = text;
+            this.data[i].timestamp = timestamp;
         }
         this.uploadTask(false);
     };

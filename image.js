@@ -8,7 +8,7 @@ const md5 = function (str) { return require('crypto').createHash('md5').update(s
 
 const main = async function () {
     await imgur.init();
-    //imgur.Database.saveDatabase();
+    //imgur.database.saveDatabase();
     console.log("==Main==");
 
     let pathArray = [];
@@ -31,7 +31,7 @@ const main = async function () {
             //console.log(mainTag + ", " + fileName);
 
             // try to find existed image first
-            let onlineImage = imgur.Database.findImageByNameTag(fileName, mainTag.split(",")[0]);
+            let onlineImage = imgur.database.findImageByNameTag(fileName, mainTag.split(",")[0]);
             if (onlineImage.length != 0) {
                 console.log("file already existed(file): " + pathArray[i]);
                 // return "file already existed";
@@ -42,7 +42,7 @@ const main = async function () {
                 var fileBinary = await fileDataDownload(pathArray[i]);
                 let fileMd5 = md5(fileBinary);  // get MD5 for check
 
-                let onlineImage = imgur.Database.findImageByMd5(fileMd5);
+                let onlineImage = imgur.database.findImageByMd5(fileMd5);
                 if (onlineImage.length != 0) {
                     console.log("file already existed(md5): " + pathArray[i]);
                     // return "file already existed";

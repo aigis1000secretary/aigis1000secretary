@@ -1,10 +1,11 @@
 
-// line bot
-//const line = require("./line.js");
 
 // ライブラリ読み込み
+var Twitter = require('twitter');
 const request = require("request");
 const crypto = require('crypto');
+const line = require("./line.js");
+const dbox = require("./dbox.js");
 
 // 各種Twitter APIを使用するための情報を設定
 const config = {
@@ -13,7 +14,7 @@ const config = {
     TWITTER_ACCESS_TOKEN: "1098066659091181568-OEi7e7FAs6Xdp0bvaXHzJE1xdMy16Q",
     TWITTER_ACCESS_TOKEN_SECRET: "nRAT33Ozkq0zJ6rjjoFJetuTWu6ouAE9dVgUxM1t36MWK",
     devLabel: "aigis1000secretary",
-    hookId: "1099858367579856901",
+    hookId: "1106006997298761728",
     webhookUrl: "https://aigis1000secretary.herokuapp.com/twitterbot/",
     expressWatchPath: "/twitterbot/"
 }
@@ -24,26 +25,72 @@ const twitter_oauth = {
     token: config.TWITTER_ACCESS_TOKEN.trim(),
     token_secret: config.TWITTER_ACCESS_TOKEN_SECRET.trim()
 }
+const bot = new Twitter({ // Twitterオブジェクトの作成
+    consumer_key: config.TWITTER_CONSUMER_KEY.trim(),
+    consumer_secret: config.TWITTER_CONSUMER_SECRET.trim(),
+    access_token_key: config.TWITTER_ACCESS_TOKEN.trim(),
+    access_token_secret: config.TWITTER_ACCESS_TOKEN_SECRET.trim()
+});
+String.prototype.replaceAll = function (s1, s2) {
+    var source = this;
+    while ((temp = source.replace(s1, s2)) != source) {
+        source = temp;
+    }
+    return source.toString();
+}
 
-
-
-module.exports = {
+const twitterCore = {
     config: config,
 
     crc: {
         // https://qiita.com/Fushihara/items/79913a5b933af15c5cf4
         // CRC API
-        crcRegist() {
+        crcRegistWebhook() {
             console.log("crcRegist");
             // Registers a webhook URL / Generates a webhook_id
-            const request_options = {
+            request.post({
                 url: `https://api.twitter.com/1.1/account_activity/all/${config.devLabel}/webhooks.json`,
                 oauth: twitter_oauth,
                 headers: { "Content-type": "application/x-www-form-urlencoded" },
                 form: { url: config.webhookUrl }
-            };
-            request.post(request_options, (error, response, body) => { console.log(body) });
+            }, (error, response, body) => { console.log(body) });
         },
+
+
+
+        crcPostSubscriptions() {
+            console.log("crcPostSubscriptions");
+            request.post({
+                url: `https://api.twitter.com/1.1/account_activity/all/${config.devLabel}/subscriptions.json`,
+                oauth: twitter_oauth,
+                headers: { "Content-type": "application/x-www-form-urlencoded" },
+            }, (error, response, body) => { if (error) console.log(error); else if (body) console.log(body); else console.log(response); });
+        },
+        crcGetSubscriptions() {
+            console.log("crcGetSubscriptions");
+            request.get({
+                url: `https://api.twitter.com/1.1/account_activity/all/${config.devLabel}/subscriptions.json`,
+                oauth: twitter_oauth,
+                headers: { "Content-type": "application/x-www-form-urlencoded" },
+            }, (error, response, body) => { if (error) console.log(error); else if (body) console.log(body); else console.log(response); });
+        },
+        crcDelSubscriptions() {
+            console.log("crcDelSubscriptions");
+            request.delete({
+                url: `https://api.twitter.com/1.1/account_activity/all/${config.devLabel}/subscriptions.json`,
+                oauth: twitter_oauth,
+                headers: { "Content-type": "application/x-www-form-urlencoded" },
+            }, (error, response, body) => { if (error) console.log(error); else if (body) console.log(body); else console.log(response); });
+        },
+
+
+
+
+
+
+
+
+
 
         crcSubsc() {
             console.log("crcSubsc");
@@ -145,19 +192,17 @@ module.exports = {
             request.delete(request_options, (error, response, body) => { console.log(`${response.statusCode} ${response.statusMessage} (204ならOKかな？)`); console.log(body) });
         }
     },
-
     webhook: {
-        crcFunction: function (request, response) {
-            for (let key in module.exports.crc) {
+        crcFunctions: function (request, response) {
+            for (let key in twitterCore.crc) {
                 if (key == request.params.function) {
-                    module.exports.crc[key]();
-                    response.send("module.exports.crc." + key + "()");
+                    twitterCore.crc[key]();
+                    response.send("twitterCore.crc." + key + "()");
                     return;
                 }
             }
-            response.send("Unknown function");
+            //response.send("Unknown function");
         },
-
         get: function (request, response) {
             // getでchallenge response check (CRC)が来るのでその対応
             const crc_token = request.query.crc_token
@@ -173,27 +218,126 @@ module.exports = {
                 response.send('Error: crc_token missing from request.')
             }
         },
-
         post: function (request, response) {
-            console.log(JSON.stringify(request.body, null, 4));
+            //console.log(JSON.stringify(request.body, null, 4));
+            if (request.body) {
+                var binary = new Buffer.from(JSON.stringify(request.body, null, 4));
+                dbox.fileUpload("webhook/" + new Date(Date.now()).toLocaleString().replaceAll(":", "_") + ".json", binary, "add").catch(function (error) { });
+            }
             response.send("200 OK");
         }
+    },
+
+    stream: {
+
+        getUserId: function (target) {
+            return new Promise(function (resolve, reject) {
+                // 監視するユーザのツイートを取得
+                bot.get('statuses/user_timeline', { screen_name: target },
+                    function (error, tweets, response) {
+                        if (!error) {
+                            // 取得したtweet情報よりユーザ固有IDを文字列形式で取得
+                            var user_id = tweets[0].user.id_str;
+                            // 取得したユーザIDよりストリーミングで使用するオプションを定義
+                            resolve(user_id);
+                        } else {
+                            console.log(error);
+                            line.botPushError(error);
+                            //reject(error);
+                        }
+                    });
+            });
+        },
+
+        litsen: async function (target, user_id, callback) {
+            if (user_id == "") {
+                user_id = await twitterCore.stream.getUserId(target);
+            }
+
+            console.log(target + 'のツイートを取得します。');
+            line.botPushLog(target + 'のツイートを取得します。');
+
+            // ストリーミングでユーザのタイムラインを監視
+            bot.stream('statuses/filter', { follow: user_id }, function (stream) {
+                // Streamingの開始と受取
+                stream.on('data', function (tweet) {
+                    console.log("stream.on = data")
+
+                    // RTと自分のツイートは除外
+                    if (tweet && !tweet.retweeted_status) {
+
+                        // 送信する情報を定義
+                        var tweet_data = twitterCore.stream.getTweetData(tweet);
+
+                        // 送信
+                        if (tweet_data.text && tweet_data.screen_name == target) {
+                            callback(tweet_data);
+                        }
+                    }
+                });
+
+                // // 接続開始時にはフォロワー情報が流れます
+                // stream.on('friends', function (tweet) { console.log(JSON.stringify(tweet)); });
+                // // つい消しの場合                    
+                // stream.on('delete', function (tweet) { console.log(JSON.stringify(tweet)); });
+                // // 位置情報の削除やふぁぼられといったeventはここに流れます
+                // stream.on('event', function (tweet) { console.log(JSON.stringify(tweet)); });
+
+                // エラー時は再接続を試みた方がいいかもしれません(未検証)
+                stream.on('error', function (rawData) {
+                    line.botPushLog("stream.on = error\ngetTweetData: ");
+                    line.botPushLog(JSON.stringify(rawData, null, 4));
+                    var tweet = rawData.source;
+
+                    // RTと自分のツイートは除外
+                    if (tweet && !tweet.retweeted_status) {
+
+                        // 送信する情報を定義
+                        var tweet_data = twitterCore.stream.getTweetData(tweet);
+
+                        // 送信
+                        if (tweet_data.text && tweet_data.screen_name == target) {
+                            callback(tweet_data);
+                        }
+                    }
+                });
+
+                stream.on('end', function (tweet) {  // 接続が切れた際の再接続
+                    stream.destroy();
+                    console.log(target + 'のツイートを取得終了。');
+                    line.botPushLog(target + 'のツイートを取得終了。');
+
+                    setTimeout(function () {
+                        twitterCore.stream.litsen(target, user_id, callback);
+                    }, 10 * 1000);
+                });
+            });
+        },
+
+        getTweetData: function (tweet) {
+            // console.log("@@getTweetData: " + JSON.stringify(tweet, null, 4))
+            var tweet_data = {};
+
+            if (tweet.user.name) tweet_data.name = tweet.user.name;
+            if (tweet.user.screen_name) tweet_data.screen_name = tweet.user.screen_name;
+
+            if (tweet.created_at) tweet_data.created_at = tweet.created_at;
+            if (tweet.timestamp_ms) tweet_data.timestamp_ms = tweet.timestamp_ms;
+
+            if (tweet.extended_tweet && tweet.extended_tweet.full_text)
+                tweet_data.text = tweet.extended_tweet.full_text;
+            else if (tweet.text)
+                tweet_data.text = tweet.text;
+
+            if (tweet.geo) tweet_data.geo = tweet.geo;
+
+            return tweet_data;
+        },
     }
+
 }
-/*
-return function (request, response) {
-    parser(request, response, function () {
-        if (this.options.verify && !this.verify(request.rawBody, request.get('X-Line-Signature'))) {
-            return response.sendStatus(400);
-        }
-        this.parse(request.body);
-        return response.json({});
-    });
-};*/
-
-
-
-
+//twitterCore.stream.litsen("Aigis1000", function () { });
+module.exports = twitterCore;
 
 
 /*
