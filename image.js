@@ -6,6 +6,14 @@ const dbox = require("./dbox.js");
 const imgur = require("./imgur.js");
 const md5 = function (str) { return require('crypto').createHash('md5').update(str).digest('hex'); }
 
+String.prototype.replaceAll = function (s1, s2) {
+    var source = this;
+    while ((temp = source.replace(s1, s2)) != source) {
+        source = temp;
+    }
+    return source.toString();
+}
+
 const main = async function () {
     await imgur.init();
     //imgur.database.saveDatabase();
@@ -62,6 +70,7 @@ const main = async function () {
             console.log(err);
         }
     }//*/
+    annaWebHook("statu");
 
 }; main();
 
@@ -95,6 +104,22 @@ const getFileList = async function (mainFolder) {
     await Promise.all(promiseArray);
 
     return pathArray;
+}
+const http = require('http');
+const annaWebHook = function (command) {
+    const webhookUrl = "http://aigis1000secretary.herokuapp.com/";
+    // const webhookUrl = "http://127.0.0.1:8080/";
+
+    http.get(webhookUrl + "anna/" + command, function (req, res) {
+        var html = '';
+        req.on('data', function (data) {
+            let str = new String(data);
+            html += str.replaceAll("<br>", "\n");;
+        });
+        req.on('end', function () {
+            console.info(html);
+        });
+    });
 }
 
 const asyncReadFile = function (filePath) {

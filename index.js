@@ -5,8 +5,8 @@
 
 // commit
 /*
-	0.6.7.13
-	twitter test
+	0.6.8.2
+	twitter bug fix
 */
 
 // 初始化

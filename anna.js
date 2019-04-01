@@ -10,7 +10,7 @@ const line = require("./line.js");
 const botPushLog = line.botPushLog;
 const botPushError = line.botPushError;
 
-var _version = "0.6.7.13";
+var _version = "0.6.8.2";
 // 主版本號：當你做了不兼容的API修改
 // 次版本號：當你做了向下兼容的功能性新增
 // 修訂號：當你做了向下兼容的問題修正
@@ -58,21 +58,21 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 	// reply
 	if (callAnna) {
 		if (command == "DEBUG") {		// debug switch
-			module.exports.debug = !module.exports.debug;
-			module.exports.debugPush = module.exports.debug;
-			return replyFunc("debug = " + (module.exports.debug ? "on" : "off"));
+			annaCore.debug = !annaCore.debug;
+			annaCore.debugPush = annaCore.debug;
+			return await replyFunc("debug = " + (annaCore.debug ? "on" : "off"));
 
 		} else if (command.length == 1) {		// 定型文
 			if (!replyStamp(command, replyFunc)) {
-				return replyFunc("王子太短了，找不到...");
+				return await replyFunc("王子太短了，找不到...");
 			}
 
 		} else if (command == "巨根") {
-			return replyFunc("王子太小了，找不到...");
+			return await replyFunc("王子太小了，找不到...");
 
 		} else if (command == "醒醒" || command == "WAKE") {
 			// wake
-			return replyFunc("呣喵~?");
+			return await replyFunc("呣喵~?");
 
 		} else if (command == "指令" || command == "HELP") {
 			// help
@@ -90,7 +90,7 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 			replyMsg += "輸入關鍵字可進行暱稱搜索&模糊搜索\n(>>安娜 NNL)\n(>>安娜 射手ナナリー)";
 
 			if (!_isAdmin) {
-				return replyFunc(replyMsg);
+				return await replyFunc(replyMsg);
 			}
 
 			replyMsg += "\n";
@@ -99,7 +99,7 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 			replyMsg += "上傳: 手動上傳資料庫更新。\n\n";
 			replyMsg += "更新: 手動上傳資料庫更新。";
 
-			return replyFunc(replyMsg);
+			return await replyFunc(replyMsg);
 
 		} else if (command == "狀態" || command == "STATU") {
 			// status
@@ -118,11 +118,11 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 			replyMsg += "　　　　　 " + classDatabase.data.length + " 筆職業資料\n";
 			replyMsg += "　　　　　 " + imgur.database.images.length + " 筆貼圖資料";
 
-			return replyFunc(replyMsg);
+			return await replyFunc(replyMsg);
 
 		} else if (command == "照片" || command == "圖片" || command == "相片" || command == "PICTURE") {
 			// 圖片空間
-			return replyFunc(createTemplateMsg("圖片空間", ["上傳新照片", "線上圖庫"],
+			return await replyFunc(createTemplateMsg("圖片空間", ["上傳新照片", "線上圖庫"],
 				["https://www.dropbox.com/request/FhIsMnWVRtv30ZL2Ty69",
 					"https://www.dropbox.com/sh/vonsrxzy79nkpah/AAD4p6TwZF44GHP5f6gdEh3ba?dl=0"]));
 
@@ -154,7 +154,7 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 
 			var replyMsg = [templateMsgA, templateMsgB];
 
-			return replyFunc(replyMsg);
+			return await replyFunc(replyMsg);
 
 		} else if (command == "職業") {
 			let classDB = classDatabase.data;
@@ -169,7 +169,7 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 			}
 			replyMsgA = replyMsgA.trim();
 			replyMsgB = replyMsgB.trim();
-			return replyFunc(replyMsgA + "\n" + replyMsgB);
+			return await replyFunc(replyMsgA + "\n" + replyMsgB);
 
 		} else if (command == "廣播") {
 
@@ -183,7 +183,7 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 					database.groupDatabase.uploadDB(false);
 				}; func();
 
-				return replyFunc("切換廣播開關，目前為: " + (alarm ? "開" : "關"));
+				return await replyFunc("切換廣播開關，目前為: " + (alarm ? "開" : "關"));
 			}
 			return false;
 
@@ -191,14 +191,14 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 			// 關鍵字學習
 			// <arg1>
 			if (arg1 == "undefined") {
-				return replyFunc("[學習] 要學甚麼?");
+				return await replyFunc("[學習] 要學甚麼?");
 			}
 			let learn = arg1.replace("：", ":");
 			debugLog("learn: <" + learn + ">");
 
 			let keys = learn.split(":"); // NNL:黑弓
 			if (keys.length < 2) {
-				return replyFunc("[學習] 看不懂...");
+				return await replyFunc("[學習] 看不懂...");
 			}
 
 			let arrayA = searchCharacter(keys[0].trim(), true);	// 精確搜索 Nickname
@@ -210,15 +210,15 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 			debugLog("full name: <" + arrayB + ">");
 
 			if (countA == 1) {
-				return replyFunc("[學習] 安娜知道的！");
+				return await replyFunc("[學習] 安娜知道的！");
 
 			} else if (countB == 0) {
 				let replyMsgs = ["不認識的人呢...", "那是誰？"];
 				var replyMsg = "[學習] " + replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
-				return replyFunc(replyMsg);
+				return await replyFunc(replyMsg);
 
 			} else if (countB > 1) {
-				return replyFunc("[學習] 太多人了，不知道是誰");
+				return await replyFunc("[學習] 太多人了，不知道是誰");
 
 			} else {
 				var key = arrayB[0];
@@ -229,7 +229,7 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 				// wait 10 min to save
 				nickDatabase.uploadTask();
 
-				return replyFunc("[學習] 嗯！記住了！");
+				return await replyFunc("[學習] 嗯！記住了！");
 			}
 		} else if (_isAdmin && command == "忘記") {
 			// forgot
@@ -248,7 +248,7 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 			// wait 10 min to save
 			nickDatabase.uploadTask();
 
-			return replyFunc("[學習] 忘記了!");
+			return await replyFunc("[學習] 忘記了!");
 
 		} else if (_isAdmin && (command == "資料庫" || command == "DB")) {
 
@@ -256,9 +256,9 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 			// >> ANNA 資料庫		CharaDatabase	NNL.ability_aw
 
 			if (arg1 == "undefined") {
-				return replyFunc("請選擇資料庫:\nCharaDatabase\nNickDatabase\nClassDatabase\n\n(>>資料庫 CharaDatabase NNL.ability_aw)");
+				return await replyFunc("請選擇資料庫:\nCharaDatabase\nNickDatabase\nClassDatabase\n\n(>>資料庫 CharaDatabase NNL.ability_aw)");
 			} else if (arg2 == "undefined") {
-				return replyFunc("請輸入項目: \n(>>資料庫 CharaDatabase NNL.ability_aw)");
+				return await replyFunc("請輸入項目: \n(>>資料庫 CharaDatabase NNL.ability_aw)");
 			}
 
 			let targetDBName = arg1;
@@ -277,16 +277,16 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 				targetDB = classDatabase;
 				index = classDatabase.indexOf(indexStr);
 			} else {
-				return replyFunc("不明的資料庫!");
+				return await replyFunc("不明的資料庫!");
 			}
 
 			if (index == -1) {
-				return replyFunc("不明的目標!");
+				return await replyFunc("不明的目標!");
 			}
 			if (msg2 == "DEL") {
 				var name = targetDB.data[index].name;
 				targetDB.data.splice(index, 1);
-				return replyFunc(targetDB.name + "." + name + " 刪除成功!");;
+				return await replyFunc(targetDB.name + "." + name + " 刪除成功!");;
 			}
 
 			if (!targetDB.data[index][propertyStr]) {
@@ -297,18 +297,18 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 					}
 				}
 
-				return replyFunc(reply.trim());
+				return await replyFunc(reply.trim());
 			}
 			if (msg2 == "undefined" || msg2 == "") {
 				var replyMsg = [];
 				replyMsg.push(createTextMsg("請換行輸入項目內容."));
 				replyMsg.push(createTextMsg(targetDB.data[index][propertyStr]));
-				return replyFunc(replyMsg);
+				return await replyFunc(replyMsg);
 
 			} else {
 				targetDB.data[index][propertyStr] = (msg2 == "CLEAR" ? "" : msg2);
 				targetDB.uploadTask();
-				return replyFunc("修改成功");
+				return await replyFunc("修改成功");
 
 			}
 
@@ -337,25 +337,25 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 		} else if (command == "更新" || command == "UPDATE") {
 			allCharaDataCrawler();
 			classDataCrawler();
-			return replyFunc("更新中...");
+			return await replyFunc("更新中...");
 
 		} else if (_isAdmin && (command == "初始化" || command == "INIT")) {
-			await module.exports.init();
-			return replyFunc("初始化完成!");
+			await annaCore.init();
+			return await replyFunc("初始化完成!");
 
 		}
 
-		if (searchClassReply(command, replyFunc)) {
+		if (await searchClassReply(command, replyFunc) != false) {
 			return true;
 		}
 
-		if (searchCharacterReply(command, false, replyFunc)) {
+		if (await searchCharacterReply(command, false, replyFunc) != false) {
 			return true;
 		}
 	}
 
 	// 呼叫定型文圖片
-	if (replyStamp(command, replyFunc)) {
+	if (await replyStamp(command, replyFunc) != false) {
 		return true;
 	}
 
@@ -363,13 +363,13 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 		// 404
 		let replyMsgs = ["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"];
 		var replyMsg = replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
-		return replyFunc(replyMsg);
+		return await replyFunc(replyMsg);
 	}
 	return false;
 }
 
 // 搜尋職業&回復
-const searchClassReply = function (command, replyFunc) {
+const searchClassReply = async function (command, replyFunc) {
 	// 搜索職業
 	let resultArray = searchByClass(command);
 	var count = resultArray.length;
@@ -378,10 +378,10 @@ const searchClassReply = function (command, replyFunc) {
 	// 遍歷
 	var result = resultArray.join("\n");
 	if (count == 1) {	// only one
-		return replyCharaData(result, replyFunc);
+		return await replyCharaData(result, replyFunc);
 
 	} else if (count > 0) {	// list
-		return replyFunc(result);
+		return await replyFunc(result);
 	}
 	return false;
 }
@@ -408,7 +408,7 @@ const searchByClass = function (command) {
 }
 
 // 搜尋角色&回復
-const searchCharacterReply = function (command, accurate, replyFunc) {
+const searchCharacterReply = async function (command, accurate, replyFunc) {
 
 	// 搜索名稱
 	let resultArray = searchCharacter(command, accurate);
@@ -418,16 +418,16 @@ const searchCharacterReply = function (command, accurate, replyFunc) {
 	// 遍歷
 	var result = resultArray.join("\n");
 	if (count == 1) {	// only one
-		return replyCharaData(result, replyFunc);
+		return await replyCharaData(result, replyFunc);
 
 	} else if (count > 0) {	// list
-		return replyFunc(result);
+		return await replyFunc(result);
 	}
 	return false;
 }
 
 // 回覆單一角色資料
-const replyCharaData = function (charaName, replyFunc) {
+const replyCharaData = async function (charaName, replyFunc) {
 	debugLog("replyCharaData(" + charaName + ")");
 
 	let i = charaDatabase.indexOf(charaName);
@@ -444,10 +444,10 @@ const replyCharaData = function (charaName, replyFunc) {
 
 	replyMsg.push(createTemplateMsg("Wiki 連結", [obj.name], [obj.getWikiUrl()]));
 
-	return replyFunc(replyMsg);
+	return await replyFunc(replyMsg);
 }
 // 定型文貼圖
-const replyStamp = function (msg, replyFunc) {
+const replyStamp = async function (msg, replyFunc) {
 	debugLog("replyStamp(" + msg + ")");
 
 	var replyMsg = [];
@@ -456,14 +456,14 @@ const replyStamp = function (msg, replyFunc) {
 	if (imgArray.length > 0) {
 		let i = Math.floor(Math.random() * imgArray.length);
 		replyMsg.push(createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
-		return replyFunc(replyMsg);
+		return await replyFunc(replyMsg);
 	}
 
 	imgArray = imgArray.concat(imgur.database.findImageByFileName(msg));
 	imgArray = imgArray.concat(imgur.database.findImageByMd5(msg));
 	if (imgArray.length > 0) {
 		replyMsg.push(createImageMsg(imgArray[0].imageLink, imgArray[0].thumbnailLink));
-		return replyFunc(replyMsg);
+		return await replyFunc(replyMsg);
 	}
 
 	return false;
@@ -663,10 +663,10 @@ const charaDataCrawler = function (urlPath) {
 					}
 
 					// 統一格式
-					newData.skill = newData.skill.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
-					newData.skill_aw = newData.skill_aw.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
-					newData.ability = newData.ability.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
-					newData.ability_aw = newData.ability_aw.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
+					newData.skill 	= newData.skill			.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
+					newData.skill_aw = newData.skill_aw		.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
+					newData.ability = newData.ability		.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
+					newData.ability_aw = newData.ability_aw	.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
 
 					if (newData.ability.indexOf("ランダム") != -1) {
 						newData.ability = newData.ability.replaceAll("、/、", "、");
@@ -1058,14 +1058,14 @@ const adminstrator = "U9eefeba8c0e5f8ee369730c4f983346b";
 const admins = [];
 const debugLogger = "U9eefeba8c0e5f8ee369730c4f983346b";
 const debugLog = function (msg) {
-	if (!module.exports.debug) {
+	if (!annaCore.debug) {
 		return;
 	}
 	console.log(msg);
 	debugPush(msg);
 }
 const debugPush = function (msg) {
-	if (module.exports.debugPush) {
+	if (annaCore.debugPush) {
 		botPushError(msg);
 	}
 }
@@ -1076,7 +1076,7 @@ const isAdmin = function (userId) {
 
 
 // 外部呼叫
-module.exports = {
+var annaCore = {
 	init: async function () {
 
 		charaDatabase.data = [];
@@ -1101,8 +1101,8 @@ module.exports = {
 
 	// update.js
 	// charaDataCrawler: charaDataCrawler,
-	allCharaDataCrawler: allCharaDataCrawler,
-	classDataCrawler: classDataCrawler,
+	// allCharaDataCrawler: allCharaDataCrawler,
+	// classDataCrawler: classDataCrawler,
 
 	// debug
 	debug: false,
@@ -1113,13 +1113,13 @@ module.exports = {
 	adminstrator: adminstrator,
 	// admins: function () { return admins },
 	debugLogger: debugLogger
-};
+}; module.exports = annaCore;
 
 
 
 /*
 const debugFunc = async function () {
-	// await module.exports.init();
+	// await annaCore.init();
 	// await imgur.init();
 
 	try {
@@ -1128,7 +1128,7 @@ const debugFunc = async function () {
 		console.log(err);
 	}
 
-	// module.exports.debug = true;
+	// annaCore.debug = true;
 	// replyAI("anna upload", debugLog);
 
 

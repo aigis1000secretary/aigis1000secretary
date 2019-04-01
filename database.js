@@ -268,27 +268,40 @@ class CharaDatabase extends Database {
 
         } else {
             let i = this.indexOf(newData.name);
+            let changed = false;
 
             if (this.data[i].ability == "") {
                 this.data[i].ability = newData.ability;
+                if (this.data[i].ability != "") { changed = true; }
             }
             if (this.data[i].ability_aw == "") {
                 this.data[i].ability_aw = newData.ability_aw;
+                if (this.data[i].ability_aw != "") { changed = true; }
             }
             if (this.data[i].skill == "") {
                 this.data[i].skill = newData.skill;
+                if (this.data[i].skill != "") { changed = true; }
             }
             if (this.data[i].skill_aw == "") {
                 this.data[i].skill_aw = newData.skill_aw;
+                if (this.data[i].skill_aw != "") { changed = true; }
             }
 
             if (this.data[i].rarity == "") {
                 this.data[i].rarity = newData.rarity;
+                if (this.data[i].rarity != "") { changed = true; }
             }
             if (this.data[i].class == "") {
                 this.data[i].class = newData.class;
+                if (this.data[i].class != "") { changed = true; }
             }
-            console.log("Character <" + newData.name + "> data is existed!");
+
+            if (changed) {
+                console.log("New character <" + newData.name + "> data update complete!");
+                botPushLog("anna " + newData.name + " New character data update complete!");
+            } else {
+                console.log("Character <" + newData.name + "> data is existed!");
+            }
         };
     };
 }
@@ -333,7 +346,7 @@ class ClassDatabase extends Database {
         if (this.indexOf(newClass.name) == -1) {
             this.data.push(newClass);
             console.log("New Class <" + newClass.name + "> add complete!");
-            debugPush("New Class <" + newClass.name + "> add complete!");
+            botPushLog("New Class <" + newClass.name + "> add complete!");
 
         } else {
             console.log("Class <" + newClass.name + "> is existed!");

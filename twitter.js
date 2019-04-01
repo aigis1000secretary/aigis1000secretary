@@ -264,7 +264,7 @@ const twitterCore = {
                     console.log("stream.on = data")
 
                     // RTと自分のツイートは除外
-                    if (tweet && !tweet.retweeted_status) {
+                    if (tweet && tweet.user && !tweet.retweeted_status) {
 
                         // 送信する情報を定義
                         var tweet_data = twitterCore.stream.getTweetData(tweet);
@@ -290,7 +290,7 @@ const twitterCore = {
                     var tweet = rawData.source;
 
                     // RTと自分のツイートは除外
-                    if (tweet && !tweet.retweeted_status) {
+                    if (tweet && tweet.user && !tweet.retweeted_status) {
 
                         // 送信する情報を定義
                         var tweet_data = twitterCore.stream.getTweetData(tweet);
