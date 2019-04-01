@@ -10,7 +10,7 @@ const line = require("./line.js");
 const botPushLog = line.botPushLog;
 const botPushError = line.botPushError;
 
-var _version = "0.6.8.2";
+var _version = "0.6.8.2-4/1";
 // 主版本號：當你做了不兼容的API修改
 // 次版本號：當你做了向下兼容的功能性新增
 // 修訂號：當你做了向下兼容的問題修正
@@ -210,10 +210,12 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 			debugLog("full name: <" + arrayB + ">");
 
 			if (countA == 1) {
-				return await replyFunc("[學習] 安娜知道的！");
+				//return await replyFunc("[學習] 安娜知道的！");
+				return await replyFunc("[學習] 知道的喔");
 
 			} else if (countB == 0) {
-				let replyMsgs = ["不認識的人呢...", "那是誰？"];
+				//let replyMsgs = ["不認識的人呢...", "那是誰？"];
+				let replyMsgs = ["不認識...", "那誰？"];
 				var replyMsg = "[學習] " + replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
 				return await replyFunc(replyMsg);
 
@@ -229,7 +231,8 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 				// wait 10 min to save
 				nickDatabase.uploadTask();
 
-				return await replyFunc("[學習] 嗯！記住了！");
+				//return await replyFunc("[學習] 嗯！記住了！");
+				return await replyFunc("[學習] 嘛...記住了...");
 			}
 		} else if (_isAdmin && command == "忘記") {
 			// forgot
@@ -361,7 +364,8 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 
 	if (callAnna) {
 		// 404
-		let replyMsgs = ["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"];
+		//let replyMsgs = ["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"];
+		let replyMsgs = ["不認識呢...", "不知道", "不懂", "那誰？", "那什麼？"];
 		var replyMsg = replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
 		return await replyFunc(replyMsg);
 	}
