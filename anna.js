@@ -342,10 +342,12 @@ const replyAI = async function (rawMsg, sourceId, userId) {
 
 		}
 
+		// 搜尋資料
 		var result = false;
 		result = searchData(command);
 		if (result != false) {
 			return result;
+			
 		}
 	}
 
@@ -380,7 +382,7 @@ const searchData = function (command) {
 		return generateCharaData(result);
 	} else if (count > 1) {
 		// found list
-		return resultArray;
+		return resultArray.join("\n");
 	}
 
 	// not class or not found
@@ -393,7 +395,7 @@ const searchData = function (command) {
 		return generateCharaData(resultArray[0]);
 	} else if (count > 1) {
 		// found list
-		return resultArray;
+		return resultArray.join("\n");
 	}
 
 	return false;

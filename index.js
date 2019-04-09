@@ -133,7 +133,7 @@ const lineBotOn = function () {
 				}
 
 				//
-				var result = await anna.replyAI("anna " + command, sourceId, userId);
+				var result = await anna.replyAI(msg, sourceId, userId);
 				if (result != false) {
 					replyFunc(result);
 					return;
