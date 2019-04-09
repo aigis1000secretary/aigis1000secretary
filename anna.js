@@ -1,5 +1,6 @@
 
 // 初始化
+const config = require("./config.js");
 // 爬蟲
 const request = require("request");
 const iconv = require("iconv-lite");
@@ -7,14 +8,9 @@ const cheerio = require("cheerio");
 
 const imgur = require("./imgur.js");
 const line = require("./line.js");
-const botPushLog = line.botPushLog;
-const botPushError = line.botPushError;
+// 資料庫
+const database = require("./database.js");
 
-var _version = "0.6.8.2-4/1";
-// 主版本號：當你做了不兼容的API修改
-// 次版本號：當你做了向下兼容的功能性新增
-// 修訂號：當你做了向下兼容的問題修正
-// 次修訂號：線上debug
 
 String.prototype.replaceAll = function (s1, s2) {
 	var source = this;
@@ -28,7 +24,7 @@ String.prototype.replaceAll = function (s1, s2) {
 
 // bot
 // 搜尋資料
-const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
+const replyAI = async function (rawMsg, sourceId, userId) {
 	debugLog("rawMsg: <" + rawMsg + ">");
 
 	// flag
@@ -48,7 +44,6 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 	let command = ("" + msgs[1].toUpperCase()).trim();
 	let arg1 = ("" + msgs[2]).trim();
 	let arg2 = ("" + msgs[3]).trim();
-
 	// <command>
 	if (command == "undefined") {
 		return false;
@@ -58,25 +53,28 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 	// reply
 	if (callAnna) {
 		if (command == "DEBUG") {		// debug switch
-			annaCore.debug = !annaCore.debug;
-			annaCore.debugPush = annaCore.debug;
-			return await replyFunc("debug = " + (annaCore.debug ? "on" : "off"));
+			config.debug = !config.debug;
+			config.debugPush = config.debug;
+			return "debug = " + (config.debug ? "on" : "off");
 
 		} else if (command.length == 1) {		// 定型文
-			if (!replyStamp(command, replyFunc)) {
-				return await replyFunc("王子太短了，找不到...");
+			var result = replyStamp(command);
+			if (result != false) {
+				return result;
+			} else {
+				return "王子太短了，找不到...";
 			}
 
 		} else if (command == "巨根") {
-			return await replyFunc("王子太小了，找不到...");
+			return "王子太小了，找不到...";
 
 		} else if (command == "醒醒" || command == "WAKE") {
 			// wake
-			return await replyFunc("呣喵~?");
+			return "呣喵~?";
 
 		} else if (command == "指令" || command == "HELP") {
 			// help
-			var replyMsg = "歡迎使用政務官小安娜 v" + _version + "\n\n";
+			var replyMsg = "歡迎使用政務官小安娜 v" + config._version + "\n\n";
 
 			replyMsg += "狀態: 確認目前版本，資料庫資料筆數。\n(>>安娜 狀態)\n\n";
 			replyMsg += "照片: 上傳角色附圖的網路空間(DropBox)。\n(>>安娜 照片)\n\n";
@@ -90,7 +88,7 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 			replyMsg += "輸入關鍵字可進行暱稱搜索&模糊搜索\n(>>安娜 NNL)\n(>>安娜 射手ナナリー)";
 
 			if (!_isAdmin) {
-				return await replyFunc(replyMsg);
+				return replyMsg;
 			}
 
 			replyMsg += "\n";
@@ -99,11 +97,10 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 			replyMsg += "上傳: 手動上傳資料庫更新。\n\n";
 			replyMsg += "更新: 手動上傳資料庫更新。";
 
-			return await replyFunc(replyMsg);
+			return replyMsg;
 
 		} else if (command == "狀態" || command == "STATU") {
 			// status
-			// loadAutoResponseList();
 			await imgur.account.allImages()
 				.then(imgur.database.loadImages)
 				.catch(function (error) {
@@ -113,18 +110,19 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 
 			var replyMsg = "";
 
-			replyMsg += "目前版本 v" + _version + "\n";
+			replyMsg += "目前版本 v" + config._version + "\n";
 			replyMsg += "資料庫內有 " + charaDatabase.data.length + " 筆角色資料\n";
 			replyMsg += "　　　　　 " + classDatabase.data.length + " 筆職業資料\n";
 			replyMsg += "　　　　　 " + imgur.database.images.length + " 筆貼圖資料";
 
-			return await replyFunc(replyMsg);
+			return replyMsg;
 
 		} else if (command == "照片" || command == "圖片" || command == "相片" || command == "PICTURE") {
 			// 圖片空間
-			return await replyFunc(createTemplateMsg("圖片空間", ["上傳新照片", "線上圖庫"],
+			return createTemplateMsg("圖片空間",
+				["上傳新照片", "線上圖庫"],
 				["https://www.dropbox.com/request/FhIsMnWVRtv30ZL2Ty69",
-					"https://www.dropbox.com/sh/vonsrxzy79nkpah/AAD4p6TwZF44GHP5f6gdEh3ba?dl=0"]));
+					"https://www.dropbox.com/sh/vonsrxzy79nkpah/AAD4p6TwZF44GHP5f6gdEh3ba?dl=0"]);
 
 		} else if (command == "工具" || command == "TOOL") {
 			// tool
@@ -154,7 +152,7 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 
 			var replyMsg = [templateMsgA, templateMsgB];
 
-			return await replyFunc(replyMsg);
+			return replyMsg;
 
 		} else if (command == "職業") {
 			let classDB = classDatabase.data;
@@ -169,7 +167,7 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 			}
 			replyMsgA = replyMsgA.trim();
 			replyMsgB = replyMsgB.trim();
-			return await replyFunc(replyMsgA + "\n" + replyMsgB);
+			return replyMsgA + "\n" + replyMsgB;
 
 		} else if (command == "廣播") {
 
@@ -181,9 +179,9 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 				let func = async function () {
 					await database.groupDatabase.saveDB();
 					database.groupDatabase.uploadDB(false);
-				}; func();
+				}; func();	// 異步儲存
 
-				return await replyFunc("切換廣播開關，目前為: " + (alarm ? "開" : "關"));
+				return "切換廣播開關，目前為: " + (alarm ? "開" : "關");
 			}
 			return false;
 
@@ -191,14 +189,14 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 			// 關鍵字學習
 			// <arg1>
 			if (arg1 == "undefined") {
-				return await replyFunc("[學習] 要學甚麼?");
+				return "[學習] 要學甚麼?";
 			}
 			let learn = arg1.replace("：", ":");
 			debugLog("learn: <" + learn + ">");
 
 			let keys = learn.split(":"); // NNL:黑弓
 			if (keys.length < 2) {
-				return await replyFunc("[學習] 看不懂...");
+				return "[學習] 看不懂...";
 			}
 
 			let arrayA = searchCharacter(keys[0].trim(), true);	// 精確搜索 Nickname
@@ -210,29 +208,26 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 			debugLog("full name: <" + arrayB + ">");
 
 			if (countA == 1) {
-				//return await replyFunc("[學習] 安娜知道的！");
-				return await replyFunc("[學習] 知道的喔");
+				return "[學習] 安娜知道的！";
 
 			} else if (countB == 0) {
-				//let replyMsgs = ["不認識的人呢...", "那是誰？"];
-				let replyMsgs = ["不認識...", "那誰？"];
+				let replyMsgs = ["不認識的人呢...", "那是誰？"];
 				var replyMsg = "[學習] " + replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
-				return await replyFunc(replyMsg);
+				return replyMsg;
 
 			} else if (countB > 1) {
-				return await replyFunc("[學習] 太多人了，不知道是誰");
+				return "[學習] 太多人了，不知道是誰";
 
 			} else {
 				var key = arrayB[0];
 				var nick = keys[0];
 
+				// 異步執行
 				nickDatabase.addData(key, nick);
-
 				// wait 10 min to save
 				nickDatabase.uploadTask();
 
-				//return await replyFunc("[學習] 嗯！記住了！");
-				return await replyFunc("[學習] 嘛...記住了...");
+				return "[學習] 嗯！記住了！";
 			}
 		} else if (_isAdmin && command == "忘記") {
 			// forgot
@@ -243,15 +238,15 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 			let learn = arg1;
 			debugLog("forgot: <" + learn + ">");
 
+			// 同步執行
 			let i = nickDatabase.indexOf(learn.trim());
 			if (i > -1) {
 				nickDatabase.data.splice(i, 1);
 			}
-
 			// wait 10 min to save
 			nickDatabase.uploadTask();
 
-			return await replyFunc("[學習] 忘記了!");
+			return "[學習] 忘記了!";
 
 		} else if (_isAdmin && (command == "資料庫" || command == "DB")) {
 
@@ -259,9 +254,9 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 			// >> ANNA 資料庫		CharaDatabase	NNL.ability_aw
 
 			if (arg1 == "undefined") {
-				return await replyFunc("請選擇資料庫:\nCharaDatabase\nNickDatabase\nClassDatabase\n\n(>>資料庫 CharaDatabase NNL.ability_aw)");
+				return "請選擇資料庫:\nCharaDatabase\nNickDatabase\nClassDatabase\n\n(>>資料庫 CharaDatabase NNL.ability_aw)";
 			} else if (arg2 == "undefined") {
-				return await replyFunc("請輸入項目: \n(>>資料庫 CharaDatabase NNL.ability_aw)");
+				return "請輸入項目: \n(>>資料庫 CharaDatabase NNL.ability_aw)";
 			}
 
 			let targetDBName = arg1;
@@ -280,16 +275,16 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 				targetDB = classDatabase;
 				index = classDatabase.indexOf(indexStr);
 			} else {
-				return await replyFunc("不明的資料庫!");
+				return "不明的資料庫!";
 			}
 
 			if (index == -1) {
-				return await replyFunc("不明的目標!");
+				return "不明的目標!";
 			}
 			if (msg2 == "DEL") {
 				var name = targetDB.data[index].name;
 				targetDB.data.splice(index, 1);
-				return await replyFunc(targetDB.name + "." + name + " 刪除成功!");;
+				return targetDB.name + "." + name + " 刪除成功!";
 			}
 
 			if (!targetDB.data[index][propertyStr]) {
@@ -300,95 +295,110 @@ const replyAI = async function (rawMsg, sourceId, userId, replyFunc) {
 					}
 				}
 
-				return await replyFunc(reply.trim());
+				return reply.trim();
 			}
 			if (msg2 == "undefined" || msg2 == "") {
 				var replyMsg = [];
 				replyMsg.push(createTextMsg("請換行輸入項目內容."));
 				replyMsg.push(createTextMsg(targetDB.data[index][propertyStr]));
-				return await replyFunc(replyMsg);
+				return replyMsg;
 
 			} else {
 				targetDB.data[index][propertyStr] = (msg2 == "CLEAR" ? "" : msg2);
 				targetDB.uploadTask();
-				return await replyFunc("修改成功");
+				return "修改成功";
 
 			}
-
-			return false;
 		} else if (command == "上傳" || command == "UPLOAD") {
 
-			try {
-				replyFunc("上傳中...");
+			// 異步執行
+			let func = async function () {
+				try {
+					await charaDatabase.saveDB();
+					await charaDatabase.uploadDB(true);
 
-				await charaDatabase.saveDB();
-				await charaDatabase.uploadDB(true);
+					await nickDatabase.saveDB();
+					await nickDatabase.uploadDB(true);
 
-				await nickDatabase.saveDB();
-				await nickDatabase.uploadDB(true);
+					await classDatabase.saveDB();
+					await classDatabase.uploadDB(true);
 
-				await classDatabase.saveDB();
-				await classDatabase.uploadDB(true);
+					botPushLog("上傳完成!");
+				} catch (error) {
+					botPushError("上傳異常! " + error.toString());
+				}
+			}; func();
 
-				botPushLog("上傳完成!");
-				return true;
-			} catch (error) {
-				botPushError("上傳異常! " + error.toString());
-				return true;
-			}
+			return "上傳中...";
 
 		} else if (command == "更新" || command == "UPDATE") {
 			allCharaDataCrawler();
 			classDataCrawler();
-			return await replyFunc("更新中...");
+			return "更新中...";
 
 		} else if (_isAdmin && (command == "初始化" || command == "INIT")) {
 			await annaCore.init();
-			return await replyFunc("初始化完成!");
+			return "初始化完成!";
 
 		}
 
-		if (await searchClassReply(command, replyFunc) != false) {
-			return true;
-		}
-
-		if (await searchCharacterReply(command, false, replyFunc) != false) {
-			return true;
+		var result = false;
+		result = searchData(command);
+		if (result != false) {
+			return result;
 		}
 	}
 
 	// 呼叫定型文圖片
-	if (await replyStamp(command, replyFunc) != false) {
-		return true;
+	var result = false;
+	result = replyStamp(command);
+	if (result != false) {
+		return result;
 	}
 
 	if (callAnna) {
 		// 404
-		//let replyMsgs = ["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"];
-		let replyMsgs = ["不認識呢...", "不知道", "不懂", "那誰？", "那什麼？"];
+		let replyMsgs = ["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"];
 		var replyMsg = replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
-		return await replyFunc(replyMsg);
+		return replyMsg;
 	}
 	return false;
 }
 
-// 搜尋職業&回復
-const searchClassReply = async function (command, replyFunc) {
+// 搜尋&回復
+const searchData = function (command) {
+	let resultArray = []
+	let count = 0
+
+	// class?
 	// 搜索職業
-	let resultArray = searchByClass(command);
-	var count = resultArray.length;
+	resultArray = searchByClass(command);
+	count = resultArray.length;
 	debugLog("classResult[" + count + "]: <" + resultArray + ">");
-
-	// 遍歷
-	var result = resultArray.join("\n");
-	if (count == 1) {	// only one
-		return await replyCharaData(result, replyFunc);
-
-	} else if (count > 0) {	// list
-		return await replyFunc(result);
+	if (count == 1) {
+		// found 1
+		return generateCharaData(result);
+	} else if (count > 1) {
+		// found list
+		return resultArray;
 	}
+
+	// not class or not found
+	// 搜索名稱
+	resultArray = searchCharacter(command);
+	count = resultArray.length;
+	debugLog("charaResult[" + count + "]: <" + resultArray + ">");
+	if (count == 1) {
+		// found 1
+		return generateCharaData(resultArray[0]);
+	} else if (count > 1) {
+		// found list
+		return resultArray;
+	}
+
 	return false;
 }
+// 搜索職業
 const searchByClass = function (command) {
 	// 搜索職業
 	if (command.indexOf("金") != 0 && command.indexOf("藍") != 0 && command.indexOf("白") != 0 &&
@@ -401,7 +411,7 @@ const searchByClass = function (command) {
 	debugLog("_rarity + _class: <" + _rarity + " + " + _class + ">");
 
 	var result = [];
-	// 遍歷角色資料
+	// 遍歷角色資料庫
 	for (let i in charaDatabase.data) {
 		let obj = charaDatabase.data[i];
 		if (obj.rarity == _rarity && obj.class == _class) {
@@ -410,48 +420,33 @@ const searchByClass = function (command) {
 	}
 	return result;
 }
-
-// 搜尋角色&回復
-const searchCharacterReply = async function (command, accurate, replyFunc) {
-
-	// 搜索名稱
-	let resultArray = searchCharacter(command, accurate);
-	var count = resultArray.length;
-	debugLog("charaResultArray[" + count + "]: <" + resultArray + ">");
-
-	// 遍歷
-	var result = resultArray.join("\n");
-	if (count == 1) {	// only one
-		return await replyCharaData(result, replyFunc);
-
-	} else if (count > 0) {	// list
-		return await replyFunc(result);
-	}
-	return false;
-}
-
-// 回覆單一角色資料
-const replyCharaData = async function (charaName, replyFunc) {
-	debugLog("replyCharaData(" + charaName + ")");
+// 建立回覆: 單一角色資料
+const generateCharaData = function (charaName) {
+	debugLog("generateCharaData(" + charaName + ")");
 
 	let i = charaDatabase.indexOf(charaName);
 	let obj = charaDatabase.data[i];
 
-	var replyMsg = [];
-	replyMsg.push(createTextMsg(obj.getMessage()));
+	if (i != -1) {
+		var replyMsg = [];
+		replyMsg.push(createTextMsg(obj.getMessage()));
 
-	let imgArray = imgur.database.findImageByTag(charaName);
-	if (imgArray.length > 0) {
-		let i = Math.floor(Math.random() * imgArray.length);
-		replyMsg.push(createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
+		let imgArray = imgur.database.findImageByTag(charaName);
+		if (imgArray.length > 0) {
+			let i = Math.floor(Math.random() * imgArray.length);
+			replyMsg.push(createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
+		}
+
+		replyMsg.push(createTemplateMsg("Wiki 連結", [obj.name], [obj.getWikiUrl()]));
+
+		return replyMsg;
 	}
 
-	replyMsg.push(createTemplateMsg("Wiki 連結", [obj.name], [obj.getWikiUrl()]));
-
-	return await replyFunc(replyMsg);
+	debugLog("generateCharaData error! can not found chara!");
+	return false;
 }
 // 定型文貼圖
-const replyStamp = async function (msg, replyFunc) {
+const replyStamp = function (msg) {
 	debugLog("replyStamp(" + msg + ")");
 
 	var replyMsg = [];
@@ -460,14 +455,14 @@ const replyStamp = async function (msg, replyFunc) {
 	if (imgArray.length > 0) {
 		let i = Math.floor(Math.random() * imgArray.length);
 		replyMsg.push(createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
-		return await replyFunc(replyMsg);
+		return replyMsg;
 	}
 
 	imgArray = imgArray.concat(imgur.database.findImageByFileName(msg));
 	imgArray = imgArray.concat(imgur.database.findImageByMd5(msg));
 	if (imgArray.length > 0) {
 		replyMsg.push(createImageMsg(imgArray[0].imageLink, imgArray[0].thumbnailLink));
-		return await replyFunc(replyMsg);
+		return replyMsg;
 	}
 
 	return false;
@@ -667,10 +662,10 @@ const charaDataCrawler = function (urlPath) {
 					}
 
 					// 統一格式
-					newData.skill 	= newData.skill			.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
-					newData.skill_aw = newData.skill_aw		.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
-					newData.ability = newData.ability		.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
-					newData.ability_aw = newData.ability_aw	.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
+					newData.skill = newData.skill.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
+					newData.skill_aw = newData.skill_aw.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
+					newData.ability = newData.ability.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
+					newData.ability_aw = newData.ability_aw.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
 
 					if (newData.ability.indexOf("ランダム") != -1) {
 						newData.ability = newData.ability.replaceAll("、/、", "、");
@@ -727,10 +722,7 @@ const allCharaDataCrawler = function () {
 			let buffer = $(this).attr("href");
 			if (buffer && $(this).parent().is("td") && $(this).prev().prev().children().is("img")) {
 				// console.log($(this).text());
-				// 延遲呼叫角色爬蟲
-				// setTimeout(function () { charaDataCrawler(buffer); }, delay * 50);
 				allCharaUrl.push(buffer);
-				// delay++;
 			}
 		});
 	}
@@ -899,7 +891,6 @@ String.prototype.tableToArray = function () {
 
 
 // 資料庫
-const database = require("./database.js");
 // Character
 var charaDatabase = database.charaDatabase;
 // 模糊搜尋
@@ -1058,29 +1049,26 @@ const createTemplateMsg = function (altText, label, url) {
 // Wiki   : encodeURI_JP(url);
 
 // 管理用參數
-const adminstrator = "U9eefeba8c0e5f8ee369730c4f983346b";
-const admins = [];
-const debugLogger = "U9eefeba8c0e5f8ee369730c4f983346b";
 const debugLog = function (msg) {
-	if (!annaCore.debug) {
+	if (!config.debug) {
 		return;
 	}
 	console.log(msg);
 	debugPush(msg);
 }
 const debugPush = function (msg) {
-	if (annaCore.debugPush) {
+	if (config.debugPush) {
 		botPushError(msg);
 	}
 }
 const isAdmin = function (userId) {
-	return (userId == adminstrator || admins.indexOf(userId) != -1)
+	return (userId == config.adminstrator || config.admins.indexOf(userId) != -1)
 }
 
 
 
 // 外部呼叫
-var annaCore = {
+const annaCore = {
 	init: async function () {
 
 		charaDatabase.data = [];
@@ -1109,48 +1097,34 @@ var annaCore = {
 	// classDataCrawler: classDataCrawler,
 
 	// debug
-	debug: false,
-	debugPush: false,
 	debugLog: debugLog,
 
 	isAdmin: isAdmin,
-	adminstrator: adminstrator,
-	// admins: function () { return admins },
-	debugLogger: debugLogger
 }; module.exports = annaCore;
 
+module.exports.autoTest = async function () {
 
+	await annaCore.init();
+	await imgur.init();
 
-/*
-const debugFunc = async function () {
-	// await annaCore.init();
-	// await imgur.init();
+	let sourceId = "U9eefeba8c0e5f8ee369730c4f983346b";
+	let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
+	// config.debug = true;
 
-	try {
-		await charaDatabase.downloadDB()
-	} catch (err) {
-		console.log(err);
-	}
+	// await annaCore.replyAI("anna 狀態", sourceId, userId).then(console.log);
 
-	// annaCore.debug = true;
-	// replyAI("anna upload", debugLog);
+	// await annaCore.replyAI("anna 學習 NNLK:白ナナリー", sourceId, userId).then(console.log);
 
+	// await annaCore.replyAI("anna NNLK", sourceId, userId).then(console.log);
+	// await annaCore.replyAI("anna 黑弓", sourceId, userId).then(console.log);
+	// await annaCore.replyAI("anna 忘記 NNLK", sourceId, userId).then(console.log);
+	// await annaCore.replyAI("anna NNLK", sourceId, userId).then(console.log);
 
-	// userId = "U9eefeba8c0e5f8ee369730c4f983346b";
-	// profile = await bot.getUserProfile(userId);
-	// console.log(profile);
+	// await annaCore.replyAI("647051929ed6333312951134c63323a1", sourceId, userId).then(console.log);
 
-	// groupId = "C576ad7f8e2d943f7a6f07d043391dab3";
-	// profile = await bot.getGroupMember(groupId);
-	// console.log(profile);
+	await annaCore.replyAI("anna update", sourceId, userId).then(console.log);
 
-	// groupId = "C906808294426cdd7d8077301b11fe95f";
-	// profile = await bot.getGroupMember(groupId);
-	// console.log(profile);
-
-}
-
-setTimeout(debugFunc, 1 * 100);// */
+};
 
 
 

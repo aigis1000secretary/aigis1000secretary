@@ -5,6 +5,7 @@ const line = require("./line.js");
 const twitter = require("./twitter.js");
 const bodyParser = require('body-parser');
 const anna = require("./anna.js");
+const config = require("./config.js");
 var jsonParser = bodyParser.json()
 
 const app = express();
@@ -29,17 +30,17 @@ module.exports = {
             response.send("Anna say hello to you!")
         });
         app.get("/anna/:command", async function (request, response) {
-            let sourceId = "U9eefeba8c0e5f8ee369730c4f983346b";
-            let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
+            let sourceId = config.adminstrator;
+            let userId = config.adminstrator;
             var command = request.params.command;
             var responseBody = "reply false!";
-            await anna.replyAI("anna " + command, sourceId, userId, function (object) {
-                if (typeof (object) == "string") {
-                    responseBody = object.replaceAll("\n", "<br>");
-                } else {
-                    responseBody = JSON.stringify(object, null, 2).replaceAll("\n", "<br>");
-                }
-            });
+
+            var result = await anna.replyAI("anna " + command, sourceId, userId);
+            if (typeof (result) == "string") {
+                responseBody = result.replaceAll("\n", "<br>");
+            } else {
+                responseBody = JSON.stringify(result, null, 2).replaceAll("\n", "<br>");
+            }
             response.send(responseBody);
         });
 
@@ -58,13 +59,12 @@ module.exports = {
 
         // hotfix
         try {
-            await dbox.fileDownload("hotfix.js", "./hotfix.js");
+            await dbox.fileDownloadToFile("hotfix.js", "./hotfix.js");
             hotfix = require("./hotfix.js");
             app.get("/hotfix/:function", hotfix.hotfix);
         } catch (err) {
             console.log("hotfix error ", err);
         }
     },
-    app: app
-}
+};
 module.exports.init();

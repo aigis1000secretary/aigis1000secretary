@@ -6,30 +6,31 @@ const request = require("request");
 const crypto = require('crypto');
 const line = require("./line.js");
 const dbox = require("./dbox.js");
+const config = require("./config.js");
 
 // 各種Twitter APIを使用するための情報を設定
-const config = {
-    TWITTER_CONSUMER_KEY: "BA5DAB2yRX2EWFPB7xIR1DOfo",
-    TWITTER_CONSUMER_SECRET: "2G8Ltf2F1DwrwscIGrJ4KhY7ZbiKCfKUlw3khkmIPNux6aJUv5",
-    TWITTER_ACCESS_TOKEN: "1098066659091181568-OEi7e7FAs6Xdp0bvaXHzJE1xdMy16Q",
-    TWITTER_ACCESS_TOKEN_SECRET: "nRAT33Ozkq0zJ6rjjoFJetuTWu6ouAE9dVgUxM1t36MWK",
-    devLabel: "aigis1000secretary",
-    hookId: "1106006997298761728",
-    webhookUrl: "https://aigis1000secretary.herokuapp.com/twitterbot/",
-    expressWatchPath: "/twitterbot/"
-}
+// const config.twitterCfg = {
+//     TWITTER_CONSUMER_KEY: "BA5DAB2yRX2EWFPB7xIR1DOfo",
+//     TWITTER_CONSUMER_SECRET: "2G8Ltf2F1DwrwscIGrJ4KhY7ZbiKCfKUlw3khkmIPNux6aJUv5",
+//     TWITTER_ACCESS_TOKEN: "1098066659091181568-OEi7e7FAs6Xdp0bvaXHzJE1xdMy16Q",
+//     TWITTER_ACCESS_TOKEN_SECRET: "nRAT33Ozkq0zJ6rjjoFJetuTWu6ouAE9dVgUxM1t36MWK",
+//     devLabel: "aigis1000secretary",
+//     hookId: "1106006997298761728",
+//     webhookUrl: "https://aigis1000secretary.herokuapp.com/twitterbot/"
+//     //expressWatchPath: "/twitterbot/"
+// }
 // oauth認証に使う値
 const twitter_oauth = {
-    consumer_key: config.TWITTER_CONSUMER_KEY.trim(),
-    consumer_secret: config.TWITTER_CONSUMER_SECRET.trim(),
-    token: config.TWITTER_ACCESS_TOKEN.trim(),
-    token_secret: config.TWITTER_ACCESS_TOKEN_SECRET.trim()
+    consumer_key: config.twitterCfg.TWITTER_CONSUMER_KEY.trim(),
+    consumer_secret: config.twitterCfg.TWITTER_CONSUMER_SECRET.trim(),
+    token: config.twitterCfg.TWITTER_ACCESS_TOKEN.trim(),
+    token_secret: config.twitterCfg.TWITTER_ACCESS_TOKEN_SECRET.trim()
 }
 const bot = new Twitter({ // Twitterオブジェクトの作成
-    consumer_key: config.TWITTER_CONSUMER_KEY.trim(),
-    consumer_secret: config.TWITTER_CONSUMER_SECRET.trim(),
-    access_token_key: config.TWITTER_ACCESS_TOKEN.trim(),
-    access_token_secret: config.TWITTER_ACCESS_TOKEN_SECRET.trim()
+    consumer_key: config.twitterCfg.TWITTER_CONSUMER_KEY.trim(),
+    consumer_secret: config.twitterCfg.TWITTER_CONSUMER_SECRET.trim(),
+    access_token_key: config.twitterCfg.TWITTER_ACCESS_TOKEN.trim(),
+    access_token_secret: config.twitterCfg.TWITTER_ACCESS_TOKEN_SECRET.trim()
 });
 String.prototype.replaceAll = function (s1, s2) {
     var source = this;
@@ -40,7 +41,7 @@ String.prototype.replaceAll = function (s1, s2) {
 }
 
 const twitterCore = {
-    config: config,
+    config: config.twitterCfg,
 
     crc: {
         // https://qiita.com/Fushihara/items/79913a5b933af15c5cf4
@@ -49,10 +50,10 @@ const twitterCore = {
             console.log("crcRegist");
             // Registers a webhook URL / Generates a webhook_id
             request.post({
-                url: `https://api.twitter.com/1.1/account_activity/all/${config.devLabel}/webhooks.json`,
+                url: `https://api.twitter.com/1.1/account_activity/all/${config.twitterCfg.devLabel}/webhooks.json`,
                 oauth: twitter_oauth,
                 headers: { "Content-type": "application/x-www-form-urlencoded" },
-                form: { url: config.webhookUrl }
+                form: { url: config.twitterCfg.webhookUrl }
             }, (error, response, body) => { console.log(body) });
         },
 
@@ -61,7 +62,7 @@ const twitterCore = {
         crcPostSubscriptions() {
             console.log("crcPostSubscriptions");
             request.post({
-                url: `https://api.twitter.com/1.1/account_activity/all/${config.devLabel}/subscriptions.json`,
+                url: `https://api.twitter.com/1.1/account_activity/all/${config.twitterCfg.devLabel}/subscriptions.json`,
                 oauth: twitter_oauth,
                 headers: { "Content-type": "application/x-www-form-urlencoded" },
             }, (error, response, body) => { if (error) console.log(error); else if (body) console.log(body); else console.log(response); });
@@ -69,7 +70,7 @@ const twitterCore = {
         crcGetSubscriptions() {
             console.log("crcGetSubscriptions");
             request.get({
-                url: `https://api.twitter.com/1.1/account_activity/all/${config.devLabel}/subscriptions.json`,
+                url: `https://api.twitter.com/1.1/account_activity/all/${config.twitterCfg.devLabel}/subscriptions.json`,
                 oauth: twitter_oauth,
                 headers: { "Content-type": "application/x-www-form-urlencoded" },
             }, (error, response, body) => { if (error) console.log(error); else if (body) console.log(body); else console.log(response); });
@@ -77,7 +78,7 @@ const twitterCore = {
         crcDelSubscriptions() {
             console.log("crcDelSubscriptions");
             request.delete({
-                url: `https://api.twitter.com/1.1/account_activity/all/${config.devLabel}/subscriptions.json`,
+                url: `https://api.twitter.com/1.1/account_activity/all/${config.twitterCfg.devLabel}/subscriptions.json`,
                 oauth: twitter_oauth,
                 headers: { "Content-type": "application/x-www-form-urlencoded" },
             }, (error, response, body) => { if (error) console.log(error); else if (body) console.log(body); else console.log(response); });
@@ -97,7 +98,7 @@ const twitterCore = {
             // Subscribes an application to an account"s events
             // これが登録らしいんだけど、来ないんだよなあ
             const request_options = {
-                url: `https://api.twitter.com/1.1/account_activity/all/${config.devLabel}/subscriptions.json`,
+                url: `https://api.twitter.com/1.1/account_activity/all/${config.twitterCfg.devLabel}/subscriptions.json`,
                 oauth: twitter_oauth
             };
             request.post(request_options, (error, response, body) => { console.log(`${response.statusCode} ${response.statusMessage}`); console.log(body) });
@@ -109,7 +110,7 @@ const twitterCore = {
             // アクティブなwebhookのURL一覧を取得
             // [{"id":"900000000000000000","url":"https://example.com/twitter-webhook-test/","valid":true,"created_timestamp":"2018-05-16 17:04:41 +0000"}]
             const request_options = {
-                url: `https://api.twitter.com/1.1/account_activity/all/${config.devLabel}/webhooks.json`,
+                url: `https://api.twitter.com/1.1/account_activity/all/${config.twitterCfg.devLabel}/webhooks.json`,
                 oauth: twitter_oauth,
                 headers: { "Content-type": "application/x-www-form-urlencoded" }
             };
@@ -123,7 +124,7 @@ const twitterCore = {
             // 登録したurlに "GET /twitter-webhook-test/index?crc_token=xxxxxxxxxxxxxxxxxxx&nonce=yyyyyyyyyyyyyyyy HTTP/1.1" のリクエストを送る
             // webhookの定期的なリクエストのテスト？
             const request_options = {
-                url: `https://api.twitter.com/1.1/account_activity/all/${config.devLabel}/webhooks/${config.hookId}.json`,
+                url: `https://api.twitter.com/1.1/account_activity/all/${config.twitterCfg.devLabel}/webhooks/${config.twitterCfg.hookId}.json`,
                 oauth: twitter_oauth,
                 headers: { "Content-type": "application/x-www-form-urlencoded" },
             };
@@ -135,7 +136,7 @@ const twitterCore = {
             // Check to see if a webhook is subscribed to an account
             // よくわからん。204が返ってきているのでOKの事らしいが
             const request_options = {
-                url: `https://api.twitter.com/1.1/account_activity/all/${config.devLabel}/subscriptions.json`,
+                url: `https://api.twitter.com/1.1/account_activity/all/${config.twitterCfg.devLabel}/subscriptions.json`,
                 oauth: twitter_oauth,
                 headers: { "Content-type": "application/x-www-form-urlencoded" }
             };
@@ -161,7 +162,7 @@ const twitterCore = {
             // {"errors":[{"message":"Your credentials do not allow access to this resource","code":220}]}
             // 無料では取れないっぽい？
             const request_options = {
-                url: `https://api.twitter.com/1.1/account_activity/all/${config.devLabel}/subscriptions/list.json`,
+                url: `https://api.twitter.com/1.1/account_activity/all/${config.twitterCfg.devLabel}/subscriptions/list.json`,
                 oauth: twitter_oauth,
                 headers: { "Content-type": "application/x-www-form-urlencoded" }
             };
@@ -173,7 +174,7 @@ const twitterCore = {
             // Deletes the webhook
             // これを実行すると、get-listの戻り値がカラになる。
             const request_options = {
-                url: `https://api.twitter.com/1.1/account_activity/all/${config.devLabel}/webhooks/${config.hookId}.json`,
+                url: `https://api.twitter.com/1.1/account_activity/all/${config.twitterCfg.devLabel}/webhooks/${config.twitterCfg.hookId}.json`,
                 oauth: twitter_oauth,
                 headers: { "Content-type": "application/x-www-form-urlencoded" }
             };
@@ -185,7 +186,7 @@ const twitterCore = {
             // Deactivates subscription
             // delを実行した後なのでわからん
             const request_options = {
-                url: `https://api.twitter.com/1.1/account_activity/all/${config.devLabel}/subscriptions.json`,
+                url: `https://api.twitter.com/1.1/account_activity/all/${config.twitterCfg.devLabel}/subscriptions.json`,
                 oauth: twitter_oauth,
                 headers: { "Content-type": "application/x-www-form-urlencoded" }
             };
@@ -207,7 +208,7 @@ const twitterCore = {
             // getでchallenge response check (CRC)が来るのでその対応
             const crc_token = request.query.crc_token
             if (crc_token) {
-                const hash = crypto.createHmac('sha256', config.TWITTER_CONSUMER_SECRET).update(crc_token).digest('base64')
+                const hash = crypto.createHmac('sha256', config.twitterCfg.TWITTER_CONSUMER_SECRET).update(crc_token).digest('base64')
                 console.log(`receive crc check. token=${crc_token} responce=${hash}`);
                 response.status(200);
                 response.send({

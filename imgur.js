@@ -1,20 +1,19 @@
 
 const request = require("request");
 const fs = require("fs");
-const md5 = function (str) { return require('crypto').createHash('md5').update(str).digest('hex'); }
+const md5f = function (str) { return require('crypto').createHash('md5').update(str).digest('hex'); }
+const config = require("./config.js");
 
 // vist site: https://api.imgur.com/oauth2/authorize?client_id=84f351fab201d5a&response_type=token
 // get var from url
-const IMGUR_REFRESH_TOKEN = "67d3f69b6ee6fd17f0c77a8df78cc87748fa7c68";
-const IMGUR_USERNAME = "z1022001jp";
+const IMGUR_REFRESH_TOKEN = config.IMGUR_REFRESH_TOKEN;
+const IMGUR_USERNAME = config.IMGUR_USERNAME;
 // https://imgur.com/account/settings/apps
-const IMGUR_CLIENT_ID = "84f351fab201d5a";
-const IMGUR_CLIENT_SECRET = "72ac198eaeb6edd3748a805f68fb9b9f741a9884";
+const IMGUR_CLIENT_ID = config.IMGUR_CLIENT_ID;
+const IMGUR_CLIENT_SECRET = config.IMGUR_CLIENT_SECRET;
 
 const IMGUR_API_URL = "https://api.imgur.com/3/";
 var IMGUR_ACCESS_TOKEN = "5f336949d6731b67fcad374a83851f3b543c17ad";
-
-var _debug = false;
 
 // Core
 var imgur = {
@@ -59,11 +58,11 @@ var imgur = {
 			// send request
 			imgur._request(options)
 				.then(function (jsonResponse) {
-					if (_debug) console.log(jsonResponse);
+					if (config._debug) console.log(jsonResponse);
 					resolve(jsonResponse);
 				})
 				.catch(function (error) {
-					if (_debug) console.log(error);
+					if (config._debug) console.log(error);
 					reject(error);
 				});
 		});
@@ -73,38 +72,38 @@ var imgur = {
 	// POST Generate Access_Token
 	// web API: https://api.imgur.com/oauth2/token
 	oauth2: {
-		token() {
+		async	token() {
 			console.log("Generate Access_Token");
-			return new Promise(function (resolve, reject) {
-				// Set the body
-				var form = {
-					refresh_token: IMGUR_REFRESH_TOKEN,
-					client_id: IMGUR_CLIENT_ID,
-					client_secret: IMGUR_CLIENT_SECRET,
-					grant_type: "refresh_token"
-				};
 
-				// Configure the request
-				var options = {
-					url: "https://api.imgur.com/oauth2/token",
-					method: "POST",
-					form: form
-				};
+			// Set the body
+			var form = {
+				refresh_token: IMGUR_REFRESH_TOKEN,
+				client_id: IMGUR_CLIENT_ID,
+				client_secret: IMGUR_CLIENT_SECRET,
+				grant_type: "refresh_token"
+			};
 
-				// send request
-				imgur._request(options)
-					.then(function (jsonResponse) {
-						if (_debug) console.log(jsonResponse);
-						IMGUR_ACCESS_TOKEN = jsonResponse.access_token;
-						//console.log(IMGUR_ACCESS_TOKEN);
-						resolve(jsonResponse);
-					})
-					.catch(function (error) {
-						if (_debug) console.log(error);
-						IMGUR_ACCESS_TOKEN = "";
-						reject(error);
-					});
-			});
+			// Configure the request
+			var options = {
+				url: "https://api.imgur.com/oauth2/token",
+				method: "POST",
+				form: form
+			};
+
+			// send request
+			try {
+				var jsonResponse = await imgur._request(options);
+
+				if (config._debug) console.log(jsonResponse);
+				IMGUR_ACCESS_TOKEN = jsonResponse.access_token;
+				//console.log(IMGUR_ACCESS_TOKEN);
+				return jsonResponse;
+
+			} catch (error) {
+				if (config._debug) console.log(error);
+				IMGUR_ACCESS_TOKEN = "";
+				return Promise.reject(error);
+			}
 		}
 	},
 
@@ -130,18 +129,17 @@ var imgur = {
 					);
 				}
 				await Promise.all(promiseArray);
-
 				return allImages;
+
 			} catch (error) {
-				throw error;
+				return Promise.reject(error);
 			}
 		},
 		// GET Images
-		images(page) {
+		async	images(page) {
 			if (typeof (page) != "number") page = 0;
 			console.log("GET Account Images page: " + page);
-
-			return new Promise(function (resolve, reject) {
+			try {
 				// Configure the request
 				var options = {
 					//url: IMGUR_API_URL + "account/" + IMGUR_USERNAME + "/images",
@@ -149,18 +147,16 @@ var imgur = {
 					method: "GET"
 				};
 
-				imgur._apiRequest(options)
-					.then(function (jsonResponse) {
-						resolve(jsonResponse.data);
-					})
-					.catch(function (error) {
-						reject(error);
-					});
-			});
+				var jsonResponse = await imgur._apiRequest(options)
+				return jsonResponse.data;
+
+			} catch (error) {
+				return Promise.reject(error);
+			}
 		},
 		// GET Count
-		imagesCount() {
-			return new Promise(function (resolve, reject) {
+		async	imagesCount() {
+			try {
 				// Configure the request
 				var options = {
 					//url: IMGUR_API_URL + "account/" + IMGUR_USERNAME + "/images",
@@ -168,14 +164,12 @@ var imgur = {
 					method: "GET"
 				};
 
-				imgur._apiRequest(options)
-					.then(function (jsonResponse) {
-						resolve(parseInt(jsonResponse.data / 50));
-					})
-					.catch(function (error) {
-						reject(error);
-					});
-			});
+				var jsonResponse = await imgur._apiRequest(options)
+				return parseInt(jsonResponse.data / 50);
+
+			} catch (error) {
+				return Promise.reject(error);
+			}
 		}
 	},
 
@@ -211,30 +205,24 @@ var imgur = {
 	// Image API
 	image: {
 		// POST Image Upload
-		imageUpload(imageLocalPath, mainTag) {
-			return new Promise(async function (resolve, reject) {
-				// get request data
-				var imageBinary = "";
-				var md5 = "";
-				var fileName = imageLocalPath.match(/[^\/]+$/gi);
-				try {
-					imageBinary = await asyncReadFile(imageLocalPath);
-					md5 = md5(imageBinary);
+		async imageUpload(imageLocalPath, mainTag) {
+			// get request data
+			var imageBinary = "";
+			var md5 = "";
+			var fileName = imageLocalPath.match(/[^\/]+$/gi);
+			try {
+				imageBinary = await asyncReadFile(imageLocalPath);
+				md5 = md5f(imageBinary);
 
-					imgur.image.binaryImageUpload(imageBinary, md5, fileName, mainTag)
-						.then(function (jsonResponse) {
-							resolve(jsonResponse);
-						})
-						.catch(function (error) {
-							reject(error);
-						});
-				} catch (error) {
-					reject(error);
-				}
-			});
+				var jsonResponse = await imgur.image.binaryImageUpload(imageBinary, md5, fileName, mainTag);
+				return jsonResponse;
+
+			} catch (error) {
+				return Promise.reject(error);
+			}
 		},
-		binaryImageUpload(imageBinary, md5, fileName, mainTag) {
-			return new Promise(function (resolve, reject) {
+		async binaryImageUpload(imageBinary, md5, fileName, mainTag) {
+			try {
 				// Configure the request
 				var options = {
 					url: IMGUR_API_URL + "image",
@@ -248,32 +236,28 @@ var imgur = {
 					}
 				};
 
-				imgur._apiRequest(options)
-					.then(function (jsonResponse) {
-						resolve(jsonResponse);
-					})
-					.catch(function (error) {
-						reject(error);
-					});
-			});
+				var jsonResponse = await imgur._apiRequest(options)
+				return jsonResponse;
+
+			} catch (error) {
+				return Promise.reject(error);
+			}
 		},
 		// DELETE Image Deletion
-		ImageDeletion(imageHash) {
-			return new Promise(function (resolve, reject) {
+		async ImageDeletion(imageHash) {
+			try {
 				// Configure the request
 				var options = {
 					url: IMGUR_API_URL + "image/" + imageHash,
 					method: "DELETE",
 				};
 
-				imgur._apiRequest(options)
-					.then(function (jsonResponse) {
-						resolve(jsonResponse);
-					})
-					.catch(function (error) {
-						reject(error);
-					});
-			});
+				var jsonResponse = await imgur._apiRequest(options)
+				return jsonResponse;
+
+			} catch (error) {
+				return Promise.reject(error);
+			}
 		}
 	},
 
@@ -397,54 +381,33 @@ var imgur = {
 
 	async init() {
 		// access token update
-		await imgur.oauth2.token()
-			.then(function (jsonResponse) {
-				console.log("IMGUR_ACCESS_TOKEN update complete!");
-			})
-			.catch(function (error) {
-				console.log("IMGUR_ACCESS_TOKEN update error!");
-				console.log(error);
-			});
+		try {
+			var jsonResponse = await imgur.oauth2.token();
+			console.log("IMGUR_ACCESS_TOKEN update complete!");
+		} catch (error) {
+			console.log("IMGUR_ACCESS_TOKEN update error!");
+			console.log(error);
+		};
 
-		await imgur.account.allImages()
-			.then(imgur.database.loadImages)
-			.catch(function (error) {
-				console.log("Imgur images load error!");
-				console.log(error);
-			});
+		try {
+			var jsonResponse = await imgur.account.allImages();
+			imgur.database.loadImages(jsonResponse);
+		} catch (error) {
+			console.log("Imgur images load error!");
+			console.log(error);
+		};
 
 		return;
 	}
 
 
-};
-module.exports = imgur;
+}; module.exports = imgur;
 
 
 /*
 imgur.account.images
 imgur.image.imageUpload = function(_imgPath, _tags)
 //*/
-/*
-const debugFunc = function() {
-	var _imageHash = "NX3tRXx";
-
-	imgur.account.images()
-	//imgur.image.imageUpload("C:/Windows/Web/Wallpaper/Scenes/img25.jpg", _tags)
-	.then(function(jsonResponse) {
-		console.log(jsonResponse);
-	})
-	.catch(function(error) {
-		console.log(error);
-	});
-}//*/
-/*
-const debugFunc = function() {
-	var tmp = imgur.database.albums;
-	var str = JSON.stringify(tmp);
-	console.log(str);
-}//*/
-//setTimeout(debugFunc, 2 * 1000);
 
 const asyncReadFile = function (filePath) {
 	return new Promise(function (resolve, reject) {

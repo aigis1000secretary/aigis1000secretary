@@ -2,8 +2,7 @@
 const fs = require("fs");
 const dbox = require("./dbox.js");
 const line = require("./line.js");
-const botPushLog = line.botPushLog;
-const botPushError = line.botPushError;
+const config = require("./config.js");
 
 // 網址編碼
 const iconv = require("iconv-lite");
@@ -132,7 +131,7 @@ class Database {
 
         // download json
         try {
-            await dbox.fileDownload(this.fileName, this.fileName);
+            await dbox.fileDownloadToFile(this.fileName, this.fileName);
             console.log(this.name + " downloaded!");
         } catch (err) {
             console.log(err);
@@ -152,8 +151,10 @@ class Database {
             if (backup) {
                 await dbox.filesBackup(this.fileName);
             }
-            await dbox.fileUpload(this.fileName, binary);
-            console.log(this.name + " uploaded!");
+            if (!config.isLocalHost) {
+                await dbox.fileUpload(this.fileName, binary);
+                console.log(this.name + " uploaded!");
+            }
         } catch (err) {
             console.log(err);
             botPushError(this.name + " uploading error...");

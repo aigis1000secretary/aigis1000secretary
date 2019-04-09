@@ -47,7 +47,7 @@ const main = async function () {
             } else {
                 // download image from dropbox
                 // var fileBinary = await asyncReadFile("6230667.png"); // test local image file
-                var fileBinary = await fileDataDownload(pathArray[i]);
+                var fileBinary = await dbox.fileDownload(pathArray[i]);
                 let fileMd5 = md5(fileBinary);  // get MD5 for check
 
                 let onlineImage = imgur.database.findImageByMd5(fileMd5);
@@ -122,28 +122,16 @@ const annaWebHook = function (command) {
     });
 }
 
-const asyncReadFile = function (filePath) {
-    return new Promise(function (resolve, reject) {
-        fs.readFile(filePath, function (err, data) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(data);
-            }
-        });
-    });
-}
-
-const fileDataDownload = function (path) {
-    return new Promise(function (resolve, reject) {
-        dbox.core.filesDownload({ path: dbox.root + path })
-            .then(function (response) {
-                resolve(response.fileBinary);
-            })
-            .catch(function (error) {
-                reject(error);
-            });
-    });
-}
+// const asyncReadFile = function (filePath) {
+//     return new Promise(function (resolve, reject) {
+//         fs.readFile(filePath, function (err, data) {
+//             if (err) {
+//                 reject(err);
+//             } else {
+//                 resolve(data);
+//             }
+//         });
+//     });
+// }
 
 

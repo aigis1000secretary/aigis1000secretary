@@ -1,22 +1,9 @@
-
-// todo
-/*
-*/
-
-// commit
-/*
-	0.6.8.2-4/1
-	4/1
-*/
-
 // 初始化
+const config = require("./config.js");
 const anna = require("./anna.js");
 const imgur = require("./imgur.js");
 const express = require("./express.js");
-
 const line = require("./line.js");
-const botPush = line.botPush;
-const botPushLog = line.botPushLog;
 const twitter = require("./twitter.js");
 
 // remote system
@@ -33,23 +20,21 @@ var groupDatabase = database.groupDatabase;
 const lineBotOn = function () {
 
 	// wellcome msg
-	line.bot.on("memberJoined", function (event) {
+	line.bot.on("memberJoined", async function (event) {
 		// anna.debugLog(event);
-		let userId = !event.source.userId ? anna.adminstrator : event.source.userId;	// Line API bug?
+		let userId = !event.source.userId ? config.adminstrator : event.source.userId;	// Line API bug?
 		let sourceId =
 			event.source.type == "group" ? event.source.groupId :
 				event.source.type == "room" ? event.source.roomId : userId;
-		// push
-		var pushFunc = function (pMsg) {
-			anna.debugLog(pMsg);
-			bot.push(sourceId, pMsg);
-			return true;
-		};
+
 		// 呼叫定型文
-		if (anna.replyStamp("新人", pushFunc)) { }
-		if (anna.replyAI("anna help", sourceId, userId, pushFunc)) {
-			return;
+		var result = anna.replyStamp("新人");
+		if (result == false) {
+			result = await anna.replyAI("anna help", sourceId, userId);
 		}
+		anna.debugLog(result);
+		line.bot.push(sourceId, result);
+		return true;
 
 	});// */
 
@@ -63,7 +48,7 @@ const lineBotOn = function () {
 			var msg = event.message.text.trim()
 			anna.debugLog(event);
 			// get source id
-			let userId = !event.source.userId ? anna.adminstrator : event.source.userId;	// Line API bug?
+			let userId = !event.source.userId ? config.adminstrator : event.source.userId;	// Line API bug?
 			let sourceId =
 				event.source.type == "group" ? event.source.groupId :
 					event.source.type == "room" ? event.source.roomId : userId;
@@ -95,7 +80,6 @@ const lineBotOn = function () {
 						let str = groupId + " :\n\t" + text;
 						console.log(str);
 						await botPush(userId, str);
-
 					}
 					return;
 
@@ -149,7 +133,9 @@ const lineBotOn = function () {
 				}
 
 				//
-				if (anna.replyAI(msg, sourceId, userId, replyFunc)) {
+				var result = await anna.replyAI("anna " + command, sourceId, userId);
+				if (result != false) {
+					replyFunc(result);
 					return;
 				}
 
@@ -187,7 +173,9 @@ const twitterBotOn = function () {
 		}
 	}
 
-	twitter.stream.litsen("Aigis1000", "", callback);
+	if (!config.isLocalHost) {
+		twitter.stream.litsen("Aigis1000", "", callback);
+	}
 }
 
 const sleep = function (ms) {
@@ -237,6 +225,7 @@ const main = async function () {
 
 	console.log("=====*****Anna secretary online*****=====");
 	botPushLog("Anna secretary online");
+
 }; main();
 
 
@@ -246,16 +235,7 @@ const debugFunc = async function () {
 	let sourceId = "U9eefeba8c0e5f8ee369730c4f983346b";
 	let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
 	var replyFunc = function (str) { console.log(">>" + str + "<<"); return str != "" && str && str != "undefined" };
-	anna.debug = true;
-
-	// anna.replyAI("anna UPLOAD", sourceId, userId, replyFunc);
-	// anna.replyAI("anna 學習 NNLK:黑弓", sourceId, userId, replyFunc);
-	// anna.replyAI("anna 黑弓", sourceId, userId, replyFunc);
-	// anna.replyAI("anna 狀態", sourceId, userId, replyFunc);
-	// anna.replyAI("anna 學習 あて：酒吞童子", sourceId, userId, replyFunc);
-	// anna.replyAI("anna 學習 V武王：一途な武王姫アリス", sourceId, userId, replyFunc);
-	// anna.replyAI("anna 忘記 あて ：酒吞童子", sourceId, userId, replyFunc);
-	// anna.replyAI("647051929ed6333312951134c63323a1", sourceId, userId, replyFunc);
+	config.debug = true;
 
 }
 // sleep
