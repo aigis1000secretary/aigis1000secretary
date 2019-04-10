@@ -53,9 +53,9 @@ const replyAI = async function (rawMsg, sourceId, userId) {
 	// reply
 	if (callAnna) {
 		if (command == "DEBUG") {		// debug switch
-			config.debug = !config.debug;
-			config.debugPush = config.debug;
-			return "debug = " + (config.debug ? "on" : "off");
+			config.switchVar.debug = !config.switchVar.debug;
+			config.switchVar.debugPush = config.switchVar.debug;
+			return "debug = " + (config.switchVar.debug ? "on" : "off");
 
 		} else if (command.length == 1) {		// 定型文
 			var result = replyStamp(command);
@@ -1052,14 +1052,14 @@ const createTemplateMsg = function (altText, label, url) {
 
 // 管理用參數
 const debugLog = function (msg) {
-	if (!config.debug) {
+	if (!config.switchVar.debug) {
 		return;
 	}
 	console.log(msg);
 	debugPush(msg);
 }
 const debugPush = function (msg) {
-	if (config.debugPush) {
+	if (config.switchVar.debugPush) {
 		botPushError(msg);
 	}
 }
@@ -1111,7 +1111,7 @@ module.exports.autoTest = async function () {
 
 	let sourceId = "U9eefeba8c0e5f8ee369730c4f983346b";
 	let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
-	// config.debug = true;
+	// config.switchVar.debug = true;
 
 	// await annaCore.replyAI("anna 狀態", sourceId, userId).then(console.log);
 
