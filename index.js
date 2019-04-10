@@ -235,7 +235,7 @@ const debugFunc = async function () {
 	let sourceId = "U9eefeba8c0e5f8ee369730c4f983346b";
 	let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
 	var replyFunc = function (str) { console.log(">>" + str + "<<"); return str != "" && str && str != "undefined" };
-	config.debug = true;
+	config.switchVar.debug = true;
 
 }
 // sleep
