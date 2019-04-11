@@ -379,7 +379,7 @@ const searchData = function (command) {
 	debugLog("classResult[" + count + "]: <" + resultArray + ">");
 	if (count == 1) {
 		// found 1
-		return generateCharaData(result);
+		return generateCharaData(resultArray[0]);
 	} else if (count > 1) {
 		// found list
 		return resultArray.join("\n");
