@@ -265,7 +265,7 @@ class CharaDatabase extends Database {
         if (this.indexOf(newData.name) == -1) {
             this.data.push(newData);
             console.log("New character <" + newData.name + "> data add complete!");
-            botPushLog("anna " + newData.name + " New character data add complete!");
+            botPush(config.debugLogger, "anna " + newData.name + " New character data add complete!");
 
         } else {
             let i = this.indexOf(newData.name);
@@ -299,7 +299,7 @@ class CharaDatabase extends Database {
 
             if (changed) {
                 console.log("New character <" + newData.name + "> data update complete!");
-                botPushLog("anna " + newData.name + " New character data update complete!");
+                botPush(config.debugLogger, "anna " + newData.name + " New character data update complete!");
             } else {
                 console.log("Character <" + newData.name + "> data is existed!");
             }
