@@ -38,6 +38,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
 	let msg1 = ("" + rawMsg.split("\n")[0]).trim();
 	let msg2 = rawMsg.indexOf("\n") != -1 ? rawMsg.substring(rawMsg.indexOf("\n") + 1).trim() : "";
 	let msgs = msg1.split(" ");
+	msgs = msgs.filter(function (n) { return (n && (n != "")) });
 	// >> ANNA <command>	<arg1>			<arg2>
 	// >> ANNA 學習			NNL:黑弓
 	// >> ANNA 資料庫		CharaDatabase	NNL.ability_aw
@@ -347,7 +348,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
 		result = searchData(command);
 		if (result != false) {
 			return result;
-			
+
 		}
 	}
 
