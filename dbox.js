@@ -4,9 +4,9 @@ const Dropbox = require('dropbox').Dropbox;
 const config = require("./config.js");
 const dbox = new Dropbox({
 	fetch: fetch,
-	accessToken: config.accessToken
+	accessToken: config.dropbox.DROPBOX_ACCESS_TOKEN
 });
-const root = config.dropBoxRoot;
+const root = config.dropbox.DROPBOX_ROOT;
 
 var dboxCore = {
 	// const rootUrl = "https://aigis1000secretary.updog.co/";
