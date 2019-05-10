@@ -27,7 +27,7 @@ const config = {
     dropbox: {
         // https://www.dropbox.com/developers/apps
         DROPBOX_ACCESS_TOKEN: process.env.DROPBOX_ACCESS_TOKEN,
-        DROPBOX_ROOT: "/應用程式/updog/aigis1000secretary/"
+        DROPBOX_ROOT: "/"
     },
 
     // imgur 

@@ -6,3 +6,4 @@ node.bat
 *.json
 *.txt
 *.log
+debug\.js
