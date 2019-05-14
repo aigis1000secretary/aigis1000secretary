@@ -228,7 +228,7 @@ var imgur = {
 						image: imageBinary,
 						title: md5,
 						name: fileName,
-						description: mainTag	//description: _tage.join(",")	// defult: folder name, manual add for auto response key word
+						description: mainTag	//description: _tags.join(",")	// defult: folder name, manual add for auto response key word
 					}
 				};
 

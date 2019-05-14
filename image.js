@@ -55,6 +55,9 @@ const main = async function () {
                     console.log("file already existed(md5): " + pathArray[i]);
                     // return "file already existed";
 
+                    if (onlineImage[0].tags.join(",") != mainTag || onlineImage[0].fileName != fileName) {
+                        console.log("Alarm!! Data is incorrect!: https://imgur.com/" + onlineImage[0].id);
+                    }
                 } else {
                     //console.log("file is not existed");
 

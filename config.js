@@ -5,8 +5,7 @@
 
 // commit
 /*
-    0.7.0.3
-    debugSwitchFix
+    image upload script fixed
 */
 
 const config = {
