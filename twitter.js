@@ -41,8 +41,7 @@ String.prototype.replaceAll = function (s1, s2) {
 }
 
 const twitterCore = {
-    config: config.twitterCfg,
-
+    // webhook crc
     crc: {
         // https://qiita.com/Fushihara/items/79913a5b933af15c5cf4
         // CRC API
@@ -83,13 +82,6 @@ const twitterCore = {
                 headers: { "Content-type": "application/x-www-form-urlencoded" },
             }, (error, response, body) => { if (error) console.log(error); else if (body) console.log(body); else console.log(response); });
         },
-
-
-
-
-
-
-
 
 
 
@@ -230,7 +222,6 @@ const twitterCore = {
     },
 
     stream: {
-
         getUserId: function (target) {
             return new Promise(function (resolve, reject) {
                 // 監視するユーザのツイートを取得
