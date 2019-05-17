@@ -68,7 +68,7 @@ var imgur = {
 	// POST Generate Access_Token
 	// web API: https://api.imgur.com/oauth2/token
 	oauth2: {
-		async	token() {
+		async token() {
 			console.log("Generate Access_Token");
 
 			// Set the body
@@ -132,7 +132,7 @@ var imgur = {
 			}
 		},
 		// GET Images
-		async	images(page) {
+		async images(page) {
 			if (typeof (page) != "number") page = 0;
 			console.log("GET Account Images page: " + page);
 			try {
@@ -150,8 +150,8 @@ var imgur = {
 				return Promise.reject(error);
 			}
 		},
-		// GET Count
-		async	imagesCount() {
+		// GET Images Count
+		async imagesCount() {
 			try {
 				// Configure the request
 				var options = {
@@ -166,58 +166,93 @@ var imgur = {
 			} catch (error) {
 				return Promise.reject(error);
 			}
-		}
-	},
+		},
 
 
-	/*// Album API
-	imgur.album = {};
-	// GET Album Images
-	imgur.album.imagesByHash = function(_albumHash) {
-		return new Promise(function(resolve, reject) {
-			// Set the headers
-			//var headers = {	Authorization:	"Bearer " + IMGUR_ACCESS_TOKEN };
-	
-			// Configure the request
-			var options = {
-				url: IMGUR_API_URL + "album/" + _albumHash + "/images",
-				method: "GET"
-			};
-	
-			imgur._apiRequest(options)
-			.then(function(jsonResponse) {
-				for (var i in jsonResponse.data) {
-					jsonResponse.data[i].albumHash = _albumHash;
-				}
-				resolve(jsonResponse.data);
-			})
-			.catch(function(error) {
-				reject(error);
-			});
-		});
-	}*/ // useless?
-
-
-	// Image API
-	image: {
-		// POST Image Upload
-		async imageUpload(imageLocalPath, mainTag) {
-			// get request data
-			var imageBinary = "";
-			var md5 = "";
-			var fileName = imageLocalPath.match(/[^\/]+$/gi);
+		// GET All Albums
+		async allAlbums() {
+			console.log("GET Account All Albums");
 			try {
-				imageBinary = await asyncReadFile(imageLocalPath);
-				md5 = md5f(imageBinary);
-
-				var jsonResponse = await imgur.image.binaryImageUpload(imageBinary, md5, fileName, mainTag);
-				return jsonResponse;
+				// get albums every page
+				let maxPage = await imgur.account.albumsCount();
+				var allAlbums = [], promiseArray = [];
+				for (let i = 0; i <= maxPage; i++) {
+					promiseArray.push(
+						imgur.account.albums(i).then(
+							function (lastAlbums) {
+								for (let j in lastAlbums) {
+									allAlbums.push(lastAlbums[j]);
+								}
+							}
+						)
+					);
+				}
+				await Promise.all(promiseArray);
+				return allAlbums;
 
 			} catch (error) {
 				return Promise.reject(error);
 			}
 		},
-		async binaryImageUpload(imageBinary, md5, fileName, mainTag) {
+		// GET Albums
+		async albums(page) {
+			if (typeof (page) != "number") page = 0;
+			console.log("GET Account Albums page: " + page);
+			try {
+				// Configure the request
+				var options = {
+					//url: IMGUR_API_URL + "account/" + IMGUR_USERNAME + "/albums",
+					url: IMGUR_API_URL + "account/me/albums/" + page,
+					method: "GET"
+				};
+
+				var jsonResponse = await imgur._apiRequest(options)
+				return jsonResponse.data;
+
+			} catch (error) {
+				return Promise.reject(error);
+			}
+		},
+		// GET Albums Count
+		async albumsCount() {
+			try {
+				// Configure the request
+				var options = {
+					//url: IMGUR_API_URL + "account/" + IMGUR_USERNAME + "/albums",
+					url: IMGUR_API_URL + "account/me/albums/count",
+					method: "GET"
+				};
+
+				var jsonResponse = await imgur._apiRequest(options)
+				return parseInt(jsonResponse.data / 50);
+
+			} catch (error) {
+				return Promise.reject(error);
+			}
+		}
+	},
+
+	// Image API
+	image: {
+		// POST Image Upload
+		// useless?
+		// async imageUpload(imageLocalPath, mainTag) {
+		// 	// get request data
+		// 	var imageBinary = "";
+		// 	var md5 = "";
+		// 	var fileName = imageLocalPath.match(/[^\/]+$/gi);
+		// 	try {
+		// 		imageBinary = await asyncReadFile(imageLocalPath);
+		// 		md5 = md5f(imageBinary);
+
+		// 		var jsonResponse = await imgur.image.binaryImageUpload(imageBinary, md5, fileName, mainTag);
+		// 		return jsonResponse;
+
+		// 	} catch (error) {
+		// 		return Promise.reject(error);
+		// 	}
+		// },
+		async binaryImageUpload(imageBinary, md5, fileName, mainTag, albumId) {
 			try {
 				// Configure the request
 				var options = {
@@ -225,10 +260,11 @@ var imgur = {
 					method: "POST",
 					// Set the POST body
 					formData: {
+						album: albumId,
 						image: imageBinary,
 						title: md5,
 						name: fileName,
-						description: mainTag	//description: _tags.join(",")	// defult: folder name, manual add for auto response key word
+						description: mainTag //description: _tags.join(",") // defult: folder name, manual add for auto response key word
 					}
 				};
 
@@ -249,6 +285,7 @@ var imgur = {
 				};
 
 				var jsonResponse = await imgur._apiRequest(options)
+				console.log("Image delete: " + imageHash);
 				return jsonResponse;
 
 			} catch (error) {
@@ -265,7 +302,7 @@ var imgur = {
 		// get image from response.data
 		loadImages(jsonResponse) {
 			// response.data to album
-			imgur.database.images = [];	// clear Database
+			imgur.database.images = []; // clear Database
 			for (let i in jsonResponse) {
 				//console.log(jsonResponse[i]);
 				var newImage = imgur.database.createImage(jsonResponse[i]);
@@ -288,23 +325,22 @@ var imgur = {
 			newImage.fileName = newData.name;
 			newImage.md5 = newData.title;
 			newImage.tags = newData.description == null ? [] : newData.description.toUpperCase().split(",");
-			newImage.id = newData.id;	// imageHash
+			newImage.id = newData.id; // imageHash
 			newImage.imageLink = newData.link;
 			newImage.thumbnailLink = newData.link.replace(newImage.id, newImage.id + "m");
 			/*
-			Thumbnail Suffix	Thumbnail Name		Thumbnail Size	Keeps Image Proportions
-			"s"					Small Square		90x90			No
-			"b"					Big Square			160x160			No
-			"t"					Small Thumbnail		160x160			Yes
-			"m"					Medium Thumbnail	320x320			Yes
-			"l"					Large Thumbnail		640x640			Yes
-			"h"					Huge Thumbnail		1024x1024		Yes
+			Thumbnail Suffix Thumbnail Name  Thumbnail Size Keeps Image Proportions
+			"s"     Small Square  90x90   No
+			"b"     Big Square   160x160   No
+			"t"     Small Thumbnail  160x160   Yes
+			"m"     Medium Thumbnail 320x320   Yes
+			"l"     Large Thumbnail  640x640   Yes
+			"h"     Huge Thumbnail  1024x1024  Yes
 			*/
 
 			for (let i in newImage.tags) {
 				newImage.tags[i] = newImage.tags[i].trim();
 			}
-
 
 			return newImage;
 		},
@@ -372,38 +408,74 @@ var imgur = {
 
 			console.log("Imgur Database saved!");
 		},
+
+		albums: [],
+		// get image from response.data
+		loadAlbums(jsonResponse) {
+			// response.data to album
+			imgur.database.albums = []; // clear Database
+			for (let i in jsonResponse) {
+				//console.log(jsonResponse[i]);
+				var newAlbum = imgur.database.createAlbum(jsonResponse[i]);
+				imgur.database.albums.push(newAlbum);
+			}
+			console.log("Imgur account albums load complete (" + imgur.database.albums.length + " albums)!");
+			return;
+		},
+		createAlbum(newData) {
+			// set new image data
+			var newAlbum = {};
+			newAlbum.title = newData.title;
+			newAlbum.id = newData.id; // albumHash
+			newAlbum.albumLink = newData.link;
+
+			for (let i in newAlbum.tags) {
+				newAlbum.tags[i] = newAlbum.tags[i].trim();
+			}
+
+			return newAlbum;
+		},
+		findAlbumByTitle(keytitle) {
+			// search album by md5
+			for (let i in imgur.database.albums) {
+				if (imgur.database.albums[i].title == keytitle)
+					return [imgur.database.albums[i]];
+			}
+			return [];
+		}
 	},
 
 
 	async init() {
 		// access token update
 		try {
-			var jsonResponse = await imgur.oauth2.token();
+			await imgur.oauth2.token();
 			console.log("IMGUR_ACCESS_TOKEN update complete!");
 		} catch (error) {
 			console.log("IMGUR_ACCESS_TOKEN update error!");
 			console.log(error);
 		};
 
-		try {
-			var jsonResponse = await imgur.account.allImages();
-			imgur.database.loadImages(jsonResponse);
-		} catch (error) {
-			console.log("Imgur images load error!");
-			console.log(error);
-		};
+		let promiseArray = [];
+
+		promiseArray.push(imgur.account.allImages().then(imgur.database.loadImages)
+			.catch(function (error) {
+				console.log("Imgur images load error!");
+				console.log(error);
+			}));
+		promiseArray.push(imgur.account.allAlbums().then(imgur.database.loadAlbums)
+			.catch(function (error) {
+				console.log("Imgur images load error!");
+				console.log(error);
+			}));
+
+		await Promise.all(promiseArray);
 
 		return;
 	}
 
 
 }; module.exports = imgur;
-
-
-/*
-imgur.account.images
-imgur.image.imageUpload = function(_imgPath, _tags)
-//*/
 
 const asyncReadFile = function (filePath) {
 	return new Promise(function (resolve, reject) {

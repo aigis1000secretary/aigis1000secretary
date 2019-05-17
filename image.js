@@ -16,8 +16,14 @@ String.prototype.replaceAll = function (s1, s2) {
 
 const main = async function () {
     await imgur.init();
+
+    // delete all image from imgur
+    // for (let i in imgur.database.images) { await imgur.image.ImageDeletion(imgur.database.images[i].id); }
+
+    // savedatabase
     //imgur.database.saveDatabase();
-    console.log("==Main==");
+
+    console.log("== image.js ==");
 
     let pathArray = [];
     // chara
@@ -56,17 +62,21 @@ const main = async function () {
                     // return "file already existed";
 
                     if (onlineImage[0].tags.join(",") != mainTag || onlineImage[0].fileName != fileName) {
-                        console.log("Alarm!! Data is incorrect!: https://imgur.com/" + onlineImage[0].id);
+                        console.log("Alarm!! Tag data is incorrect!: https://imgur.com/" + onlineImage[0].id);
                     }
                 } else {
                     //console.log("file is not existed");
+                    // var album = findAlbumByTitle()
+                    // let albumTitle = pathArray[i].split("\/")[0];
+                    let album = imgur.database.findAlbumByTitle(pathArray[i].split("\/")[0]);
+                    var albumId = (album && album.length >= 1) ? album[0].id : "";
 
                     // test local image file
-                    //let uploadResponse = await imgur.image.binaryImageUpload(fileBinary, fileMd5, "6230667.png", "刻詠の風水士リンネ");
-                    let uploadResponse = await imgur.image.binaryImageUpload(fileBinary, fileMd5, fileName, mainTag);
+                    // let uploadResponse = await imgur.image.binaryImageUpload(fileBinary, fileMd5, "6230667.png", "刻詠の風水士リンネ");
+                    let uploadResponse = await imgur.image.binaryImageUpload(fileBinary, fileMd5, fileName, mainTag, albumId);
 
                     //console.log("upload file: " + pathArray[i]);
-                    console.log("upload file: " + uploadResponse.data.title + ", " + fileName + ", " + mainTag);
+                    console.log("upload file: " + uploadResponse.data.title + ", " + fileName + ", " + mainTag, albumId);
                 }
             }
         } catch (err) {

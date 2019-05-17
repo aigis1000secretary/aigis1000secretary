@@ -6,6 +6,7 @@
 // commit
 /*
     image upload script fixed
+    upload images add album data
 */
 
 const config = {
