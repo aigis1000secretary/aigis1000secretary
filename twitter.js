@@ -41,8 +41,6 @@ String.prototype.replaceAll = function (s1, s2) {
 }
 
 const twitterCore = {
-    config: config.twitterCfg,
-
     crc: {
         // https://qiita.com/Fushihara/items/79913a5b933af15c5cf4
         // CRC API
@@ -83,13 +81,6 @@ const twitterCore = {
                 headers: { "Content-type": "application/x-www-form-urlencoded" },
             }, (error, response, body) => { if (error) console.log(error); else if (body) console.log(body); else console.log(response); });
         },
-
-
-
-
-
-
-
 
 
 
@@ -269,6 +260,10 @@ const twitterCore = {
 
                         // 送信する情報を定義
                         var tweet_data = twitterCore.stream.getTweetData(tweet);
+                        if (config.switchVar.logStreamToFile) {
+                            // todo
+                            console.log(JSON.stringify(tweet, null, 4));
+                        }
 
                         // 送信
                         if (tweet_data.text && tweet_data.screen_name == target) {
