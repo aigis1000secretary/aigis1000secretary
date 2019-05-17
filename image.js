@@ -1,4 +1,4 @@
-﻿
+
 console.log("Image Upload Script");
 
 const fs = require("fs");
