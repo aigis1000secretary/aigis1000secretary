@@ -5,8 +5,7 @@
 
 // commit
 /*
-    webhook backup to file
-    local webhook test
+    tweet object add media
 */
 
 const config = {
@@ -45,10 +44,10 @@ const config = {
 
     // twitter
     twitterCfg: {
-        TWITTER_CONSUMER_KEY: "BA5DAB2yRX2EWFPB7xIR1DOfo",
-        TWITTER_CONSUMER_SECRET: "2G8Ltf2F1DwrwscIGrJ4KhY7ZbiKCfKUlw3khkmIPNux6aJUv5",
-        TWITTER_ACCESS_TOKEN: "1098066659091181568-OEi7e7FAs6Xdp0bvaXHzJE1xdMy16Q",
-        TWITTER_ACCESS_TOKEN_SECRET: "nRAT33Ozkq0zJ6rjjoFJetuTWu6ouAE9dVgUxM1t36MWK",
+        TWITTER_CONSUMER_KEY: process.env.TWITTER_CONSUMER_KEY,
+        TWITTER_CONSUMER_SECRET: process.env.TWITTER_CONSUMER_SECRET,
+        TWITTER_ACCESS_TOKEN: process.env.TWITTER_ACCESS_TOKEN,
+        TWITTER_ACCESS_TOKEN_SECRET: process.env.TWITTER_ACCESS_TOKEN_SECRET,
         devLabel: "aigis1000secretary",
         hookId: "1106006997298761728",
         webhookUrl: "https://aigis1000secretary.herokuapp.com/twitterbot/"
@@ -58,8 +57,9 @@ const config = {
     switchVar: {
         debug: false,
         debugPush: false,
-        logRequestToFile: false
-    }
+        logRequestToFile: false,
+        logStreamToFile: true
+    },
 };
 
 Object.freeze(config.devbot);   // Object.assign({}, config.devbot)
