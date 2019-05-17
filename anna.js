@@ -332,7 +332,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
 			return "上傳中...";
 
 		} else if (command == "更新" || command == "UPDATE") {
-			allCharaDataCrawler();
+			allCharaDataCrawler(sourceId);
 			classDataCrawler();
 			return "更新中...";
 
@@ -347,7 +347,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
 		result = searchData(command);
 		if (result != false) {
 			return result;
-			
+
 		}
 	}
 
@@ -704,7 +704,7 @@ const charaDataCrawler = function (urlPath) {
 	});
 };
 // 爬所有角色
-const allCharaDataCrawler = function () {
+const allCharaDataCrawler = function (sourceId) {
 	console.log("AllCharaData Crawling...");
 	let allCharaUrl = [];
 
@@ -744,7 +744,7 @@ const allCharaDataCrawler = function () {
 			}
 			await Promise.all(promiseArray);
 		}
-		botPushLog("角色更新完成!");
+		botPush(sourceId, "角色更新完成!");
 		// save Database
 		charaDatabase.uploadTask();
 	}, 3000);

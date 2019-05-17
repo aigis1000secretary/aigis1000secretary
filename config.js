@@ -1,13 +1,12 @@
 ﻿
 // todo
 /*
-    webhook backup to file
-    local webhook test
 */
 
 // commit
 /*
     update log fix
+    log target fix
 */
 
 const config = {
