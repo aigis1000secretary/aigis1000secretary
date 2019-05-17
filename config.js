@@ -1,14 +1,13 @@
 ﻿
 // todo
 /*
-    webhook backup to file
-    local webhook test
 */
 
 // commit
 /*
     retweet Image
     tweet object add media
+    auto retweet image
 */
 
 const config = {

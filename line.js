@@ -5,13 +5,21 @@ const config = require("./config.js");
 const devbot = linebot(Object.assign({}, config.devbot));
 const debugLogger = config.debugLogger;
 
+class LineMessage {
+    constructor(rawData) {
+        for (let key in rawData) {
+            this[key] = rawData[key];
+        }
+    };
+}
 
 module.exports = {
     bot: devbot,
     botPush: async function (userId, msg) {
-        if (typeof (msg) != "string") {
+        if (imageMsg.constructor.name != "LineMessage" && typeof (msg) != "string") {
             msg = msg.toString() + JSON.stringify(msg, null, 2)
         }
+
         if (!config.isLocalHost) {
             await devbot.push(userId, msg);
         } else {
@@ -19,9 +27,10 @@ module.exports = {
         }
     },
     botPushLog: async function (msg) {
-        if (typeof (msg) != "string") {
+        if (imageMsg.constructor.name != "LineMessage" && typeof (msg) != "string") {
             msg = msg.toString() + JSON.stringify(msg, null, 2)
         }
+
         if (!config.isLocalHost) {
             await devbot.push(debugLogger, "@" + msg);
         } else {
@@ -29,9 +38,10 @@ module.exports = {
         }
     },
     botPushError: async function (msg) {
-        if (typeof (msg) != "string") {
+        if (imageMsg.constructor.name != "LineMessage" && typeof (msg) != "string") {
             msg = msg.toString() + JSON.stringify(msg, null, 2)
         }
+
         if (!config.isLocalHost) {
             await devbot.push(debugLogger, "#" + msg);
         } else {
@@ -42,19 +52,19 @@ module.exports = {
     // Line Message element
     // 文字訊息
     createTextMsg: function (_text) {
-        return {
+        return new LineMessage({
             type: "text",
             text: _text.trim()
-        };
+        });
     },
     // 圖片訊息
     // url = https://aigis1000secretary.updog.co/刻詠の風水士リンネ/6230667.png encodeURI(img) (utf8 to %utf8 )
     createImageMsg: function (image, thumbnail) {
-        return {
+        return new LineMessage({
             type: "image",
             originalContentUrl: image,
             previewImageUrl: (!thumbnail ? image : thumbnail)
-        };
+        });
     },
     // 超連結選項
     // altText = "Wiki 連結"
@@ -80,7 +90,7 @@ module.exports = {
             };
             replyMsg.template.actions.push(buttons);
         }
-        return replyMsg;
+        return new LineMessage(replyMsg);
     }
     // DROPBOX: encodeURI(url);
     // Wiki   : encodeURI_JP(url);
@@ -90,6 +100,3 @@ module.exports = {
 botPush = module.exports.botPush;
 botPushLog = module.exports.botPushLog;
 botPushError = module.exports.botPushError;
-
-
-

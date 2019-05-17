@@ -168,7 +168,17 @@ const twitterBotOn = function () {
 
 		for (let i in groupDatabase.data) {
 			if (groupDatabase.data[i].alarm) {
-				botPush(groupDatabase.data[i].name, tweet_data.text);
+
+				// push text
+				await botPush(groupDatabase.data[i].name, tweet_data.text);
+
+				// push image
+				if (tweet_data.media.length > 0) {
+					for (let j in tweet_data.media) {
+						var imageMsg = createImageMsg(tweet_data.media[j].link, tweet_data.media[j].link);
+						await botPush(groupDatabase.data[i].name, imageMsg);
+					}
+				}
 			}
 		}
 	}

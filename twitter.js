@@ -321,10 +321,13 @@ const twitterCore = {
             else if (tweet.text)
                 tweet_data.text = tweet.text;
 
+            tweet_data.media = [];
             if (tweet.extended_entities && tweet.extended_entities.media) {
-                tweet_data.media = [];
                 for (let i in tweet.extended_entities.media) {
                     let media = tweet.extended_entities.media[i];
+                    
+                    if (media.type != "photo") continue;
+
                     tweet_data.media.push({
                         link: media.media_url_https,
                         url: media.url  // same with tweet text
