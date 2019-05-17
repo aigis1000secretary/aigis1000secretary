@@ -41,8 +41,7 @@ String.prototype.replaceAll = function (s1, s2) {
 }
 
 const twitterCore = {
-    config: config.twitterCfg,
-
+    // webhook crc
     crc: {
         // https://qiita.com/Fushihara/items/79913a5b933af15c5cf4
         // CRC API
@@ -83,13 +82,6 @@ const twitterCore = {
                 headers: { "Content-type": "application/x-www-form-urlencoded" },
             }, (error, response, body) => { if (error) console.log(error); else if (body) console.log(body); else console.log(response); });
         },
-
-
-
-
-
-
-
 
 
 
@@ -230,7 +222,6 @@ const twitterCore = {
     },
 
     stream: {
-
         getUserId: function (target) {
             return new Promise(function (resolve, reject) {
                 // 監視するユーザのツイートを取得
@@ -242,7 +233,7 @@ const twitterCore = {
                             // 取得したユーザIDよりストリーミングで使用するオプションを定義
                             resolve(user_id);
                         } else {
-                            console.log(error);
+                            // console.log(error);
                             line.botPushError(error);
                             //reject(error);
                         }
@@ -255,7 +246,7 @@ const twitterCore = {
                 user_id = await twitterCore.stream.getUserId(target);
             }
 
-            console.log(target + 'のツイートを取得します。');
+            // console.log(target + 'のツイートを取得します。');
             line.botPushLog(target + 'のツイートを取得します。');
 
             // ストリーミングでユーザのタイムラインを監視
@@ -305,7 +296,7 @@ const twitterCore = {
 
                 stream.on('end', function (tweet) {  // 接続が切れた際の再接続
                     stream.destroy();
-                    console.log(target + 'のツイートを取得終了。');
+                    // console.log(target + 'のツイートを取得終了。');
                     line.botPushLog(target + 'のツイートを取得終了。');
 
                     setTimeout(function () {
@@ -330,6 +321,17 @@ const twitterCore = {
             else if (tweet.text)
                 tweet_data.text = tweet.text;
 
+            if (tweet.extended_entities && tweet.extended_entities.media) {
+                tweet_data.media = [];
+                for (let i in tweet.extended_entities.media) {
+                    let media = tweet.extended_entities.media[i];
+                    tweet_data.media.push({
+                        link: media.media_url_https,
+                        url: media.url  // same with tweet text
+                    });
+                }
+            }
+
             if (tweet.geo) tweet_data.geo = tweet.geo;
 
             return tweet_data;
@@ -340,6 +342,9 @@ const twitterCore = {
 //twitterCore.stream.litsen("Aigis1000", function () { });
 module.exports = twitterCore;
 
+// twitterCore.stream.litsen("z1022001", "", function (tweet_data) {
+//     console.log(JSON.stringify(tweet_data, null, 4));
+// });
 
 /*
 const httpTwitterAPI = function () {
