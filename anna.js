@@ -120,7 +120,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
 
 		} else if (command == "照片" || command == "圖片" || command == "相片" || command == "PICTURE") {
 			// 圖片空間
-			return createTemplateMsg("圖片空間",
+			return line.createTemplateMsg("圖片空間",
 				["上傳新照片", "線上圖庫"],
 				["https://www.dropbox.com/request/FhIsMnWVRtv30ZL2Ty69",
 					"https://www.dropbox.com/sh/vonsrxzy79nkpah/AAD4p6TwZF44GHP5f6gdEh3ba?dl=0"]);
@@ -137,7 +137,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
 			urlArray.push("http://aigistool.html.xdomain.jp/EXP.html");
 			tagArray.push("體魅計算機");
 			urlArray.push("http://aigistool.html.xdomain.jp/ChariSta.html");
-			templateMsgA = createTemplateMsg("實用工具 (1)", tagArray, urlArray);
+			templateMsgA = line.createTemplateMsg("實用工具 (1)", tagArray, urlArray);
 
 			tagArray = [];
 			urlArray = [];
@@ -149,7 +149,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
 			urlArray.push("https://www.youtube.com/channel/UC8RlGt22URJuM0yM0pUyWBA");
 			// tagArray.push("千年戦争アイギス攻略ブログ");
 			// urlArray.push("http://sennenaigis.blog.fc2.com/");
-			templateMsgB = createTemplateMsg("實用工具 (2)", tagArray, urlArray);
+			templateMsgB = line.createTemplateMsg("實用工具 (2)", tagArray, urlArray);
 
 			var replyMsg = [templateMsgA, templateMsgB];
 
@@ -300,8 +300,8 @@ const replyAI = async function (rawMsg, sourceId, userId) {
 			}
 			if (msg2 == "undefined" || msg2 == "") {
 				var replyMsg = [];
-				replyMsg.push(createTextMsg("請換行輸入項目內容."));
-				replyMsg.push(createTextMsg(targetDB.data[index][propertyStr]));
+				replyMsg.push(line.createTextMsg("請換行輸入項目內容."));
+				replyMsg.push(line.createTextMsg(targetDB.data[index][propertyStr]));
 				return replyMsg;
 
 			} else {
@@ -333,7 +333,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
 			return "上傳中...";
 
 		} else if (command == "更新" || command == "UPDATE") {
-			allCharaDataCrawler();
+			allCharaDataCrawler(sourceId);
 			classDataCrawler();
 			return "更新中...";
 
@@ -432,15 +432,15 @@ const generateCharaData = function (charaName) {
 
 	if (i != -1) {
 		var replyMsg = [];
-		replyMsg.push(createTextMsg(obj.getMessage()));
+		replyMsg.push(line.createTextMsg(obj.getMessage()));
 
 		let imgArray = imgur.database.findImageByTag(charaName);
 		if (imgArray.length > 0) {
 			let i = Math.floor(Math.random() * imgArray.length);
-			replyMsg.push(createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
+			replyMsg.push(line.createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
 		}
 
-		replyMsg.push(createTemplateMsg("Wiki 連結", [obj.name], [obj.getWikiUrl()]));
+		replyMsg.push(line.createTemplateMsg("Wiki 連結", [obj.name], [obj.getWikiUrl()]));
 
 		return replyMsg;
 	}
@@ -457,14 +457,14 @@ const replyStamp = function (msg) {
 	let imgArray = imgur.database.findImageByTag(msg);
 	if (imgArray.length > 0) {
 		let i = Math.floor(Math.random() * imgArray.length);
-		replyMsg.push(createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
+		replyMsg.push(line.createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
 		return replyMsg;
 	}
 
 	imgArray = imgArray.concat(imgur.database.findImageByFileName(msg));
 	imgArray = imgArray.concat(imgur.database.findImageByMd5(msg));
 	if (imgArray.length > 0) {
-		replyMsg.push(createImageMsg(imgArray[0].imageLink, imgArray[0].thumbnailLink));
+		replyMsg.push(line.createImageMsg(imgArray[0].imageLink, imgArray[0].thumbnailLink));
 		return replyMsg;
 	}
 
@@ -705,7 +705,7 @@ const charaDataCrawler = function (urlPath) {
 	});
 };
 // 爬所有角色
-const allCharaDataCrawler = function () {
+const allCharaDataCrawler = function (sourceId) {
 	console.log("AllCharaData Crawling...");
 	let allCharaUrl = [];
 
@@ -745,7 +745,7 @@ const allCharaDataCrawler = function () {
 			}
 			await Promise.all(promiseArray);
 		}
-		botPushLog("角色更新完成!");
+		botPush(sourceId, "角色更新完成!");
 		// save Database
 		charaDatabase.uploadTask();
 	}, 3000);
@@ -1004,52 +1004,6 @@ const getRarityString = function (str) {
 }
 
 
-
-// Line Message element
-// 文字訊息
-const createTextMsg = function (_text) {
-	return {
-		type: "text",
-		text: _text.trim()
-	};
-}
-// 圖片訊息
-// url = https://aigis1000secretary.updog.co/刻詠の風水士リンネ/6230667.png encodeURI(img) (utf8 to %utf8 )
-const createImageMsg = function (image, thumbnail) {
-	return {
-		type: "image",
-		originalContentUrl: image,
-		previewImageUrl: (!thumbnail ? image : thumbnail)
-	};
-}
-// 超連結選項
-// altText = "Wiki 連結"
-// label = Name
-// url = "https://seesaawiki.jp/aigis/d/刻詠の風水士リンネ"	encodeURI_JP(url)
-const createTemplateMsg = function (altText, label, url) {
-	if (label.length != url.length) return "";
-	if (label.length <= 0 || 4 < label.length) return "";
-	var replyMsg = {
-		type: "template",
-		altText: altText,
-		template: {
-			type: "buttons",
-			text: altText,
-			actions: []
-		}
-	};
-	for (let i = 0; i < label.length; i++) {
-		var buttons = {
-			type: "uri",
-			label: label[i],
-			uri: url[i]
-		};
-		replyMsg.template.actions.push(buttons);
-	}
-	return replyMsg;
-}
-// DROPBOX: encodeURI(url);
-// Wiki   : encodeURI_JP(url);
 
 // 管理用參數
 const debugLog = function (msg) {

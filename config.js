@@ -5,12 +5,17 @@
 
 // commit
 /*
-    0.7.0.3
-    debugSwitchFix
+    0.7.1.0
+    retweet Image
+    tweet object add media
+    auto retweet image
+    
+    update log fix
+    log target fix
 */
 
 const config = {
-    _version: "0.7.0.3",
+    _version: "0.7.1.0",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
@@ -64,7 +69,8 @@ const config = {
     switchVar: {
         debug: false,
         debugPush: false,
-        logRequestToFile: false
+        logRequestToFile: false,
+        logStreamToFile: true
     }
 };
 
