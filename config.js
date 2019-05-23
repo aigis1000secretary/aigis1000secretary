@@ -8,6 +8,8 @@
     retweet Image
     tweet object add media
     auto retweet image
+    update log fix
+    log target fix
 */
 
 const config = {
