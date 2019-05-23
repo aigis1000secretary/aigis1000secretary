@@ -5,8 +5,9 @@
 
 // commit
 /*
-    0.7.0.3
-    debugSwitchFix
+    retweet Image
+    tweet object add media
+    auto retweet image
 */
 
 const config = {
@@ -64,7 +65,8 @@ const config = {
     switchVar: {
         debug: false,
         debugPush: false,
-        logRequestToFile: false
+        logRequestToFile: false,
+        logStreamToFile: true
     }
 };
 
