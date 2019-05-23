@@ -16,7 +16,7 @@ class LineMessage {
 module.exports = {
     bot: devbot,
     botPush: async function (userId, msg) {
-        if (imageMsg.constructor.name != "LineMessage" && typeof (msg) != "string") {
+        if (msg.constructor.name != "LineMessage" && typeof (msg) != "string") {
             msg = msg.toString() + JSON.stringify(msg, null, 2)
         }
 
@@ -27,7 +27,7 @@ module.exports = {
         }
     },
     botPushLog: async function (msg) {
-        if (imageMsg.constructor.name != "LineMessage" && typeof (msg) != "string") {
+        if (msg.constructor.name != "LineMessage" && typeof (msg) != "string") {
             msg = msg.toString() + JSON.stringify(msg, null, 2)
         }
 
@@ -38,7 +38,7 @@ module.exports = {
         }
     },
     botPushError: async function (msg) {
-        if (imageMsg.constructor.name != "LineMessage" && typeof (msg) != "string") {
+        if (msg.constructor.name != "LineMessage" && typeof (msg) != "string") {
             msg = msg.toString() + JSON.stringify(msg, null, 2)
         }
 
