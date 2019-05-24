@@ -252,7 +252,7 @@ var imgur = {
 		// 		return Promise.reject(error);
 		// 	}
 		// },
-		async binaryImageUpload(imageBinary, md5, fileName, mainTag, albumId) {
+		async binaryImageUpload(imageBinary, md5, fileName, mainTag) {
 			try {
 				// Configure the request
 				var options = {
@@ -260,7 +260,7 @@ var imgur = {
 					method: "POST",
 					// Set the POST body
 					formData: {
-						album: albumId,
+						// album: albumId,
 						image: imageBinary,
 						title: md5,
 						name: fileName,
@@ -473,7 +473,6 @@ var imgur = {
 
 		return;
 	}
-
 
 }; module.exports = imgur;
 

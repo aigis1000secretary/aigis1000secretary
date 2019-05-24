@@ -34,55 +34,55 @@ const main = async function () {
         console.log(error);
     }
     console.log("GET DBox Images count: " + pathArray.length);
+    console.log("pathArray = " + JSON.stringify(pathArray, null, 4));
 
-    for (let i in pathArray) {
+    try {
+        for (let i in pathArray) {
 
-        try {
             // split folder name for AR key word
-            let fileName = pathArray[i].substr(pathArray[i].lastIndexOf("/") + 1);
-            let mainTag = pathArray[i].substr(0, pathArray[i].lastIndexOf("/"));
-            mainTag = mainTag.substr(mainTag.indexOf("/") + 1);
-            //console.log(mainTag + ", " + fileName);
+            let parameter = pathArray[i].split("/");
+            let album = parameter[0];
+            let tagList = parameter[1];
+            let fileName = parameter[2];
+            // console.log(tagList + ", " + fileName);
+
+
+            let onlineImage;
 
             // try to find existed image first
-            let onlineImage = imgur.database.findImageByNameTag(fileName, mainTag.split(",")[0]);
-            if (onlineImage.length != 0) {
-                console.log("file already existed(file): " + pathArray[i]);
+            onlineImage = imgur.database.findImageByNameTag(fileName, tagList.split(",")[0]);
+            if (onlineImage.length == 1) {
+                console.log("file already existed(file+tag): " + pathArray[i]);
                 // return "file already existed";
-
-            } else {
-                // download image from dropbox
-                // var fileBinary = await asyncReadFile("6230667.png"); // test local image file
-                var fileBinary = await dbox.fileDownload(pathArray[i]);
-                let fileMd5 = md5(fileBinary);  // get MD5 for check
-
-                let onlineImage = imgur.database.findImageByMd5(fileMd5);
-                if (onlineImage.length != 0) {
-                    console.log("file already existed(md5): " + pathArray[i]);
-                    // return "file already existed";
-
-                    if (onlineImage[0].tags.join(",") != mainTag || onlineImage[0].fileName != fileName) {
-                        console.log("Alarm!! Tag data is incorrect!: https://imgur.com/" + onlineImage[0].id);
-                    }
-                } else {
-                    //console.log("file is not existed");
-                    // var album = findAlbumByTitle()
-                    // let albumTitle = pathArray[i].split("\/")[0];
-                    let album = imgur.database.findAlbumByTitle(pathArray[i].split("\/")[0]);
-                    var albumId = (album && album.length >= 1) ? album[0].id : "";
-
-                    // test local image file
-                    // let uploadResponse = await imgur.image.binaryImageUpload(fileBinary, fileMd5, "6230667.png", "刻詠の風水士リンネ");
-                    let uploadResponse = await imgur.image.binaryImageUpload(fileBinary, fileMd5, fileName, mainTag, albumId);
-
-                    //console.log("upload file: " + pathArray[i]);
-                    console.log("upload file: " + uploadResponse.data.title + ", " + fileName + ", " + mainTag, albumId);
-                }
+                continue;
             }
-        } catch (err) {
-            console.log(err);
-        }
-    }//*/
+
+            // download image from dropbox
+            // var fileBinary = await asyncReadFile("6230667.png"); // test local image file
+            var fileBinary = await dbox.fileDownload(pathArray[i]);
+            let fileMd5 = md5(fileBinary);  // get MD5 for check
+            onlineImage = imgur.database.findImageByMd5(fileMd5);
+            if (onlineImage.length == 1) {
+                console.log("file already existed(md5): " + pathArray[i]);
+                // return "file already existed";
+                if (onlineImage[0].tags.join(",") != tagList || onlineImage[0].fileName != fileName) {
+                    console.log("Alarm!! Tag data is incorrect!: https://imgur.com/" + onlineImage[0].id);
+                    console.log(onlineImage[0].tags.join(",") + " : " + tagList);
+                    console.log(onlineImage[0].fileName + " : " + fileName);
+
+                }
+                continue;
+            }
+
+            // test local image file
+            // let uploadResponse = await imgur.image.binaryImageUpload(fileBinary, fileMd5, "6230667.png", "刻詠の風水士リンネ");
+            let uploadResponse = await imgur.image.binaryImageUpload(fileBinary, fileMd5, fileName, tagList);
+            console.log("upload file: " + uploadResponse.data.title + ", " + fileName + ", " + tagList);
+
+        }//*/
+    } catch (err) {
+        console.log(err);
+    }
     annaWebHook("statu");
 
 }; main();
@@ -106,8 +106,7 @@ const getFileList = async function (mainFolder) {
                         for (let j in fileArray) {
                             // set AR image full path
                             pathArray.push(dirArray[i] + "/" + fileArray[j]);
-                            //console.log("pathArray: " + dirArray[i] + "/" + fileArray[j]);
-                            console.log("pathArray: " + pathArray[pathArray.length - 1]);
+                            // console.log("pathArray: " + pathArray[pathArray.length - 1]);
                         }
                     }
                 ).catch(console.log)
