@@ -67,9 +67,8 @@ const main = async function () {
                 // return "file already existed";
                 if (onlineImage[0].tags.join(",") != tagList || onlineImage[0].fileName != fileName) {
                     console.log("Alarm!! Tag data is incorrect!: https://imgur.com/" + onlineImage[0].id);
-                    console.log(onlineImage[0].tags.join(",") + " : " + tagList);
-                    console.log(onlineImage[0].fileName + " : " + fileName);
-
+                    console.log(onlineImage[0].fileName + " : " + onlineImage[0].tags.join(","));
+                    console.log(fileName + " : " + tagList);
                 }
                 continue;
             }
