@@ -175,7 +175,7 @@ const twitterBotOn = function () {
 				// push image
 				if (tweet_data.media.length > 0) {
 					for (let j in tweet_data.media) {
-						var imageMsg = createImageMsg(tweet_data.media[j].link, tweet_data.media[j].link);
+						var imageMsg = line.createImageMsg(tweet_data.media[j].link, tweet_data.media[j].link);
 						await botPush(groupDatabase.data[i].name, imageMsg);
 					}
 				}
