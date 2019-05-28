@@ -15,10 +15,13 @@
 
     0.7.1.1
     line push function fix
+    
+    0.7.1.2
+    retweet image function call fix
 */
 
 const config = {
-    _version: "0.7.1.1",
+    _version: "0.7.1.2",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
