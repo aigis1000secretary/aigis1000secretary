@@ -212,10 +212,10 @@ const main = async function () {
 	express.init();
 
 	// 讀取資料
-	let pArray = [];
-	pArray.push(anna.init());
-	pArray.push(imgur.init());
-	await Promise.all(pArray);
+	await Promise.all([
+		anna.init(),
+		imgur.init()
+	]);
 
 	// 開始監聽
 	await groupDatabase.init();

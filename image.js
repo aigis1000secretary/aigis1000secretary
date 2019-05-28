@@ -6,22 +6,15 @@ const dbox = require("./dbox.js");
 const imgur = require("./imgur.js");
 const md5 = function (str) { return require('crypto').createHash('md5').update(str).digest('hex'); }
 
-String.prototype.replaceAll = function (s1, s2) {
-    var source = this;
-    while ((temp = source.replace(s1, s2)) != source) {
-        source = temp;
-    }
-    return source.toString();
-}
 
 const main = async function () {
     await imgur.init();
 
     // delete all image from imgur
-    // for (let i in imgur.database.images) { await imgur.image.ImageDeletion(imgur.database.images[i].id); }
+    // // for (let i in imgur.database.images) { await imgur.image.ImageDeletion(imgur.database.images[i].id); }
 
     // savedatabase
-    //imgur.database.saveDatabase();
+    imgur.database.saveDatabase();
 
     console.log("== image.js ==");
 
@@ -34,54 +27,79 @@ const main = async function () {
         console.log(error);
     }
     console.log("GET DBox Images count: " + pathArray.length);
-    console.log("pathArray = " + JSON.stringify(pathArray, null, 4));
+    // console.log("pathArray = " + JSON.stringify(pathArray, null, 4));
+
 
     try {
         for (let i in pathArray) {
 
             // split folder name for AR key word
             let parameter = pathArray[i].split("/");
-            let album = parameter[0];
+            let albumName = parameter[0];
             let tagList = parameter[1];
             let fileName = parameter[2];
-            // console.log(tagList + ", " + fileName);
+            // console.log(albumName + ", " + tagList + ", " + fileName);
 
 
             let onlineImage;
-
-            // try to find existed image first
-            onlineImage = imgur.database.findImageByNameTag(fileName, tagList.split(",")[0]);
-            if (onlineImage.length == 1) {
-                console.log("file already existed(file+tag): " + pathArray[i]);
-                // return "file already existed";
-                continue;
+            let onlineAlbum = imgur.database.findAlbumData({ title: albumName });
+            let albumHash = "";
+            if (onlineAlbum.length == 0) {
+                console.log("album not existed: " + albumName);
+                // albumHash = (await imgur.api.album.albumCreation({ title: albumName })).id;
+            } else {
+                albumHash = onlineAlbum[0].id;
             }
 
+
+            // // try to find existed image first
+            // onlineImage = imgur.database.findImageData({ fileName, tag: tagList.split(",")[0] });
+            // if (onlineImage.length == 1) {
+            //     console.log("file already existed(file+tag): " + pathArray[i]);
+            //     continue;
+            // }
+
+
             // download image from dropbox
-            // var fileBinary = await asyncReadFile("6230667.png"); // test local image file
-            var fileBinary = await dbox.fileDownload(pathArray[i]);
-            let fileMd5 = md5(fileBinary);  // get MD5 for check
-            onlineImage = imgur.database.findImageByMd5(fileMd5);
+            let imageBinary = await asyncReadFile("C:\\LineBot\\imgur\\" + pathArray[i]); // test local image file
+            // let imageBinary = await dbox.fileDownload(pathArray[i]);
+            let fileMd5 = md5(imageBinary);  // get MD5 for check
+            onlineImage = imgur.database.findImageData({ md5: fileMd5 });
             if (onlineImage.length == 1) {
-                console.log("file already existed(md5): " + pathArray[i]);
-                // return "file already existed";
-                if (onlineImage[0].tags.join(",") != tagList || onlineImage[0].fileName != fileName) {
-                    console.log("Alarm!! Tag data is incorrect!: https://imgur.com/" + onlineImage[0].id);
-                    console.log(onlineImage[0].fileName + " : " + onlineImage[0].tags.join(","));
-                    console.log(fileName + " : " + tagList);
+                // console.log("file already existed(md5): " + pathArray[i]);
+
+                if (onlineImage[0].tagList != tagList) {
+                    console.log("Alarm!! TagList incorrect!: https://imgur.com/" + onlineImage[0].id);
+                    imgur.api.image.updateImage({ imageHash: onlineImage[0].id, tagList });
+                }
+                if (onlineImage[0].fileName != fileName) {
+                    console.log("Alarm!! fileName incorrect!: https://imgur.com/" + onlineImage[0].id);
+                }
+                // if (onlineAlbum[0].findImage({ id: onlineImage[0].id }).length == 0) {
+                if (onlineAlbum[0].findImage(onlineImage[0]).length == 0) {
+                    console.log("Alarm!! Image not in album!");
+                    // console.log(onlineAlbum[0]);
+
                 }
                 continue;
             }
 
-            // test local image file
-            // let uploadResponse = await imgur.image.binaryImageUpload(fileBinary, fileMd5, "6230667.png", "刻詠の風水士リンネ");
-            let uploadResponse = await imgur.image.binaryImageUpload(fileBinary, fileMd5, fileName, tagList);
-            console.log("upload file: " + uploadResponse.data.title + ", " + fileName + ", " + tagList);
 
-        }//*/
-    } catch (err) {
-        console.log(err);
+            // test local image file
+            // let uploadResponse = await imgur.image.binaryImageUpload(fileBinary, "6230667.png",albumHash, "刻詠の風水士リンネ");
+            // let uploadResponse = await imgur.api.image.imageUpload({ imageBinary, fileName, albumHash, tagList });
+            // console.log("upload file: " + uploadResponse.title + ", " + fileName + ", " + tagList);
+
+
+
+            console.log("file is not exist: " + pathArray[i]);
+        }
+
+    } catch (error) {
+        console.log(error);
     }
+    // */
+
     annaWebHook("statu");
 
 }; main();
@@ -122,7 +140,7 @@ const annaWebHook = function (command) {
     // const webhookUrl = "http://127.0.0.1:8080/";
 
     http.get(webhookUrl + "anna/" + command, function (req, res) {
-        var html = '';
+        let html = '';
         req.on('data', function (data) {
             let str = new String(data);
             html += str.replaceAll("<br>", "\n");;
@@ -133,16 +151,16 @@ const annaWebHook = function (command) {
     });
 }
 
-// const asyncReadFile = function (filePath) {
-//     return new Promise(function (resolve, reject) {
-//         fs.readFile(filePath, function (err, data) {
-//             if (err) {
-//                 reject(err);
-//             } else {
-//                 resolve(data);
-//             }
-//         });
-//     });
-// }
+const asyncReadFile = function (filePath) {
+    return new Promise(function (resolve, reject) {
+        fs.readFile(filePath, function (err, data) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(data);
+            }
+        });
+    });
+}
 
 

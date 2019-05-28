@@ -8,6 +8,8 @@
     image upload script fixed
     upload images add album data
     imgur API v2
+    imgur database done
+    image.js rebuilding
 */
 
 const config = {
