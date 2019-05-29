@@ -21,8 +21,17 @@ const main = async function () {
     let pathArray = [];
     // chara
     try {
-        let pathArrayAR = await getFileList("AutoResponse"); pathArray = pathArray.concat(pathArrayAR)
-        let pathArrayCh = await getFileList("Character"); pathArray = pathArray.concat(pathArrayCh)
+        let albumList = ["AutoResponse", "Character"];
+        for (let i in albumList) {
+            let albumName = albumList[i];
+            let newPathArray = await getFileList(albumName);
+            pathArray = pathArray.concat(newPathArray);
+
+            if (imgur.database.findAlbumData({ title: albumName }).length == 0) {
+                console.log("album not existed: " + albumName);
+                // await imgur.api.album.albumCreation({ title: albumName });
+            }
+        }
     } catch (error) {
         console.log(error);
     }
@@ -40,55 +49,46 @@ const main = async function () {
             let fileName = parameter[2];
             // console.log(albumName + ", " + tagList + ", " + fileName);
 
-
             let onlineImage;
-            let onlineAlbum = imgur.database.findAlbumData({ title: albumName });
-            let albumHash = "";
-            if (onlineAlbum.length == 0) {
-                console.log("album not existed: " + albumName);
-                // albumHash = (await imgur.api.album.albumCreation({ title: albumName })).id;
-            } else {
-                albumHash = onlineAlbum[0].id;
+            let onlineAlbum = imgur.database.findAlbumData({ title: albumName })[0];
+            let albumHash = onlineAlbum.id;
+
+
+            // try to find existed image first
+            onlineImage = imgur.database.findImageData({ fileName, tag: tagList.split(",")[0] })[0];
+            if (onlineImage) {
+                console.log("file already existed(file+tag): " + pathArray[i]);
+                continue;
             }
 
-
-            // // try to find existed image first
-            // onlineImage = imgur.database.findImageData({ fileName, tag: tagList.split(",")[0] });
-            // if (onlineImage.length == 1) {
-            //     console.log("file already existed(file+tag): " + pathArray[i]);
-            //     continue;
-            // }
-
-
-            // download image from dropbox
-            let imageBinary = await asyncReadFile("C:\\LineBot\\imgur\\" + pathArray[i]); // test local image file
+            // test local image files
+            let imageBinary = await asyncReadFile("C:\\LineBot\\imgur\\" + pathArray[i]);
+            // download image files from dropbox
             // let imageBinary = await dbox.fileDownload(pathArray[i]);
             let fileMd5 = md5(imageBinary);  // get MD5 for check
-            onlineImage = imgur.database.findImageData({ md5: fileMd5 });
-            if (onlineImage.length == 1) {
-                // console.log("file already existed(md5): " + pathArray[i]);
+            onlineImage = imgur.database.findImageData({ md5: fileMd5 })[0];
+            if (onlineImage) {
+                console.log("file already existed(md5): " + pathArray[i]);
 
-                if (onlineImage[0].tagList != tagList) {
-                    console.log("Alarm!! TagList incorrect!: https://imgur.com/" + onlineImage[0].id);
-                    imgur.api.image.updateImage({ imageHash: onlineImage[0].id, tagList });
+                if (onlineImage.tagList != tagList) {
+                    console.log("Alarm!! TagList incorrect!: https://imgur.com/" + onlineImage.id);
+                    imgur.api.image.updateImage({ imageHash: onlineImage.id, tagList });
                 }
-                if (onlineImage[0].fileName != fileName) {
-                    console.log("Alarm!! fileName incorrect!: https://imgur.com/" + onlineImage[0].id);
+                if (onlineImage.fileName != fileName) {
+                    console.log("Alarm!! fileName incorrect!: https://imgur.com/" + onlineImage.id);
                 }
-                // if (onlineAlbum[0].findImage({ id: onlineImage[0].id }).length == 0) {
-                if (onlineAlbum[0].findImage(onlineImage[0]).length == 0) {
+                if (albumHash && onlineAlbum.findImage({ id: onlineImage.id }).length == 0) {
                     console.log("Alarm!! Image not in album!");
-                    // console.log(onlineAlbum[0]);
-
+                    // console.log(onlineAlbum);
+                    imgur.api.album.addAlbumImages({ albumHash: albumHash, ids: [onlineImage.id] });
                 }
                 continue;
             }
 
 
-            // test local image file
-            // let uploadResponse = await imgur.image.binaryImageUpload(fileBinary, "6230667.png",albumHash, "刻詠の風水士リンネ");
-            // let uploadResponse = await imgur.api.image.imageUpload({ imageBinary, fileName, albumHash, tagList });
-            // console.log("upload file: " + uploadResponse.title + ", " + fileName + ", " + tagList);
+            // upload not exist image file
+            let uploadResponse = await imgur.api.image.imageUpload({ imageBinary, fileName, albumHash, tagList });
+            console.log("upload file: " + uploadResponse.title + ", " + fileName + ", " + tagList);
 
 
 

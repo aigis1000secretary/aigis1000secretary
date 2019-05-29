@@ -111,7 +111,7 @@ let imgurCore = {
 
                 } catch (error) {
                     console.log(error);
-                    return [];
+                    return {};
                 }
             },
             // GET Image IDs
@@ -127,7 +127,7 @@ let imgurCore = {
 
                 } catch (error) {
                     console.log(error);
-                    return [];
+                    return {};
                 }
             },
             // GET Image Count
@@ -143,7 +143,7 @@ let imgurCore = {
 
                 } catch (error) {
                     console.log(error);
-                    return [];
+                    return {};
                 }
             },
             // load all images data
@@ -175,7 +175,7 @@ let imgurCore = {
 
                 } catch (error) {
                     console.log(error);
-                    return [];
+                    return {};
                 }
             },
             // GET Album IDs
@@ -195,7 +195,7 @@ let imgurCore = {
 
                 } catch (error) {
                     console.log(error);
-                    return [];
+                    return {};
                 }
             },
             // GET Album Count
@@ -211,7 +211,7 @@ let imgurCore = {
 
                 } catch (error) {
                     console.log(error);
-                    return [];
+                    return {};
                 }
             },
             // load all albums data
@@ -244,7 +244,7 @@ let imgurCore = {
 
                 } catch (error) {
                     console.log(error);
-                    return [];
+                    return {};
                 }
             },
             // POST Image Upload
@@ -264,13 +264,14 @@ let imgurCore = {
                             description: tagList //description: _tags // defult: folder name, manual add for auto response key word
                         }
                     };
-                    let data = (await imgurCore._apiRequest(options)).data;
-                    imgurCore.database.newImageData(data);
-                    return data;
+                    // let data = (await imgurCore._apiRequest(options)).data;
+                    // imgurCore.database.newImageData(data);
+                    // return data;
+                    return (await imgurCore._apiRequest(options)).data;
 
                 } catch (error) {
                     console.log(error);
-                    return [];
+                    return {};
                 }
             },
             // DEL Image Deletion
@@ -286,7 +287,7 @@ let imgurCore = {
 
                 } catch (error) {
                     console.log(error);
-                    return [];
+                    return {};
                 }
             },
             // POST Update Image Information
@@ -303,13 +304,14 @@ let imgurCore = {
                         method: "POST",
                         formData: postBody
                     };
-                    let data = (await imgurCore._apiRequest(options)).data;
-                    imgurCore.database.newImageData(data);
-                    return data;
+                    // let data = (await imgurCore._apiRequest(options)).data;
+                    // imgurCore.database.newImageData(data);
+                    // return data;
+                    return (await imgurCore._apiRequest(options)).data;
 
                 } catch (error) {
                     console.log(error);
-                    return [];
+                    return {};
                 }
             }
         },
@@ -331,7 +333,7 @@ let imgurCore = {
 
                 } catch (error) {
                     console.log(error);
-                    return [];
+                    return {};
                 }
             },
             // GET Album Images // useless?
@@ -347,11 +349,11 @@ let imgurCore = {
 
                 } catch (error) {
                     console.log(error);
-                    return [];
+                    return {};
                 }
             },
             // POST Album Creation
-            async albumCreation({ title, ids = [], description = "", privacy = "hidden", cover }) {
+            async albumCreation({ title, ids = [], description = "", privacy = "hidden", cover = null }) {
                 try {
                     console.log("POST Album Creation ");
                     // Set the POST body
@@ -371,7 +373,8 @@ let imgurCore = {
 
                 } catch (error) {
                     console.log(error);
-                    return [];
+                    console.log(error.message);
+                    return {};
                 }
             },
             // PUT Update Album // useless
@@ -396,7 +399,7 @@ let imgurCore = {
 
                 } catch (error) {
                     console.log(error);
-                    return [];
+                    return {};
                 }
             },
             // DEL Album Deletion
@@ -412,7 +415,7 @@ let imgurCore = {
 
                 } catch (error) {
                     console.log(error);
-                    return [];
+                    return {};
                 }
             },
             // POST Set Album Images
@@ -432,11 +435,11 @@ let imgurCore = {
 
                 } catch (error) {
                     console.log(error);
-                    return [];
+                    return {};
                 }
             },
             // POST Add Images to an Album
-            async addAlbumImages({ albumHash, ids = [] }) {
+            async addAlbumImages({ albumHash, ids }) {
                 try {
                     console.log("POST Add Images to an Album " + albumHash);
                     // Configure the request
@@ -452,27 +455,27 @@ let imgurCore = {
 
                 } catch (error) {
                     console.log(error);
-                    return [];
+                    return {};
                 }
             }
             /*// POST Remove Images from an Album // Deprecation ?
-            async removeAlbumImages({ albumHash, ids = [] }) {
+            , async removeAlbumImages({ albumHash, ids }) {
                 try {
                     console.log("POST Remove Images from an Album " + albumHash);
                     // Configure the request
                     let options = {
                         url: IMGUR_API_URL + "album/" + albumHash + "/remove_images",
-                        method: "DELETE",
+                        method: "POST",
                         // Set the POST body
                         formData: {
-                            ids: ids.join(",")
+                            ids: ids
                         }
                     };
                     return (await imgurCore._apiRequest(options)).data;
-         
+
                 } catch (error) {
                     console.log(error);
-                    return [];
+                    return {};
                 }
             }//*/
         }
@@ -609,7 +612,6 @@ let imgurCore = {
             imgurCore.api.account.getAllImages().catch(function (error) { console.log("Imgur images load error!\n" + error) }),
             imgurCore.api.account.getAllAlbums().catch(function (error) { console.log("Imgur images load error!\n" + error) })
         ]);
-        this.autoTest();
         return;
     },
 
@@ -623,7 +625,7 @@ let imgurCore = {
         // await imgurCore.api.account.imagesIds(5).then(obj => JSON.stringify(obj, null, 4)).then(console.log);
 
         // // Image
-        // let imageHash = "uH66IWL";
+        // let imageHash = "E4d7e8w";
         // let fileName = "20190524003631.jpg";
         // let imageBinary = await asyncReadFile(fileName);
         // let tagList = "付与魔術師アンリ";
@@ -633,17 +635,21 @@ let imgurCore = {
         // await imgurCore.api.image.updateImage({ imageHash, tagList }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
 
         // // Album
-        // let albumHash = "kGtma7A"   // test album hash
+        // let albumHash = "UuqLJAz"   // test album hash
         // await imgurCore.api.album.album({ albumHash }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
         // await imgurCore.api.album.albumImages({ albumHash }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
-        // await imgurCore.api.album.albumCreation({ title: "Test" }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
+        // await imgurCore.api.album.albumCreation({ title: "Test", ids: ["E4d7e8w"] }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
         // await imgurCore.api.album.updateAlbum({ albumHash, description: "" }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
         // await imgurCore.api.album.albumDeletion({albumHash}).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
-        // await imgurCore.api.album.setAlbumImages({ albumHash, ids: ["uH66IWL"] }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
-        // await imgurCore.api.album.addAlbumImages({ albumHash, ids: ["RZRO2d1", "Sb4N1jh"] }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
+        // await imgurCore.api.album.setAlbumImages({ albumHash, ids: [] }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
+        // await imgurCore.api.album.setAlbumImages({ albumHash, ids: ["uH66IWL", "E4d7e8w"] }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
+        // await imgurCore.api.album.addAlbumImages({ albumHash, ids: ["iDMq8GF"] }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
+        // await imgurCore.api.album.addAlbumImages({ albumHash, ids: ["Sb4N1jh"] }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
+        // await imgurCore.api.album.album({ albumHash }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
 
-        // let albumHash = "kGtma7A"   // test album hash
-        // let imageHash = "RZRO2d1";
+
+        // let albumHash = "UuqLJAz"   // test album hash
+        // let imageHash = "E4d7e8w";
         // let rawAlbumData = await imgurCore.api.album.album({ albumHash });
         // let rawImageData = await imgurCore.api.image.image({ imageHash });
         // let image = imgurCore.database.newImageData(rawImageData);

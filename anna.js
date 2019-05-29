@@ -102,12 +102,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
 
 		} else if (command == "狀態" || command == "STATU") {
 			// status
-			await imgur.account.allImages()
-				.then(imgur.database.loadImages)
-				.catch(function (error) {
-					console.log("Imgur images load error!");
-					console.log(error);
-				});
+			await imgur.init();
 
 			var replyMsg = "";
 
@@ -434,7 +429,7 @@ const generateCharaData = function (charaName) {
 		var replyMsg = [];
 		replyMsg.push(createTextMsg(obj.getMessage()));
 
-		let imgArray = imgur.database.findImageByTag(charaName);
+		let imgArray = imgur.database.findImageData({ tag: charaName });
 		if (imgArray.length > 0) {
 			let i = Math.floor(Math.random() * imgArray.length);
 			replyMsg.push(createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
@@ -454,15 +449,15 @@ const replyStamp = function (msg) {
 
 	var replyMsg = [];
 
-	let imgArray = imgur.database.findImageByTag(msg);
+	let imgArray = imgur.database.findImageData({ tag: msg });
 	if (imgArray.length > 0) {
 		let i = Math.floor(Math.random() * imgArray.length);
 		replyMsg.push(createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
 		return replyMsg;
 	}
 
-	imgArray = imgArray.concat(imgur.database.findImageByFileName(msg));
-	imgArray = imgArray.concat(imgur.database.findImageByMd5(msg));
+	imgArray = imgArray.concat(imgur.database.findImageData({ fileName: msg }));
+	imgArray = imgArray.concat(imgur.database.findImageData({ md5: msg }));
 	if (imgArray.length > 0) {
 		replyMsg.push(createImageMsg(imgArray[0].imageLink, imgArray[0].thumbnailLink));
 		return replyMsg;
@@ -1103,31 +1098,36 @@ const annaCore = {
 	debugLog: debugLog,
 
 	isAdmin: isAdmin,
+
+	autoTest: async function () {
+
+		await this.init();
+		await imgur.init();
+
+		let sourceId = "U9eefeba8c0e5f8ee369730c4f983346b";
+		let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
+		// config.switchVar.debug = true;
+
+		// await annaCore.replyAI("anna 狀態", sourceId, userId).then(console.log);
+
+		// await annaCore.replyAI("anna 學習 NNLK:白ナナリー", sourceId, userId).then(console.log);
+
+		// await annaCore.replyAI("anna NNLK", sourceId, userId).then(console.log);
+		// await annaCore.replyAI("anna 黑弓", sourceId, userId).then(console.log);
+		// await annaCore.replyAI("anna 忘記 NNLK", sourceId, userId).then(console.log);
+		// await annaCore.replyAI("anna NNLK", sourceId, userId).then(console.log);
+
+		await annaCore.replyAI("anna 白き射手ナナリー", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+		// await annaCore.replyAI("1528476371865.JPEG", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+		// await annaCore.replyAI("0ab61ce0f94dc2f81b38a08f150a17fb", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+		// await annaCore.replyAI("刻詠の風水士リンネ", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+
+		// await annaCore.replyAI("anna update", sourceId, userId).then(console.log);
+
+	}
+
 }; module.exports = annaCore;
 
-module.exports.autoTest = async function () {
-
-	await annaCore.init();
-	await imgur.init();
-
-	let sourceId = "U9eefeba8c0e5f8ee369730c4f983346b";
-	let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
-	// config.switchVar.debug = true;
-
-	// await annaCore.replyAI("anna 狀態", sourceId, userId).then(console.log);
-
-	// await annaCore.replyAI("anna 學習 NNLK:白ナナリー", sourceId, userId).then(console.log);
-
-	// await annaCore.replyAI("anna NNLK", sourceId, userId).then(console.log);
-	// await annaCore.replyAI("anna 黑弓", sourceId, userId).then(console.log);
-	// await annaCore.replyAI("anna 忘記 NNLK", sourceId, userId).then(console.log);
-	// await annaCore.replyAI("anna NNLK", sourceId, userId).then(console.log);
-
-	// await annaCore.replyAI("647051929ed6333312951134c63323a1", sourceId, userId).then(console.log);
-
-	await annaCore.replyAI("anna update", sourceId, userId).then(console.log);
-
-};
 
 
 
