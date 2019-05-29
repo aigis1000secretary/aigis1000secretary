@@ -1,16 +1,16 @@
-﻿
+
 // todo
 /*
 */
 
 // commit
 /*
-    0.7.0.2
-    anna.js reply list fix
+    update log fix
+    log target fix
 */
 
 const config = {
-    _version: "0.7.0.2",
+    _version: "0.7.0.3",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
@@ -57,6 +57,7 @@ const config = {
 
     switchVar: {
         debug: false,
+        debugPush: false,
         logRequestToFile: false
     }
 };
