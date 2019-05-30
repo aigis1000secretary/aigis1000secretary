@@ -5,14 +5,16 @@
 
 // commit
 /*
->> feature/imageUploadScript
+    >> feature/imageUploadScript
     image upload script fixed
     upload images add album data
     imgur API v2
     image.js rebuilding
     move prototype function
+
     >>feature/twitterConfig
     twitter oauth rebuild done
+
     >> feature/localWebhookTest
     stream log switch done
     webhook backup to file done
@@ -21,7 +23,7 @@
 */
 
 const config = {
-    _version: "0.7.1.3",
+    _version: "0.7.2.0",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
@@ -110,6 +112,7 @@ String.prototype.equali = function (s1) {
     if (!s1) s1 = "";
     return (source.toUpperCase() == s1.toUpperCase());
 }
+
 // sleep
 global.sleep = function (ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
