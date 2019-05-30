@@ -12,15 +12,11 @@ const config = require("./config.js");
 const twitter_oauth = {
     consumer_key: config.twitterCfg.TWITTER_CONSUMER_KEY.trim(),
     consumer_secret: config.twitterCfg.TWITTER_CONSUMER_SECRET.trim(),
-    token: config.twitterCfg.TWITTER_ACCESS_TOKEN.trim(),
-    token_secret: config.twitterCfg.TWITTER_ACCESS_TOKEN_SECRET.trim()
+    access_token_key: config.twitterCfg.TWITTER_ACCESS_TOKEN.trim(),
+    access_token_secret: config.twitterCfg.TWITTER_ACCESS_TOKEN_SECRET.trim()
 }
-const bot = new Twitter({ // Twitterオブジェクトの作成
-    consumer_key: twitter_oauth.consumer_key,
-    consumer_secret: twitter_oauth.consumer_secret,
-    access_token_key: twitter_oauth.token,
-    access_token_secret: twitter_oauth.token_secret
-});
+const bot = new Twitter(twitter_oauth);
+// Twitterオブジェクトの作成
 
 const twitterCore = {
     // webhook crc
@@ -173,7 +169,7 @@ const twitterCore = {
             // getでchallenge response check (CRC)が来るのでその対応
             const crc_token = request.query.crc_token
             if (crc_token) {
-                const hash = crypto.createHmac('sha256', token_secret.consumer_secret).update(crc_token).digest('base64')
+                const hash = crypto.createHmac('sha256', twitter_oauth.consumer_secret).update(crc_token).digest('base64')
                 console.log(`receive crc check. token=${crc_token} responce=${hash}`);
                 response.status(200);
                 response.send({
@@ -339,6 +335,44 @@ module.exports = twitterCore;
 // twitterCore.stream.litsen("z1022001", "", function (tweet_data) {
 //     console.log(JSON.stringify(tweet_data, null, 4));
 // });
+
+
+/*
+searchTweet('『冥闇の剣士アンブレ』が登場！');
+function searchTweet(queryArg, nextResultsMaxIdArg = null) {
+    bot.get('search/tweets', { q: queryArg, count: 100, max_id: nextResultsMaxIdArg }, (error, searchData, response) => {
+        for (item in searchData.statuses) {
+            let tweet = searchData.statuses[item];
+            // console.log('@' + tweet.user.screen_name + ' : ' + tweet.text); //実際に使う場合はここでファイルへ書き出しなどといった処理を行うことになると思います
+
+            // if (!tweet.retweeted_status) {
+            if (tweet.user.screen_name == "Aigis1000") {
+                console.log('@' + tweet.user.screen_name + '\n >>' + tweet.text); //実際に使う場合はここでファイルへ書き出しなどといった処理を行うことになると思います
+                console.log(JSON.stringify(tweet, null, 4));
+            }
+        }
+
+        if (searchData.search_metadata == undefined) {
+            console.log('---- Complete (no metadata) ----');
+            return 0;
+        }
+        else if (searchData.search_metadata.next_results) {
+            let maxId = searchData.search_metadata.next_results.match(/\?max_id=(\d*)/);
+
+            if (maxId[1] == null) {
+                return 0;
+            }
+
+            console.log('---- next:' + maxId[1] + ' ----');
+            searchTweet(queryArg, maxId[1]);
+        }
+        else {
+            console.log('---- Complete ----');
+            return 0;
+        }
+    });
+}//*/
+
 
 /*
 const httpTwitterAPI = function () {
