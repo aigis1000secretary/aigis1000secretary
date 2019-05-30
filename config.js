@@ -1,35 +1,12 @@
-
+﻿
 // todo
 /*
+    wait check tweet stream log file
 */
 
 // commit
 /*
-    0.7.2.0
-    >> feature/imageUploadScript
-    image upload script fixed
-    upload images add album data
-    imgur API v2
-    image.js rebuilding
-    move prototype function
-
-    >>feature/twitterConfig
-    twitter oauth rebuild done
-
-    >> feature/localWebhookTest
-    stream log switch done
-    webhook backup to file done
-    stream backup to file done
-    move prototype function
-    
-    0.7.2.1
-    log file message off
-
-    0.7.2.2
-    image upload  Script fixed
-
-    0.7.2.3
-    twitterCore.stream.getStreamData function fixed;
+    >> feature/tweetExtendedMedia
 */
 
 const config = {
