@@ -8,17 +8,6 @@ const line = require("./line.js");
 const dbox = require("./dbox.js");
 const config = require("./config.js");
 
-// 各種Twitter APIを使用するための情報を設定
-// const config.twitterCfg = {
-//     TWITTER_CONSUMER_KEY: "BA5DAB2yRX2EWFPB7xIR1DOfo",
-//     TWITTER_CONSUMER_SECRET: "2G8Ltf2F1DwrwscIGrJ4KhY7ZbiKCfKUlw3khkmIPNux6aJUv5",
-//     TWITTER_ACCESS_TOKEN: "1098066659091181568-OEi7e7FAs6Xdp0bvaXHzJE1xdMy16Q",
-//     TWITTER_ACCESS_TOKEN_SECRET: "nRAT33Ozkq0zJ6rjjoFJetuTWu6ouAE9dVgUxM1t36MWK",
-//     devLabel: "aigis1000secretary",
-//     hookId: "1106006997298761728",
-//     webhookUrl: "https://aigis1000secretary.herokuapp.com/twitterbot/"
-//     //expressWatchPath: "/twitterbot/"
-// }
 // oauth認証に使う値
 const twitter_oauth = {
     consumer_key: config.twitterCfg.TWITTER_CONSUMER_KEY.trim(),
@@ -27,10 +16,10 @@ const twitter_oauth = {
     token_secret: config.twitterCfg.TWITTER_ACCESS_TOKEN_SECRET.trim()
 }
 const bot = new Twitter({ // Twitterオブジェクトの作成
-    consumer_key: config.twitterCfg.TWITTER_CONSUMER_KEY.trim(),
-    consumer_secret: config.twitterCfg.TWITTER_CONSUMER_SECRET.trim(),
-    access_token_key: config.twitterCfg.TWITTER_ACCESS_TOKEN.trim(),
-    access_token_secret: config.twitterCfg.TWITTER_ACCESS_TOKEN_SECRET.trim()
+    consumer_key: twitter_oauth.consumer_key,
+    consumer_secret: twitter_oauth.consumer_secret,
+    access_token_key: twitter_oauth.token,
+    access_token_secret: twitter_oauth.token_secret
 });
 String.prototype.replaceAll = function (s1, s2) {
     var source = this;
@@ -41,8 +30,7 @@ String.prototype.replaceAll = function (s1, s2) {
 }
 
 const twitterCore = {
-    config: config.twitterCfg,
-
+    // webhook crc
     crc: {
         // https://qiita.com/Fushihara/items/79913a5b933af15c5cf4
         // CRC API
@@ -83,13 +71,6 @@ const twitterCore = {
                 headers: { "Content-type": "application/x-www-form-urlencoded" },
             }, (error, response, body) => { if (error) console.log(error); else if (body) console.log(body); else console.log(response); });
         },
-
-
-
-
-
-
-
 
 
 
@@ -208,7 +189,7 @@ const twitterCore = {
             // getでchallenge response check (CRC)が来るのでその対応
             const crc_token = request.query.crc_token
             if (crc_token) {
-                const hash = crypto.createHmac('sha256', config.twitterCfg.TWITTER_CONSUMER_SECRET).update(crc_token).digest('base64')
+                const hash = crypto.createHmac('sha256', token_secret.consumer_secret).update(crc_token).digest('base64')
                 console.log(`receive crc check. token=${crc_token} responce=${hash}`);
                 response.status(200);
                 response.send({
@@ -230,7 +211,6 @@ const twitterCore = {
     },
 
     stream: {
-
         getUserId: function (target) {
             return new Promise(function (resolve, reject) {
                 // 監視するユーザのツイートを取得
@@ -242,7 +222,7 @@ const twitterCore = {
                             // 取得したユーザIDよりストリーミングで使用するオプションを定義
                             resolve(user_id);
                         } else {
-                            console.log(error);
+                            // console.log(error);
                             line.botPushError(error);
                             //reject(error);
                         }
@@ -255,7 +235,7 @@ const twitterCore = {
                 user_id = await twitterCore.stream.getUserId(target);
             }
 
-            console.log(target + 'のツイートを取得します。');
+            // console.log(target + 'のツイートを取得します。');
             line.botPushLog(target + 'のツイートを取得します。');
 
             // ストリーミングでユーザのタイムラインを監視
@@ -305,7 +285,7 @@ const twitterCore = {
 
                 stream.on('end', function (tweet) {  // 接続が切れた際の再接続
                     stream.destroy();
-                    console.log(target + 'のツイートを取得終了。');
+                    // console.log(target + 'のツイートを取得終了。');
                     line.botPushLog(target + 'のツイートを取得終了。');
 
                     setTimeout(function () {
@@ -330,6 +310,20 @@ const twitterCore = {
             else if (tweet.text)
                 tweet_data.text = tweet.text;
 
+            tweet_data.media = [];
+            if (tweet.extended_entities && tweet.extended_entities.media) {
+                for (let i in tweet.extended_entities.media) {
+                    let media = tweet.extended_entities.media[i];
+                    
+                    if (media.type != "photo") continue;
+
+                    tweet_data.media.push({
+                        link: media.media_url_https,
+                        url: media.url  // same with tweet text
+                    });
+                }
+            }
+
             if (tweet.geo) tweet_data.geo = tweet.geo;
 
             return tweet_data;
@@ -340,6 +334,9 @@ const twitterCore = {
 //twitterCore.stream.litsen("Aigis1000", function () { });
 module.exports = twitterCore;
 
+// twitterCore.stream.litsen("z1022001", "", function (tweet_data) {
+//     console.log(JSON.stringify(tweet_data, null, 4));
+// });
 
 /*
 const httpTwitterAPI = function () {

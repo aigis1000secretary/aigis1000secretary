@@ -4,13 +4,9 @@ const fs = require("fs");
 const md5f = function (str) { return require('crypto').createHash('md5').update(str).digest('hex'); }
 const config = require("./config.js");
 
-// vist site: https://api.imgur.com/oauth2/authorize?client_id=84f351fab201d5a&response_type=token
-// get var from url
-const IMGUR_REFRESH_TOKEN = config.IMGUR_REFRESH_TOKEN;
-const IMGUR_USERNAME = config.IMGUR_USERNAME;
-// https://imgur.com/account/settings/apps
-const IMGUR_CLIENT_ID = config.IMGUR_CLIENT_ID;
-const IMGUR_CLIENT_SECRET = config.IMGUR_CLIENT_SECRET;
+const IMGUR_CLIENT_ID = config.imgur.IMGUR_CLIENT_ID;
+const IMGUR_CLIENT_SECRET = config.imgur.IMGUR_CLIENT_SECRET;
+const IMGUR_REFRESH_TOKEN = config.imgur.IMGUR_REFRESH_TOKEN;
 
 const IMGUR_API_URL = "https://api.imgur.com/3/";
 var IMGUR_ACCESS_TOKEN = "5f336949d6731b67fcad374a83851f3b543c17ad";
