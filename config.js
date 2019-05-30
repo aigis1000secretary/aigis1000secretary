@@ -9,19 +9,19 @@
     retweet Image
     tweet object add media
     auto retweet image
-    
-    update log fix
-    log target fix
 
     0.7.1.1
-    line push function fix
+    line push function fixed
     
     0.7.1.2
-    retweet image function call fix
+    retweet image function call fixed
+    
+    0.7.1.3
+    update Log Target fixed
 */
 
 const config = {
-    _version: "0.7.1.2",
+    _version: "0.7.1.3",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
