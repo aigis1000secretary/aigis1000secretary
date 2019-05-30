@@ -29,7 +29,10 @@ const main = async function () {
 
             if (imgur.database.findAlbumData({ title: albumName }).length == 0) {
                 console.log("album not existed: " + albumName);
-                // await imgur.api.album.albumCreation({ title: albumName });
+                await imgur.api.album.albumCreation({ title: albumName });
+
+                imgurCore.database.albums = [];
+                await imgurCore.api.account.getAllAlbums().catch(function (error) { console.log("Imgur images load error!\n" + error) })
             }
         }
     } catch (error) {
@@ -58,6 +61,11 @@ const main = async function () {
             onlineImage = imgur.database.findImageData({ fileName, tag: tagList.split(",")[0] })[0];
             if (onlineImage) {
                 console.log("file already existed(file+tag): " + pathArray[i]);
+                if (albumHash && onlineAlbum.findImage({ id: onlineImage.id }).length == 0) {
+                    console.log("Alarm!! Image not in album!");
+                    // console.log(onlineAlbum);
+                    imgur.api.album.addAlbumImages({ albumHash: albumHash, ids: [onlineImage.id] });
+                }
                 continue;
             }
 
@@ -65,6 +73,7 @@ const main = async function () {
             // let imageBinary = await asyncReadFile("C:\\LineBot\\imgur\\" + pathArray[i]);
             // download image files from dropbox
             let imageBinary = await dbox.fileDownload(pathArray[i]);
+            asyncWriteFile("C:\\LineBot\\imgur\\" + pathArray[i], imageBinary, "Binary")
             let fileMd5 = md5(imageBinary);  // get MD5 for check
             onlineImage = imgur.database.findImageData({ md5: fileMd5 })[0];
             if (onlineImage) {
