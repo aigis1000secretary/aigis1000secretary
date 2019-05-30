@@ -61,10 +61,10 @@ const main = async function () {
                 continue;
             }
 
-            // test local image files
-            let imageBinary = await asyncReadFile("C:\\LineBot\\imgur\\" + pathArray[i]);
+            // // test local image files
+            // let imageBinary = await asyncReadFile("C:\\LineBot\\imgur\\" + pathArray[i]);
             // download image files from dropbox
-            // let imageBinary = await dbox.fileDownload(pathArray[i]);
+            let imageBinary = await dbox.fileDownload(pathArray[i]);
             let fileMd5 = md5(imageBinary);  // get MD5 for check
             onlineImage = imgur.database.findImageData({ md5: fileMd5 })[0];
             if (onlineImage) {
@@ -88,11 +88,9 @@ const main = async function () {
 
             // upload not exist image file
             let uploadResponse = await imgur.api.image.imageUpload({ imageBinary, fileName, albumHash, tagList });
+            console.log("file is not exist: " + pathArray[i]);
             console.log("upload file: " + uploadResponse.title + ", " + fileName + ", " + tagList);
 
-
-
-            console.log("file is not exist: " + pathArray[i]);
         }
 
     } catch (error) {
