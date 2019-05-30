@@ -21,13 +21,6 @@ const bot = new Twitter({ // Twitterオブジェクトの作成
     access_token_key: twitter_oauth.token,
     access_token_secret: twitter_oauth.token_secret
 });
-String.prototype.replaceAll = function (s1, s2) {
-    var source = this;
-    while ((temp = source.replace(s1, s2)) != source) {
-        source = temp;
-    }
-    return source.toString();
-}
 
 const twitterCore = {
     config: config.twitterCfg,

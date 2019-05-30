@@ -14,13 +14,6 @@ const server = app.listen(process.env.PORT || 8080, function () {
     let port = server.address().port;
     console.log("App now running on port", port);
 });
-String.prototype.replaceAll = function (s1, s2) {
-    var source = this;
-    while ((temp = source.replace(s1, s2)) != source) {
-        source = temp;
-    }
-    return source.toString();
-}
 
 module.exports = {
     init: async function () {

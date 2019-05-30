@@ -12,16 +12,6 @@ const line = require("./line.js");
 const database = require("./database.js");
 
 
-String.prototype.replaceAll = function (s1, s2) {
-	var source = this;
-	while ((temp = source.replace(s1, s2)) != source) {
-		source = temp;
-	}
-	return source.toString();
-}
-
-
-
 // bot
 // 搜尋資料
 const replyAI = async function (rawMsg, sourceId, userId) {

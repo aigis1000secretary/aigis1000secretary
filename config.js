@@ -5,10 +5,12 @@
 
 // commit
 /*
+>> feature/imageUploadScript
     image upload script fixed
     upload images add album data
     imgur API v2
     image.js rebuilding
+    move prototype function
 */
 
 const config = {
@@ -88,4 +90,15 @@ setTimeout(async function () {
     });
 }, 1);
 
-
+String.prototype.replaceAll = function (s1, s2) {
+    let source = this;
+    while ((temp = source.replace(s1, s2)) != source) {
+        source = temp;
+    }
+    return source.toString();
+}
+String.prototype.equali = function (s1) {
+    let source = this;
+    if (!s1) s1 = "";
+    return (source.toUpperCase() == s1.toUpperCase());
+}
