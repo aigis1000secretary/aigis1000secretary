@@ -1,23 +1,12 @@
-
+﻿
 // todo
 /*
 */
 
 // commit
 /*
-    0.7.1.0
-    retweet Image
-    tweet object add media
-    auto retweet image
-    
-    update log fix
-    log target fix
-
-    0.7.1.1
-    line push function fix
-    
-    0.7.1.2
-    retweet image function call fix
+    >>feature/twitterConfig
+    twitter oauth rebuild done
 */
 
 const config = {
