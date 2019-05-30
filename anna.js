@@ -1061,7 +1061,8 @@ const annaCore = {
 		// await annaCore.replyAI("anna 忘記 NNLK", sourceId, userId).then(console.log);
 		// await annaCore.replyAI("anna NNLK", sourceId, userId).then(console.log);
 
-		await annaCore.replyAI("anna 白き射手ナナリー", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+		// await annaCore.replyAI("anna 射", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+		// await annaCore.replyAI("anna 白き射手ナナリー", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
 		// await annaCore.replyAI("1528476371865.JPEG", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
 		// await annaCore.replyAI("0ab61ce0f94dc2f81b38a08f150a17fb", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
 		// await annaCore.replyAI("刻詠の風水士リンネ", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));

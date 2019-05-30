@@ -513,7 +513,7 @@ let imgurCore = {
                 }
                 if (filter.tag) {
                     result = result && (
-                        image.tagList.toUpperCase().indexOf(
+                        image.tagList.toUpperCase().split(",").indexOf(
                             filter.tag.toUpperCase().trim()
                         ) != -1);
                 }
