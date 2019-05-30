@@ -72,7 +72,7 @@ const main = async function () {
 
                 if (onlineImage.tagList != tagList) {
                     console.log("Alarm!! TagList incorrect!: https://imgur.com/" + onlineImage.id);
-                    imgur.api.image.updateImage({ imageHash: onlineImage.id, tagList });
+                    imgur.api.image.updateImage({ imageHash: onlineImage.id, tagList, md5: fileMd5 });
                 }
                 if (onlineImage.fileName != fileName) {
                     console.log("Alarm!! fileName incorrect!: https://imgur.com/" + onlineImage.id);

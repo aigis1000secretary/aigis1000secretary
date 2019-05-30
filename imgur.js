@@ -259,9 +259,9 @@ let imgurCore = {
                         formData: {
                             image: imageBinary, // A binary file, base64 data, or a URL for an image. (up to 10MB)
                             album: albumHash,
-                            title: md5f(imageBinary),
+                            title: tagList,
                             name: fileName,
-                            description: tagList //description: _tags // defult: folder name, manual add for auto response key word
+                            description: md5f(imageBinary)
                         }
                     };
                     // let data = (await imgurCore._apiRequest(options)).data;
@@ -296,8 +296,8 @@ let imgurCore = {
                     console.log("POST Update Image(" + imageHash + ") Information <" + tagList + ">, <" + md5 + ">");
                     // Set the POST body
                     let postBody = {};
-                    if (md5) postBody.title = md5;
-                    if (tagList) postBody.description = tagList;
+                    if (md5) postBody.description = md5;
+                    if (tagList) postBody.title = tagList;
                     // Configure the request
                     let options = {
                         url: IMGUR_API_URL + "image/" + imageHash,
@@ -679,8 +679,8 @@ class Image {
     };
     _constructor({ id, title, description, name, link }) {
         this.fileName = name;
-        this.md5 = title;
-        this.tagList = (description) ? description : "";
+        this.md5 = (description) ? description : "";;
+        this.tagList = (title) ? title : "";
         this.id = id; // imageHash
         this.imageLink = link;
         this.thumbnailLink = (link) ? link.replace(this.id, this.id + "m") : "";
