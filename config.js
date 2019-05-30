@@ -1,4 +1,4 @@
-﻿
+
 // todo
 /*
 */
@@ -123,10 +123,8 @@ global.asyncReadFile = function (filePath) {
     return new Promise(function (resolve, reject) {
         fs.readFile(filePath, function (err, data) {
             if (err) {
-                console.log(err);
                 reject(err);
             } else {
-                console.log(data);
                 resolve(data);
             }
         });
