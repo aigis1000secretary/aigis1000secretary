@@ -1,14 +1,15 @@
-
+﻿
 // todo
 /*
-    webhook backup to file
-    stream backup to file
-    local file test
 */
 
 // commit
 /*
-    stream log switch
+    >> feature/localWebhookTest
+    stream log switch done
+    webhook backup to file done
+    stream backup to file done
+    move prototype function
 */
 
 const config = {
@@ -41,7 +42,7 @@ const config = {
         // check REFRESH_TOKEN var from url
         IMGUR_REFRESH_TOKEN: process.env.IMGUR_REFRESH_TOKEN
     },
-    
+
     // line
     devbot: {
         // https://developers.line.biz/console/channel/1612493892/basic/
@@ -66,8 +67,8 @@ const config = {
     switchVar: {
         debug: false,
         debugPush: false,
-        logRequestToFile: false,
-        logStreamToFile: true
+        logRequestToFile: process.env.LOG_REQUEST_TO_FILE,
+        logStreamToFile: process.env.LOG_STREAM_TO_FILE
     }
 };
 
@@ -89,4 +90,33 @@ setTimeout(async function () {
     });
 }, 1);
 
+// sleep
+global.sleep = function (ms) {
+    return new Promise(resolve => setTimeout(resolve, ms))
+}
 
+const fs = require("fs");
+global.asyncReadFile = function (filePath) {
+    return new Promise(function (resolve, reject) {
+        fs.readFile(filePath, function (err, data) {
+            if (err) {
+                console.log(err);
+                reject(err);
+            } else {
+                console.log(data);
+                resolve(data);
+            }
+        });
+    });
+}
+global.asyncWriteFile = function (filePath, data, options = "utf8") {
+    return new Promise(function (resolve, reject) {
+        fs.writeFile(filePath, data, options, function (err, bytesRead, buffer) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+    });
+};

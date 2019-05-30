@@ -1,5 +1,4 @@
 
-const fs = require("fs");
 const dbox = require("./dbox.js");
 const line = require("./line.js");
 const config = require("./config.js");
@@ -77,7 +76,7 @@ class Database {
         var json = JSON.stringify(this.data);
 
         try {
-            await asyncSaveFile(this.fileName, json);
+            await asyncWriteFile(this.fileName, json);
             console.log(this.name + " saved!");
         } catch (err) {
             console.log(err);
@@ -394,35 +393,6 @@ class GroupDatabase extends Database {
         }
         this.uploadTask(false);
     };
-}
-
-// readfile
-const asyncReadFile = function (filePath) {
-    return new Promise(function (resolve, reject) {
-        fs.readFile(filePath, function (err, data) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(data);
-            }
-        });
-    });
-}
-// json to file
-const asyncSaveFile = function (filePath, data) {
-    return new Promise(function (resolve, reject) {
-        fs.writeFile(filePath, data, "utf8", function (err, bytesRead, buffer) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve();
-            }
-        });
-    });
-}
-// sleep
-const sleep = function (ms) {
-    return new Promise(resolve => setTimeout(resolve, ms))
 }
 
 var groupDatabase = new GroupDatabase("GroupDatabase");
