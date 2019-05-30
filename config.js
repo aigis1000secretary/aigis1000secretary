@@ -1,23 +1,14 @@
 
 // todo
 /*
+    webhook backup to file
+    stream backup to file
+    local file test
 */
 
 // commit
 /*
-    0.7.1.0
-    retweet Image
-    tweet object add media
-    auto retweet image
-
-    0.7.1.1
-    line push function fixed
-    
-    0.7.1.2
-    retweet image function call fixed
-    
-    0.7.1.3
-    update Log Target fixed
+    stream log switch
 */
 
 const config = {
