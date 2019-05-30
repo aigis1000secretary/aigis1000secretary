@@ -232,7 +232,7 @@ const twitterCore = {
                 stream.on('data', function (tweet) {
                     console.log("stream.on = data")
 
-                    this.getStreamData(tweet, callback);
+                    twitterCore.stream.getStreamData(tweet, callback);
                 });
 
                 // エラー時は再接続を試みた方がいいかもしれません(未検証)
@@ -241,7 +241,7 @@ const twitterCore = {
                     line.botPushLog(JSON.stringify(rawData, null, 4));
 
                     let tweet = rawData.source;
-                    this.getStreamData(tweet, callback);
+                    twitterCore.stream.getStreamData(tweet, callback);
                 });
 
                 // 接続が切れた際の再接続
