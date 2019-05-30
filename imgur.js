@@ -404,15 +404,3 @@ var imgur = {
 imgur.account.images
 imgur.image.imageUpload = function(_imgPath, _tags)
 //*/
-
-const asyncReadFile = function (filePath) {
-	return new Promise(function (resolve, reject) {
-		fs.readFile(filePath, function (err, data) {
-			if (err) {
-				reject(err);
-			} else {
-				resolve(data);
-			}
-		});
-	});
-}
