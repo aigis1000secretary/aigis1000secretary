@@ -1,7 +1,7 @@
 
 
 // ライブラリ読み込み
-var Twitter = require('twitter');
+let Twitter = require('twitter');
 const request = require("request");
 const crypto = require('crypto');
 const line = require("./line.js");
@@ -12,22 +12,11 @@ const config = require("./config.js");
 const twitter_oauth = {
     consumer_key: config.twitterCfg.TWITTER_CONSUMER_KEY.trim(),
     consumer_secret: config.twitterCfg.TWITTER_CONSUMER_SECRET.trim(),
-    token: config.twitterCfg.TWITTER_ACCESS_TOKEN.trim(),
-    token_secret: config.twitterCfg.TWITTER_ACCESS_TOKEN_SECRET.trim()
+    access_token_key: config.twitterCfg.TWITTER_ACCESS_TOKEN.trim(),
+    access_token_secret: config.twitterCfg.TWITTER_ACCESS_TOKEN_SECRET.trim()
 }
-const bot = new Twitter({ // Twitterオブジェクトの作成
-    consumer_key: twitter_oauth.consumer_key,
-    consumer_secret: twitter_oauth.consumer_secret,
-    access_token_key: twitter_oauth.token,
-    access_token_secret: twitter_oauth.token_secret
-});
-String.prototype.replaceAll = function (s1, s2) {
-    var source = this;
-    while ((temp = source.replace(s1, s2)) != source) {
-        source = temp;
-    }
-    return source.toString();
-}
+const bot = new Twitter(twitter_oauth);
+// Twitterオブジェクトの作成
 
 const twitterCore = {
     // webhook crc
@@ -44,7 +33,6 @@ const twitterCore = {
                 form: { url: config.twitterCfg.webhookUrl }
             }, (error, response, body) => { console.log(body) });
         },
-
 
 
         crcPostSubscriptions() {
@@ -73,7 +61,6 @@ const twitterCore = {
         },
 
 
-
         crcSubsc() {
             console.log("crcSubsc");
             // Subscribes an application to an account"s events
@@ -84,7 +71,6 @@ const twitterCore = {
             };
             request.post(request_options, (error, response, body) => { console.log(`${response.statusCode} ${response.statusMessage}`); console.log(body) });
         },
-
         crcGetList() {
             console.log("crcGetList");
             // Returns all webhook URLs and their statuses
@@ -97,7 +83,6 @@ const twitterCore = {
             };
             request.get(request_options, (error, response, body) => { console.log(body) });
         },
-
         crcPutHook() {
             console.log("crcPutHook");
             // Manually triggers a challenge response check
@@ -111,7 +96,6 @@ const twitterCore = {
             };
             request.put(request_options, (error, response, body) => { console.log(body) });
         },
-
         crcGetSubsc() {
             console.log("crcGetSubsc");
             // Check to see if a webhook is subscribed to an account
@@ -123,7 +107,6 @@ const twitterCore = {
             };
             request.get(request_options, (error, response, body) => { console.log(`${response.statusCode} ${response.statusMessage} ( 204ならok)`); console.log(body) });
         },
-
         crcCount() {
             console.log("crcCount");
             // Returns a count of currently active subscriptions
@@ -136,7 +119,6 @@ const twitterCore = {
             };
             request.get(request_options, (error, response, body) => { console.log(body) });
         },
-
         crcList() {
             console.log("crcList");
             // Returns a list of currently active subscriptions
@@ -149,7 +131,6 @@ const twitterCore = {
             };
             request.get(request_options, (error, response, body) => { console.log(`${response.statusCode} ${response.statusMessage}`); console.log(body) });
         },
-
         crcDel() {
             console.log("crcDel");
             // Deletes the webhook
@@ -161,7 +142,6 @@ const twitterCore = {
             };
             request.delete(request_options, (error, response, body) => { console.log(`${response.statusCode} ${response.statusMessage}`); console.log(body) });
         },
-
         crcDes() {
             console.log("crcDes");
             // Deactivates subscription
@@ -189,7 +169,7 @@ const twitterCore = {
             // getでchallenge response check (CRC)が来るのでその対応
             const crc_token = request.query.crc_token
             if (crc_token) {
-                const hash = crypto.createHmac('sha256', token_secret.consumer_secret).update(crc_token).digest('base64')
+                const hash = crypto.createHmac('sha256', twitter_oauth.consumer_secret).update(crc_token).digest('base64')
                 console.log(`receive crc check. token=${crc_token} responce=${hash}`);
                 response.status(200);
                 response.send({
@@ -201,10 +181,18 @@ const twitterCore = {
             }
         },
         post: function (request, response) {
-            //console.log(JSON.stringify(request.body, null, 4));
-            if (request.body) {
-                var binary = new Buffer.from(JSON.stringify(request.body, null, 4));
-                dbox.fileUpload("webhook/" + new Date(Date.now()).toLocaleString().replaceAll(":", "_") + ".json", binary, "add").catch(function (error) { });
+            if (config.switchVar.logRequestToFile) {
+                let path = "twitter_webhook_post/" +
+                    dateNow.getFullYear() + "-" +
+                    (dateNow.getMonth() + 1) + "-" +
+                    dateNow.getDate() + "-" +
+                    dateNow.getHours() +
+                    dateNow.getMinutes() +
+                    dateNow.getSeconds() +
+                    dateNow.getMilliseconds();
+                let data = new Buffer.from(JSON.stringify(request.body, null, 4));
+
+                dbox.fileUpload("webhook/" + path + ".json", data, "add").catch(function (error) { });
             }
             response.send("200 OK");
         }
@@ -218,7 +206,7 @@ const twitterCore = {
                     function (error, tweets, response) {
                         if (!error) {
                             // 取得したtweet情報よりユーザ固有IDを文字列形式で取得
-                            var user_id = tweets[0].user.id_str;
+                            let user_id = tweets[0].user.id_str;
                             // 取得したユーザIDよりストリーミングで使用するオプションを定義
                             resolve(user_id);
                         } else {
@@ -244,17 +232,27 @@ const twitterCore = {
                 stream.on('data', function (tweet) {
                     console.log("stream.on = data")
 
-                    // RTと自分のツイートは除外
-                    if (tweet && tweet.user && !tweet.retweeted_status) {
+                    this.getStreamData(tweet, callback);
+                });
 
-                        // 送信する情報を定義
-                        var tweet_data = twitterCore.stream.getTweetData(tweet);
+                // エラー時は再接続を試みた方がいいかもしれません(未検証)
+                stream.on('error', function (rawData) {
+                    line.botPushLog("stream.on = error\ngetTweetData: ");
+                    line.botPushLog(JSON.stringify(rawData, null, 4));
 
-                        // 送信
-                        if (tweet_data.text && tweet_data.screen_name == target) {
-                            callback(tweet_data);
-                        }
-                    }
+                    let tweet = rawData.source;
+                    this.getStreamData(tweet, callback);
+                });
+
+                // 接続が切れた際の再接続
+                stream.on('end', function (tweet) {
+                    stream.destroy();
+                    // console.log(target + 'のツイートを取得終了。');
+                    line.botPushLog(target + 'のツイートを取得終了。');
+
+                    setTimeout(function () {
+                        twitterCore.stream.litsen(target, user_id, callback);
+                    }, 10 * 1000);
                 });
 
                 // // 接続開始時にはフォロワー情報が流れます
@@ -264,40 +262,38 @@ const twitterCore = {
                 // // 位置情報の削除やふぁぼられといったeventはここに流れます
                 // stream.on('event', function (tweet) { console.log(JSON.stringify(tweet)); });
 
-                // エラー時は再接続を試みた方がいいかもしれません(未検証)
-                stream.on('error', function (rawData) {
-                    line.botPushLog("stream.on = error\ngetTweetData: ");
-                    line.botPushLog(JSON.stringify(rawData, null, 4));
-                    var tweet = rawData.source;
-
-                    // RTと自分のツイートは除外
-                    if (tweet && tweet.user && !tweet.retweeted_status) {
-
-                        // 送信する情報を定義
-                        var tweet_data = twitterCore.stream.getTweetData(tweet);
-
-                        // 送信
-                        if (tweet_data.text && tweet_data.screen_name == target) {
-                            callback(tweet_data);
-                        }
-                    }
-                });
-
-                stream.on('end', function (tweet) {  // 接続が切れた際の再接続
-                    stream.destroy();
-                    // console.log(target + 'のツイートを取得終了。');
-                    line.botPushLog(target + 'のツイートを取得終了。');
-
-                    setTimeout(function () {
-                        twitterCore.stream.litsen(target, user_id, callback);
-                    }, 10 * 1000);
-                });
             });
+        },
+
+        getStreamData: function (tweet, callback) {
+            // RTと自分のツイートは除外
+            if (tweet && tweet.user && !tweet.retweeted_status) {
+
+                // 送信する情報を定義
+                let tweet_data = twitterCore.stream.getTweetData(tweet);
+
+                // 送信
+                if (tweet_data.text && tweet_data.screen_name == target) {
+                    callback(tweet_data);
+                }
+            }
+            if (config.switchVar.logStreamToFile) {
+                let dateString =
+                    dateNow.getFullYear() + "-" +
+                    (dateNow.getMonth() + 1) + "-" +
+                    dateNow.getDate() + "-" +
+                    dateNow.getHours() +
+                    dateNow.getMinutes() +
+                    dateNow.getSeconds() +
+                    dateNow.getMilliseconds();
+
+                dbox.fileUpload("stream/" + dateString + ".json", binary, "add").catch(function (error) { });
+            }
         },
 
         getTweetData: function (tweet) {
             // console.log("@@getTweetData: " + JSON.stringify(tweet, null, 4))
-            var tweet_data = {};
+            let tweet_data = {};
 
             if (tweet.user.name) tweet_data.name = tweet.user.name;
             if (tweet.user.screen_name) tweet_data.screen_name = tweet.user.screen_name;
@@ -314,7 +310,7 @@ const twitterCore = {
             if (tweet.extended_entities && tweet.extended_entities.media) {
                 for (let i in tweet.extended_entities.media) {
                     let media = tweet.extended_entities.media[i];
-                    
+
                     if (media.type != "photo") continue;
 
                     tweet_data.media.push({
@@ -328,8 +324,10 @@ const twitterCore = {
 
             return tweet_data;
         },
-    }
+    },
 
+    // autoTest: async function () {
+    // }
 }
 //twitterCore.stream.litsen("Aigis1000", function () { });
 module.exports = twitterCore;
@@ -337,6 +335,44 @@ module.exports = twitterCore;
 // twitterCore.stream.litsen("z1022001", "", function (tweet_data) {
 //     console.log(JSON.stringify(tweet_data, null, 4));
 // });
+
+
+/*
+searchTweet('『冥闇の剣士アンブレ』が登場！');
+function searchTweet(queryArg, nextResultsMaxIdArg = null) {
+    bot.get('search/tweets', { q: queryArg, count: 100, max_id: nextResultsMaxIdArg }, (error, searchData, response) => {
+        for (item in searchData.statuses) {
+            let tweet = searchData.statuses[item];
+            // console.log('@' + tweet.user.screen_name + ' : ' + tweet.text); //実際に使う場合はここでファイルへ書き出しなどといった処理を行うことになると思います
+
+            // if (!tweet.retweeted_status) {
+            if (tweet.user.screen_name == "Aigis1000") {
+                console.log('@' + tweet.user.screen_name + '\n >>' + tweet.text); //実際に使う場合はここでファイルへ書き出しなどといった処理を行うことになると思います
+                console.log(JSON.stringify(tweet, null, 4));
+            }
+        }
+
+        if (searchData.search_metadata == undefined) {
+            console.log('---- Complete (no metadata) ----');
+            return 0;
+        }
+        else if (searchData.search_metadata.next_results) {
+            let maxId = searchData.search_metadata.next_results.match(/\?max_id=(\d*)/);
+
+            if (maxId[1] == null) {
+                return 0;
+            }
+
+            console.log('---- next:' + maxId[1] + ' ----');
+            searchTweet(queryArg, maxId[1]);
+        }
+        else {
+            console.log('---- Complete ----');
+            return 0;
+        }
+    });
+}//*/
+
 
 /*
 const httpTwitterAPI = function () {
@@ -350,7 +386,7 @@ const httpTwitterAPI = function () {
             return null;
         }
 
-        var html = iconv.decode(new Buffer(body, "binary"), "UTF-8"); // EUC-JP to utf8 // Shift_JIS EUC-JP
+        let html = iconv.decode(new Buffer(body, "binary"), "UTF-8"); // EUC-JP to utf8 // Shift_JIS EUC-JP
         let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
 
         // remove all hashtag

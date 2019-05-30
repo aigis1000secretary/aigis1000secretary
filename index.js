@@ -21,6 +21,20 @@ const lineBotOn = function () {
 
 	// wellcome msg
 	line.bot.on("memberJoined", async function (event) {
+		if (config.switchVar.logRequestToFile) {
+			let path = "line_bot_on_memberJoined/" +
+				dateNow.getFullYear() + "-" +
+				(dateNow.getMonth() + 1) + "-" +
+				dateNow.getDate() + "-" +
+				dateNow.getHours() +
+				dateNow.getMinutes() +
+				dateNow.getSeconds() +
+				dateNow.getMilliseconds();
+			let data = new Buffer.from(JSON.stringify(event, null, 4));
+
+			dbox.fileUpload("webhook/" + path + ".json", data, "add").catch(function (error) { });
+		}
+
 		// anna.debugLog(event);
 		let userId = !event.source.userId ? config.adminstrator : event.source.userId;	// Line API bug?
 		let sourceId =
@@ -35,11 +49,23 @@ const lineBotOn = function () {
 		anna.debugLog(result);
 		line.bot.push(sourceId, result);
 		return true;
-
 	});// */
 
 	// normal msg
 	line.bot.on("message", async function (event) {
+		if (config.switchVar.logRequestToFile) {
+			let path = "line_bot_on_message/" +
+				dateNow.getFullYear() + "-" +
+				(dateNow.getMonth() + 1) + "-" +
+				dateNow.getDate() + "-" +
+				dateNow.getHours() +
+				dateNow.getMinutes() +
+				dateNow.getSeconds() +
+				dateNow.getMilliseconds();
+			let data = new Buffer.from(JSON.stringify(event, null, 4));
+
+			dbox.fileUpload("webhook/" + path + ".json", data, "add").catch(function (error) { });
+		}
 		// anna.debugLog(event);
 
 		// 文字事件
@@ -188,9 +214,6 @@ const twitterBotOn = function () {
 	}
 }
 
-const sleep = function (ms) {
-	return new Promise(resolve => setTimeout(resolve, ms))
-}
 const timerBotOn = function () {
 
 	var timer = async function () {
@@ -222,10 +245,10 @@ const main = async function () {
 	express.init();
 
 	// 讀取資料
-	let pArray = [];
-	pArray.push(anna.init());
-	pArray.push(imgur.init());
-	await Promise.all(pArray);
+	await Promise.all([
+		anna.init(),
+		imgur.init()
+	]);
 
 	// 開始監聽
 	await groupDatabase.init();
@@ -247,10 +270,6 @@ const debugFunc = async function () {
 	var replyFunc = function (str) { console.log(">>" + str + "<<"); return str != "" && str && str != "undefined" };
 	config.switchVar.debug = true;
 
-}
-// sleep
-const sleep = function (ms) {
-	return new Promise(resolve => setTimeout(resolve, ms))
 }
 
 

@@ -1,27 +1,29 @@
-
+﻿
 // todo
 /*
 */
 
 // commit
 /*
-    0.7.1.0
-    retweet Image
-    tweet object add media
-    auto retweet image
+    >> feature/imageUploadScript
+    image upload script fixed
+    upload images add album data
+    imgur API v2
+    image.js rebuilding
+    move prototype function
 
-    0.7.1.1
-    line push function fixed
-    
-    0.7.1.2
-    retweet image function call fixed
-    
-    0.7.1.3
-    update Log Target fixed
+    >>feature/twitterConfig
+    twitter oauth rebuild done
+
+    >> feature/localWebhookTest
+    stream log switch done
+    webhook backup to file done
+    stream backup to file done
+    move prototype function
 */
 
 const config = {
-    _version: "0.7.1.3",
+    _version: "0.7.2.0",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
@@ -50,7 +52,7 @@ const config = {
         // check REFRESH_TOKEN var from url
         IMGUR_REFRESH_TOKEN: process.env.IMGUR_REFRESH_TOKEN
     },
-    
+
     // line
     devbot: {
         // https://developers.line.biz/console/channel/1612493892/basic/
@@ -75,8 +77,8 @@ const config = {
     switchVar: {
         debug: false,
         debugPush: false,
-        logRequestToFile: false,
-        logStreamToFile: true
+        logRequestToFile: process.env.LOG_REQUEST_TO_FILE,
+        logStreamToFile: process.env.LOG_STREAM_TO_FILE
     }
 };
 
@@ -98,4 +100,46 @@ setTimeout(async function () {
     });
 }, 1);
 
+String.prototype.replaceAll = function (s1, s2) {
+    let source = this;
+    while ((temp = source.replace(s1, s2)) != source) {
+        source = temp;
+    }
+    return source.toString();
+}
+String.prototype.equali = function (s1) {
+    let source = this;
+    if (!s1) s1 = "";
+    return (source.toUpperCase() == s1.toUpperCase());
+}
 
+// sleep
+global.sleep = function (ms) {
+    return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+const fs = require("fs");
+global.asyncReadFile = function (filePath) {
+    return new Promise(function (resolve, reject) {
+        fs.readFile(filePath, function (err, data) {
+            if (err) {
+                console.log(err);
+                reject(err);
+            } else {
+                console.log(data);
+                resolve(data);
+            }
+        });
+    });
+}
+global.asyncWriteFile = function (filePath, data, options = "utf8") {
+    return new Promise(function (resolve, reject) {
+        fs.writeFile(filePath, data, options, function (err, bytesRead, buffer) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+    });
+};

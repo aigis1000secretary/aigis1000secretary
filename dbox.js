@@ -1,5 +1,4 @@
 const fetch = require('isomorphic-fetch');
-const fs = require("fs");
 const Dropbox = require('dropbox').Dropbox;
 const config = require("./config.js");
 const dbox = new Dropbox({
@@ -54,7 +53,7 @@ var dboxCore = {
 
 		try {
 			let response = await dbox.filesDownload({ path: root + dirPath })
-			await asyncSaveFile(localPath, response.fileBinary, "Binary");
+			await asyncWriteFile(localPath, response.fileBinary, "Binary");
 
 		} catch (error) {
 			//console.log(error);
@@ -117,22 +116,6 @@ var dboxCore = {
 	},
 
 }; module.exports = dboxCore
-
-// json to file
-const asyncSaveFile = function (filePath, data, options) {
-	if (!options) options = "utf8";
-	return new Promise(function (resolve, reject) {
-		fs.writeFile(filePath, data, options, function (err, bytesRead, buffer) {
-			if (err) {
-				reject(err);
-			} else {
-				resolve("");
-			}
-		});
-	});
-};
-
-
 
 
 /*
