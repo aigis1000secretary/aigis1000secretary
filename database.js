@@ -258,13 +258,13 @@ class CharaDatabase extends Database {
     };
 
     addData(newData) {
-        if (newData.name == "") return;
+        if (newData.name == "") return "";
         // debugLog("New character <" + newData.name + "> data add...");
 
         if (this.indexOf(newData.name) == -1) {
             this.data.push(newData);
             console.log("New character <" + newData.name + "> data add complete!");
-            botPush(config.debugLogger, "anna " + newData.name + " New character data add complete!");
+            return "anna " + newData.name + " New character data add complete!";
 
         } else {
             let i = this.indexOf(newData.name);
@@ -298,9 +298,10 @@ class CharaDatabase extends Database {
 
             if (changed) {
                 console.log("New character <" + newData.name + "> data update complete!");
-                botPush(config.debugLogger, "anna " + newData.name + " New character data update complete!");
+                return "anna " + newData.name + " New character data update complete!";
             } else {
                 console.log("Character <" + newData.name + "> data is existed!");
+                return "";
             }
         };
     };
@@ -317,7 +318,7 @@ class NickDatabase extends Database {
     };
 
     addData(name, nick) {
-        if (name == "" || nick == "") return;
+        if (name == "" || nick == "") return "";
 
         if (this.indexOf(nick) == -1) {
             var newData = this.newData();
@@ -340,16 +341,18 @@ class ClassDatabase extends Database {
     };
 
     addData(newClass) {
-        if (newClass.name == "") return;
+        if (newClass.name == "") return "";
         // console.log("New <" + newClass.name + "> Class data add...");
 
         if (this.indexOf(newClass.name) == -1) {
             this.data.push(newClass);
             console.log("New Class <" + newClass.name + "> add complete!");
             botPushLog("New Class <" + newClass.name + "> add complete!");
+            return "New Class <" + newClass.name + "> add complete!";
 
         } else {
             console.log("Class <" + newClass.name + "> is existed!");
+            return "";
         }
     };
 }
@@ -372,7 +375,7 @@ class GroupDatabase extends Database {
     };
 
     addData(groupId, text, timestamp) {
-        if (groupId == "" || text == "" || timestamp == "") return;
+        if (groupId == "" || text == "" || timestamp == "") return "";
 
         if (this.indexOf(groupId) == -1) {
             var newData = this.newData();
@@ -386,12 +389,14 @@ class GroupDatabase extends Database {
             this.data.sort(function (A, B) {
                 return A.name.localeCompare(B.name)
             })
+
         } else {
             let i = this.indexOf(groupId);
             this.data[i].text = text;
             this.data[i].timestamp = timestamp;
         }
         this.uploadTask(false);
+        return "";
     };
 }
 

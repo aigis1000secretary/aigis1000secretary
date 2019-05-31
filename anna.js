@@ -460,7 +460,7 @@ const replyStamp = function (msg) {
 
 // 爬蟲
 // 爬蟲函數
-const charaDataCrawler = function (urlPath) {
+const charaDataCrawler = function (urlPath, sourceId) {
 	return new Promise(function (resolve, reject) {
 		// callback
 		let requestCallBack = function (error, response, body) {
@@ -683,7 +683,10 @@ const charaDataCrawler = function (urlPath) {
 			});
 			// debugLog(newData);
 			// 新增角色資料
-			charaDatabase.addData(newData);
+			let msg = charaDatabase.addData(newData);
+			if (msg != "") {
+				botPush(sourceId, msg);
+			}			
 			resolve();
 		}
 		request.get(urlPath, { encoding: "binary" }, requestCallBack);
@@ -725,7 +728,7 @@ const allCharaDataCrawler = function (sourceId) {
 			// 50 thread
 			for (let i = 0; i < 50; i++) {
 				if (allCharaUrl.length > 0) {
-					promiseArray.push(charaDataCrawler(allCharaUrl.pop()));
+					promiseArray.push(charaDataCrawler(allCharaUrl.pop(), sourceId));
 				}
 			}
 			await Promise.all(promiseArray);
