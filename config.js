@@ -36,10 +36,13 @@
 
     0.7.2.5
     update log target fixed
+    
+    0.7.2.6
+    log file path fixed
 */
 
 const config = {
-    _version: "0.7.2.5",
+    _version: "0.7.2.6",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
