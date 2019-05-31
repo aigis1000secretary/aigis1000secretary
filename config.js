@@ -1,35 +1,11 @@
-
+﻿
 // todo
 /*
 */
 
 // commit
 /*
-    0.7.2.0
-    >> feature/imageUploadScript
-    image upload script fixed
-    upload images add album data
-    imgur API v2
-    image.js rebuilding
-    move prototype function
-
-    >>feature/twitterConfig
-    twitter oauth rebuild done
-
-    >> feature/localWebhookTest
-    stream log switch done
-    webhook backup to file done
-    stream backup to file done
-    move prototype function
-    
-    0.7.2.1
-    log file message off
-
-    0.7.2.2
-    image upload  Script fixed
-
-    0.7.2.3
-    twitterCore.stream.getStreamData function fixed;
+    >> feature/imgurImageTitle
 */
 
 const config = {
@@ -120,7 +96,7 @@ String.prototype.replaceAll = function (s1, s2) {
 String.prototype.equali = function (s1) {
     let source = this;
     if (!s1) s1 = "";
-    return (source.toUpperCase() == s1.toUpperCase());
+    return (source.toUpperCase().trim() == s1.toUpperCase().trim());
 }
 
 // sleep
@@ -142,12 +118,29 @@ global.asyncReadFile = function (filePath) {
 }
 global.asyncWriteFile = function (filePath, data, options = "utf8") {
     return new Promise(function (resolve, reject) {
-        fs.writeFile(filePath, data, options, function (err, bytesRead, buffer) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve();
+        let path = filePath.substring(0, filePath.lastIndexOf("\\"));
+
+        fs.exists(path, function (exists) {
+            if (!exists) {
+
+                fs.mkdir(path, { recursive: true }, function (err) {
+                    if (err) {
+                        reject(err);
+                    } else {
+
+                        fs.writeFile(filePath, data, options, function (err, bytesRead, buffer) {
+                            if (err) {
+                                reject(err);
+                            } else {
+                                resolve();
+                            }
+                        });
+
+                    }
+                });
+
             }
         });
+
     });
 };
