@@ -21,7 +21,8 @@ const lineBotOn = function () {
 
 	// wellcome msg
 	line.bot.on("memberJoined", async function (event) {
-		if (config.switchVar.logRequestToFile) {
+		if (config.switchVar.logRequestToFile && event) {
+			let dateNow = new Date(Date.now());
 			let path = "line_bot_on_memberJoined/" +
 				dateNow.getFullYear() + "-" +
 				(dateNow.getMonth() + 1) + "-" +
@@ -53,7 +54,8 @@ const lineBotOn = function () {
 
 	// normal msg
 	line.bot.on("message", async function (event) {
-		if (config.switchVar.logRequestToFile) {
+		if (config.switchVar.logRequestToFile && event) {
+			let dateNow = new Date(Date.now());
 			let path = "line_bot_on_message/" +
 				dateNow.getFullYear() + "-" +
 				(dateNow.getMonth() + 1) + "-" +
