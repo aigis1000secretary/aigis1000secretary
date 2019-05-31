@@ -181,7 +181,8 @@ const twitterCore = {
             }
         },
         post: function (request, response) {
-            if (config.switchVar.logRequestToFile) {
+            if (config.switchVar.logRequestToFile && request.body) {
+                let dateNow = new Date(Date.now());
                 let path = "twitter_webhook_post/" +
                     dateNow.getFullYear() + "-" +
                     (dateNow.getMonth() + 1) + "-" +
@@ -232,7 +233,7 @@ const twitterCore = {
                 stream.on('data', function (tweet) {
                     console.log("stream.on = data")
 
-                    twitterCore.stream.getStreamData(tweet, callback);
+                    twitterCore.stream.getStreamData(tweet, target, callback);
                 });
 
                 // エラー時は再接続を試みた方がいいかもしれません(未検証)
@@ -241,7 +242,7 @@ const twitterCore = {
                     line.botPushLog(JSON.stringify(rawData, null, 4));
 
                     let tweet = rawData.source;
-                    twitterCore.stream.getStreamData(tweet, callback);
+                    twitterCore.stream.getStreamData(tweet, target, callback);
                 });
 
                 // 接続が切れた際の再接続
@@ -265,7 +266,7 @@ const twitterCore = {
             });
         },
 
-        getStreamData: function (tweet, callback) {
+        getStreamData: function (tweet, target, callback) {
             // RTと自分のツイートは除外
             if (tweet && tweet.user && !tweet.retweeted_status) {
 
@@ -277,7 +278,8 @@ const twitterCore = {
                     callback(tweet_data);
                 }
             }
-            if (config.switchVar.logStreamToFile) {
+            if (config.switchVar.logStreamToFile && tweet) {
+                let dateNow = new Date(Date.now());
                 let dateString =
                     dateNow.getFullYear() + "-" +
                     (dateNow.getMonth() + 1) + "-" +
@@ -286,8 +288,9 @@ const twitterCore = {
                     dateNow.getMinutes() +
                     dateNow.getSeconds() +
                     dateNow.getMilliseconds();
+                let data = new Buffer.from(JSON.stringify(tweet, null, 4));
 
-                dbox.fileUpload("stream/" + dateString + ".json", binary, "add").catch(function (error) { });
+                dbox.fileUpload("stream/" + dateString + ".json", data, "add").catch(function (error) { });
             }
         },
 
