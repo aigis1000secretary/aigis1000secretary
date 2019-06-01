@@ -5,40 +5,7 @@
 
 // commit
 /*
-    0.7.2.0
-    >> feature/imageUploadScript
-    image upload script fixed
-    upload images add album data
-    imgur API v2
-    image.js rebuilding
-    move prototype function
-
-    >>feature/twitterConfig
-    twitter oauth rebuild done
-
-    >> feature/localWebhookTest
-    stream log switch done
-    webhook backup to file done
-    stream backup to file done
-    move prototype function
-    
-    0.7.2.1
-    log file message off
-
-    0.7.2.2
-    image upload Script fixed
-
-    0.7.2.3
-    twitterCore.stream.getStreamData function fixed;
-
-    0.7.2.4
-    stamp tag search fixed
-
-    0.7.2.5
-    update log target fixed
-    
-    0.7.2.6
-    log file path fixed
+    >> feature/searchCharacter
 */
 
 const config = {
