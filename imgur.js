@@ -259,9 +259,9 @@ let imgurCore = {
                         formData: {
                             image: imageBinary, // A binary file, base64 data, or a URL for an image. (up to 10MB)
                             album: albumHash,
-                            title: md5f(imageBinary),
+                            title: tagList,
                             name: fileName,
-                            description: tagList //description: _tags // defult: folder name, manual add for auto response key word
+                            description: md5f(imageBinary)
                         }
                     };
                     // let data = (await imgurCore._apiRequest(options)).data;
@@ -296,8 +296,8 @@ let imgurCore = {
                     console.log("POST Update Image(" + imageHash + ") Information <" + tagList + ">, <" + md5 + ">");
                     // Set the POST body
                     let postBody = {};
-                    if (md5) postBody.title = md5;
-                    if (tagList) postBody.description = tagList;
+                    if (md5) postBody.description = md5;
+                    if (tagList) postBody.title = tagList;
                     // Configure the request
                     let options = {
                         url: IMGUR_API_URL + "image/" + imageHash,
@@ -501,19 +501,19 @@ let imgurCore = {
         },
         findImageData(filter = { id, md5, fileName, tag }) {
             return this.images.filter(function (image) {
-                let result = true;
+                let result = !!((filter.id) || (filter.md5) || (filter.fileName) || (filter.tag));
                 if (filter.id) {
                     result = result && (filter.id == image.id);
                 }
                 if (filter.md5) {
-                    result = result && (filter.md5.equali(image.md5) || filter.md5.equali(image.tagList.split(",")[0]));
+                    result = result && (filter.md5.equali(image.md5));
                 }
                 if (filter.fileName) {
                     result = result && filter.fileName.equali(image.fileName);
                 }
                 if (filter.tag) {
                     result = result && (
-                        image.tagList.toUpperCase().split(",").indexOf(
+                        image.tagList.toUpperCase().trim().split(",").indexOf(
                             filter.tag.toUpperCase().trim()
                         ) != -1);
                 }
@@ -522,19 +522,19 @@ let imgurCore = {
         },
         deleteImageData(filter = { id, md5, fileName, tag }) {
             this.images = this.images.filter(function (image) {
-                let result = true;
+                let result = !!((filter.id) || (filter.md5) || (filter.fileName) || (filter.tag));
                 if (filter.id) {
                     result = result && (filter.id == image.id);
                 }
                 if (filter.md5) {
-                    result = result && (filter.md5.equali(image.md5) || filter.md5.equali(image.tagList.split(",")[0]));
+                    result = result && (filter.md5.equali(image.md5));
                 }
                 if (filter.fileName) {
                     result = result && filter.fileName.equali(image.fileName);
                 }
                 if (filter.tag) {
                     result = result && (
-                        image.tagList.toUpperCase().indexOf(
+                        image.tagList.toUpperCase().trim().split(",").indexOf(
                             filter.tag.toUpperCase().trim()
                         ) != -1);
                 }
@@ -559,7 +559,7 @@ let imgurCore = {
         },
         findAlbumData(filter = { id, title }) {
             return this.albums.filter(function (album) {
-                let result = true;
+                let result = !!((filter.id) || (filter.title));
                 for (let key in filter) {
                     result &= (album[key] == filter[key]);
                 }
@@ -568,7 +568,7 @@ let imgurCore = {
         },
         deleteAlbum(filter = { id, title }) {
             this.albums = this.albums.filter(function (album) {
-                let result = true;
+                let result = !!((filter.id) || (filter.title));
                 for (let key in filter) {
                     result &= (album[key] == filter[key]);
                 }
@@ -679,8 +679,8 @@ class Image {
     };
     _constructor({ id, title, description, name, link }) {
         this.fileName = name;
-        this.md5 = title;
-        this.tagList = (description) ? description : "";
+        this.md5 = (description) ? description : "";;
+        this.tagList = (title) ? title : "";
         this.id = id; // imageHash
         this.imageLink = link;
         this.thumbnailLink = (link) ? link.replace(this.id, this.id + "m") : "";
@@ -735,20 +735,20 @@ class Album {
     }
     findImage(filter = { id, md5, fileName, tags }) {
         return this.images.filter(function (image) {
-            let result = true;
+            let result = !!((filter.id) || (filter.md5) || (filter.fileName) || (filter.tag));
             if (filter.id) {
                 result = result && (filter.id == image.id);
             }
             if (filter.md5) {
-                result = result && (filter.md5.equali(image.md5) || filter.md5.equali(image.tags[0]));
+                result = result && (filter.md5.equali(image.md5));
             }
             if (filter.fileName) {
                 result = result && filter.fileName.equali(image.fileName);
             }
-            if (filter.tags) {
+            if (filter.tag) {
                 result = result && (
-                    image.tags.toUpperCase().indexOf(
-                        filter.tags[0].toUpperCase().trim()
+                    image.tagList.toUpperCase().trim().split(",").indexOf(
+                        filter.tag.toUpperCase().trim()
                     ) != -1);
             }
             return result;

@@ -1,48 +1,22 @@
 ﻿
 // todo
 /*
+    wait check tweet stream log file
 */
 
 // commit
 /*
-    0.7.2.0
-    >> feature/imageUploadScript
-    image upload script fixed
-    upload images add album data
-    imgur API v2
-    image.js rebuilding
-    move prototype function
-
-    >>feature/twitterConfig
-    twitter oauth rebuild done
-
-    >> feature/localWebhookTest
-    stream log switch done
-    webhook backup to file done
-    stream backup to file done
-    move prototype function
-    
-    0.7.2.1
-    log file message off
-
-    0.7.2.2
-    image upload Script fixed
-
-    0.7.2.3
-    twitterCore.stream.getStreamData function fixed;
-
-    0.7.2.4
-    stamp tag search fixed
-
-    0.7.2.5
-    update log target fixed
-    
-    0.7.2.6
-    log file path fixed
+    >> feature/searchCharacter
+    search character function fixed
+    >> feature/tweetExtendedMedia
+    retweet image function update done
+    >> feature/imgurImageTitle
+    imgur api update done
+    image upload script update done
 */
 
 const config = {
-    _version: "0.7.2.6",
+    _version: "0.7.3.0",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
@@ -129,7 +103,7 @@ String.prototype.replaceAll = function (s1, s2) {
 String.prototype.equali = function (s1) {
     let source = this;
     if (!s1) s1 = "";
-    return (source.toUpperCase() == s1.toUpperCase());
+    return (source.toUpperCase().trim() == s1.toUpperCase().trim());
 }
 
 // sleep
@@ -151,12 +125,38 @@ global.asyncReadFile = function (filePath) {
 }
 global.asyncWriteFile = function (filePath, data, options = "utf8") {
     return new Promise(function (resolve, reject) {
-        fs.writeFile(filePath, data, options, function (err, bytesRead, buffer) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve();
+        try {
+            let path = filePath.substring(0, filePath.lastIndexOf("\\"));
+
+            if (!fs.existsSync(path)) {
+                fs.mkdirSync(path, { recursive: true });
             }
-        });
+
+            // fs.writeFileSync(filePath, data, options);
+            // resolve();
+            fs.writeFile(filePath, data, options, function (err, bytesRead, buffer) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+
+        } catch (err) {
+            reject(err);
+        }
     });
 };
+
+
+
+
+
+
+
+
+
+
+
+
+

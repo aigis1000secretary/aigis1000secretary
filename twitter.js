@@ -185,12 +185,12 @@ const twitterCore = {
                 let dateNow = new Date(Date.now());
                 let path = "twitter_webhook_post/" +
                     dateNow.getFullYear() + "-" +
-                    (dateNow.getMonth() + 1) + "-" +
-                    dateNow.getDate() + "-" +
-                    dateNow.getHours() +
-                    dateNow.getMinutes() +
-                    dateNow.getSeconds() +
-                    dateNow.getMilliseconds();
+                    ((dateNow.getMonth() + 1) + "-").padStart(3, "0") +
+                    (dateNow.getDate() + "-").padStart(3, "0") +
+                    (dateNow.getHours() + "").padStart(2, "0") +
+                    (dateNow.getMinutes() + "").padStart(2, "0") +
+                    (dateNow.getSeconds() + "").padStart(2, "0") +
+                    (dateNow.getMilliseconds() + "").padStart(4, "0");
                 let data = new Buffer.from(JSON.stringify(request.body, null, 4));
 
                 dbox.fileUpload("webhook/" + path + ".json", data, "add").catch(function (error) { });
@@ -277,53 +277,57 @@ const twitterCore = {
                 if (tweet_data.text && tweet_data.screen_name == target) {
                     callback(tweet_data);
                 }
-            }
-            if (config.switchVar.logStreamToFile && tweet) {
-                let dateNow = new Date(Date.now());
-                let dateString =
-                    dateNow.getFullYear() + "-" +
-                    (dateNow.getMonth() + 1) + "-" +
-                    dateNow.getDate() + "-" +
-                    dateNow.getHours() +
-                    dateNow.getMinutes() +
-                    dateNow.getSeconds() +
-                    dateNow.getMilliseconds();
-                let data = new Buffer.from(JSON.stringify(tweet, null, 4));
 
-                dbox.fileUpload("stream/" + dateString + ".json", data, "add").catch(function (error) { });
+                // log
+                if (config.switchVar.logStreamToFile && tweet) {
+                    let dateNow = new Date(Date.now());
+                    let dateString =
+                        dateNow.getFullYear() + "-" +
+                        ((dateNow.getMonth() + 1) + "-").padStart(3, "0") +
+                        (dateNow.getDate() + "-").padStart(3, "0") +
+                        (dateNow.getHours() + "").padStart(2, "0") +
+                        (dateNow.getMinutes() + "").padStart(2, "0") +
+                        (dateNow.getSeconds() + "").padStart(2, "0") +
+                        (dateNow.getMilliseconds() + "").padStart(4, "0");
+
+                    dbox.fileUpload("stream/" + dateString + ".json", binary, "add").catch(function (error) { });
+                }
             }
         },
 
-        getTweetData: function (tweet) {
-            // console.log("@@getTweetData: " + JSON.stringify(tweet, null, 4))
-            let tweet_data = {};
+        getTweetData: function (raw) {
+            let tweet_data = { media: [] };
 
-            if (tweet.user.name) tweet_data.name = tweet.user.name;
-            if (tweet.user.screen_name) tweet_data.screen_name = tweet.user.screen_name;
+            if (raw.extended_tweet) {
+                raw = Object.assign(raw, raw.extended_tweet);
+            }
+            if (!raw.entities) raw.entities = {};
+            if (!raw.extended_entities) raw.extended_entities = {};
+            raw.entities = Object.assign(raw.entities, raw.extended_entities);
 
-            if (tweet.created_at) tweet_data.created_at = tweet.created_at;
-            if (tweet.timestamp_ms) tweet_data.timestamp_ms = tweet.timestamp_ms;
+            // get tweet data
+            tweet_data.name = raw.user.name;
+            tweet_data.screen_name = raw.user.screen_name;
+            tweet_data.created_at = raw.created_at;
+            tweet_data.timestamp_ms = raw.timestamp_ms;
 
-            if (tweet.extended_tweet && tweet.extended_tweet.full_text)
-                tweet_data.text = tweet.extended_tweet.full_text;
-            else if (tweet.text)
-                tweet_data.text = tweet.text;
+            // tweet text
+            tweet_data.text = raw.full_text ? raw.full_text : raw.text;
 
-            tweet_data.media = [];
-            if (tweet.extended_entities && tweet.extended_entities.media) {
-                for (let i in tweet.extended_entities.media) {
-                    let media = tweet.extended_entities.media[i];
+            // tweet media
+            if (raw.entities.media && Array.isArray(raw.entities.media)) {
+                for (let i in raw.entities.media) {
+                    let media = raw.entities.media[i];
 
-                    if (media.type != "photo") continue;
-
-                    tweet_data.media.push({
-                        link: media.media_url_https,
-                        url: media.url  // same with tweet text
-                    });
+                    if (media.type == "photo") {
+                        tweet_data.media.push({
+                            type: media.type,
+                            link: media.media_url_https,
+                            url: media.url  // same with tweet text
+                        });
+                    }
                 }
             }
-
-            if (tweet.geo) tweet_data.geo = tweet.geo;
 
             return tweet_data;
         },

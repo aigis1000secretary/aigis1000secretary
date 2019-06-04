@@ -686,7 +686,7 @@ const charaDataCrawler = function (urlPath, sourceId) {
 			let msg = charaDatabase.addData(newData);
 			if (msg != "") {
 				botPush(sourceId, msg);
-			}			
+			}
 			resolve();
 		}
 		request.get(urlPath, { encoding: "binary" }, requestCallBack);
@@ -907,43 +907,46 @@ const searchCharacter = function (key, accurate) {
 		const metricsA = 8;	// 同字
 		const metricsB = 1;	// 同順
 		const metricsC = 2;	// 連接
-		let j = 0, k = -2, l = -1;
-		let metrics = -15;
-		// array_metrics[(metricsA + metricsB) * key.length] = [];
+		let metrics = -5 * key.length;
 
-		for (let i = 0; j < key.length; j++) {
-			l = obj.name.indexOf(key[j], Math.max(k, 0));
-
-			if (l > -1)	// find key[j] in source
-				metrics += metricsA;
-
-			if (l > k)	// find key[j] after key[j - 1]
-				metrics += metricsB;
-
-			if (l == k + 1)	// find key[j] just after key[j - 1]
-				metrics += metricsC;
-
-			k = l;
-		}
-
-		if (metrics > 0) {
-			// array_metrics.push([i, metrics]);
-			// array_metrics[i] = metrics;
-			// array_metrics[metrics].push(i);
-			if (!array_metrics[metrics]) {
-				array_metrics[metrics] = [charaIndex];
-			} else {
-				array_metrics[metrics].push(charaIndex);
+		let ketMetrics = new Array(key.length);
+		let sourceName = "@" + obj.name;
+		// 逐字搜尋
+		for (let i = 0; i < key.length; i++) {
+			ketMetrics[i] = sourceName.indexOf(key[i]);
+			if (ketMetrics[i] != -1) {
+				sourceName = sourceName.replace(sourceName[ketMetrics[i]], "@");
 			}
+		}
+		// 計算權重
+		for (let i = 0; i < ketMetrics.length; i++) {
+			if (ketMetrics[i] != -1) {
+				metrics += metricsA;	// 同字元
+
+				if (i > 0) {
+					if (ketMetrics[i] > ketMetrics[i - 1]) {
+						metrics += metricsB;	// 字元同順
+					}
+					if (ketMetrics[i] == (ketMetrics[i - 1] + 1)) {
+						metrics += metricsC;	// 同sub字串
+					}
+				}
+			}
+		}
+		// array_metrics[ 權重值 ] = [ 角色index, 角色index ]
+		if (metrics > 0) {
+			if (!array_metrics[metrics]) { array_metrics[metrics] = []; }
+			array_metrics[metrics].push(charaIndex);
 		}
 	}
 
 	// 模糊加權結果
-	var result = [];
+	let result = [];
 	if (array_metrics.length > 0) {
 		// 權值大到小
 		let metricsMax = array_metrics.length - 1;
-		let metricsMin = Math.floor(metricsMax * 0.9);
+		let metricsMin = Math.floor(metricsMax * 0.75);
+		// let metricsMin = 0;
 		debugLog("_metricsMax: <" + metricsMax + ">");
 		debugLog("_metricsMin: <" + metricsMin + ">");
 
@@ -951,7 +954,6 @@ const searchCharacter = function (key, accurate) {
 			if (!array_metrics[charaIndex]) continue;	// 檢查搜尋結果
 
 			// 遍歷搜尋結果
-			// for (let i = 0; i < array_metrics[charaIndex].length; i++) {
 			for (let i in array_metrics[charaIndex]) {
 				let index = array_metrics[charaIndex][i];
 
@@ -1065,6 +1067,7 @@ const annaCore = {
 		// await annaCore.replyAI("anna NNLK", sourceId, userId).then(console.log);
 
 		// await annaCore.replyAI("anna 射", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+		// await annaCore.replyAI("anna シャル", sourceId, userId).then(obj => console.log(obj));
 		// await annaCore.replyAI("anna 白き射手ナナリー", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
 		// await annaCore.replyAI("1528476371865.JPEG", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
 		// await annaCore.replyAI("0ab61ce0f94dc2f81b38a08f150a17fb", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
