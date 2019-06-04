@@ -10,6 +10,9 @@
     search character function fixed
     >> feature/tweetExtendedMedia
     retweet image function update done
+    >> feature/imgurImageTitle
+    imgur api update done
+    image upload script update done
 */
 
 const config = {
@@ -100,7 +103,7 @@ String.prototype.replaceAll = function (s1, s2) {
 String.prototype.equali = function (s1) {
     let source = this;
     if (!s1) s1 = "";
-    return (source.toUpperCase() == s1.toUpperCase());
+    return (source.toUpperCase().trim() == s1.toUpperCase().trim());
 }
 
 // sleep
@@ -122,12 +125,38 @@ global.asyncReadFile = function (filePath) {
 }
 global.asyncWriteFile = function (filePath, data, options = "utf8") {
     return new Promise(function (resolve, reject) {
-        fs.writeFile(filePath, data, options, function (err, bytesRead, buffer) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve();
+        try {
+            let path = filePath.substring(0, filePath.lastIndexOf("\\"));
+
+            if (!fs.existsSync(path)) {
+                fs.mkdirSync(path, { recursive: true });
             }
-        });
+
+            // fs.writeFileSync(filePath, data, options);
+            // resolve();
+            fs.writeFile(filePath, data, options, function (err, bytesRead, buffer) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+
+        } catch (err) {
+            reject(err);
+        }
     });
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
