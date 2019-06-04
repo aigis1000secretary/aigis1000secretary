@@ -1,12 +1,15 @@
 ﻿
 // todo
 /*
+    wait check tweet stream log file
 */
 
 // commit
 /*
     >> feature/searchCharacter
     search character function fixed
+    >> feature/tweetExtendedMedia
+    retweet image function update done
 */
 
 const config = {
