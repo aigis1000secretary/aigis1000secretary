@@ -22,14 +22,15 @@ const lineBotOn = function () {
 	// wellcome msg
 	line.bot.on("memberJoined", async function (event) {
 		if (config.switchVar.logRequestToFile) {
+			let dateNow = new Date(Date.now());
 			let path = "line_bot_on_memberJoined/" +
 				dateNow.getFullYear() + "-" +
-				(dateNow.getMonth() + 1) + "-" +
-				dateNow.getDate() + "-" +
-				dateNow.getHours() +
-				dateNow.getMinutes() +
-				dateNow.getSeconds() +
-				dateNow.getMilliseconds();
+				((dateNow.getMonth() + 1) + "-").padStart(3, "0") +
+				(dateNow.getDate() + "-").padStart(3, "0") +
+				(dateNow.getHours() + "").padStart(2, "0") +
+				(dateNow.getMinutes() + "").padStart(2, "0") +
+				(dateNow.getSeconds() + "").padStart(2, "0") +
+				(dateNow.getMilliseconds() + "").padStart(4, "0");
 			let data = new Buffer.from(JSON.stringify(event, null, 4));
 
 			dbox.fileUpload("webhook/" + path + ".json", data, "add").catch(function (error) { });
@@ -54,14 +55,15 @@ const lineBotOn = function () {
 	// normal msg
 	line.bot.on("message", async function (event) {
 		if (config.switchVar.logRequestToFile) {
+			let dateNow = new Date(Date.now());
 			let path = "line_bot_on_message/" +
 				dateNow.getFullYear() + "-" +
-				(dateNow.getMonth() + 1) + "-" +
-				dateNow.getDate() + "-" +
-				dateNow.getHours() +
-				dateNow.getMinutes() +
-				dateNow.getSeconds() +
-				dateNow.getMilliseconds();
+				((dateNow.getMonth() + 1) + "-").padStart(3, "0") +
+				(dateNow.getDate() + "-").padStart(3, "0") +
+				(dateNow.getHours() + "").padStart(2, "0") +
+				(dateNow.getMinutes() + "").padStart(2, "0") +
+				(dateNow.getSeconds() + "").padStart(2, "0") +
+				(dateNow.getMilliseconds() + "").padStart(4, "0");
 			let data = new Buffer.from(JSON.stringify(event, null, 4));
 
 			dbox.fileUpload("webhook/" + path + ".json", data, "add").catch(function (error) { });
@@ -193,19 +195,22 @@ const twitterBotOn = function () {
 		// };
 
 		for (let i in groupDatabase.data) {
-			if (groupDatabase.data[i].alarm) {
+			if (!groupDatabase.data[i].alarm) continue;
 
-				// push text
-				await botPush(groupDatabase.data[i].name, tweet_data.text);
 
-				// push image
-				if (tweet_data.media.length > 0) {
-					for (let j in tweet_data.media) {
-						var imageMsg = line.createImageMsg(tweet_data.media[j].link, tweet_data.media[j].link);
-						await botPush(groupDatabase.data[i].name, imageMsg);
-					}
+			// push text
+			await botPush(groupDatabase.data[i].name, tweet_data.text);
+
+
+			// push image
+			if (tweet_data.media.length <= 0) continue;
+			for (let j in tweet_data.media) {
+				if (tweet_data.media.type == "photo") {
+					let imageMsg = line.createImageMsg(tweet_data.media[j].link, tweet_data.media[j].link);
+					await botPush(groupDatabase.data[i].name, imageMsg);
 				}
 			}
+
 		}
 	}
 

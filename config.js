@@ -7,6 +7,7 @@
 // commit
 /*
     >> feature/tweetExtendedMedia
+    retweet image function update done
 */
 
 const config = {
