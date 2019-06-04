@@ -5,6 +5,8 @@
 
 // commit
 /*
+    >> feature/searchCharacter
+    search character function fixed
 */
 
 const config = {
