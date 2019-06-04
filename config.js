@@ -6,6 +6,8 @@
 // commit
 /*
     >> feature/imgurImageTitle
+    imgur api update done
+    image upload script update done
 */
 
 const config = {
@@ -118,29 +120,38 @@ global.asyncReadFile = function (filePath) {
 }
 global.asyncWriteFile = function (filePath, data, options = "utf8") {
     return new Promise(function (resolve, reject) {
-        let path = filePath.substring(0, filePath.lastIndexOf("\\"));
+        try {
+            let path = filePath.substring(0, filePath.lastIndexOf("\\"));
 
-        fs.exists(path, function (exists) {
-            if (!exists) {
-
-                fs.mkdir(path, { recursive: true }, function (err) {
-                    if (err) {
-                        reject(err);
-                    } else {
-
-                        fs.writeFile(filePath, data, options, function (err, bytesRead, buffer) {
-                            if (err) {
-                                reject(err);
-                            } else {
-                                resolve();
-                            }
-                        });
-
-                    }
-                });
-
+            if (!fs.existsSync(path)) {
+                fs.mkdirSync(path, { recursive: true });
             }
-        });
 
+            // fs.writeFileSync(filePath, data, options);
+            // resolve();
+            fs.writeFile(filePath, data, options, function (err, bytesRead, buffer) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+
+        } catch (err) {
+            reject(err);
+        }
     });
 };
+
+
+
+
+
+
+
+
+
+
+
+
+

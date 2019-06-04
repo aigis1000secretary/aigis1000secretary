@@ -11,15 +11,14 @@ const main = async function () {
     await imgur.init();
 
     // delete all image from imgur
-    // // for (let i in imgur.database.images) { await imgur.image.ImageDeletion(imgur.database.images[i].id); }
+    // // // for (let i in imgur.database.images) { await imgur.image.ImageDeletion(imgur.database.images[i].id); }
 
-    // savedatabase
+    // save database
     imgur.database.saveDatabase();
-
     console.log("== image.js ==");
 
+    // get image list
     let pathArray = [];
-    // chara
     try {
         let albumList = ["AutoResponse", "Character"];
         let newAlbum = false;
@@ -44,8 +43,22 @@ const main = async function () {
     console.log("GET DBox Images count: " + pathArray.length);
     // console.log("pathArray = " + JSON.stringify(pathArray, null, 4));
 
+    // script parameter
+    const localImageFileScript = false;
+    const localImagesPath = "C:\\LineBot\\imgur\\";
 
+    // // download all image
+    // for (let i in pathArray) {
+    //     console.log(pathArray[i]);
+    //     try {
+    //         let imageBinary = await dbox.fileDownload(pathArray[i]);
+    //         await asyncWriteFile(localImagesPath + pathArray[i].replaceAll("/", "\\"), imageBinary, "Binary");
+    //     } catch (error) {
+    //         console.log(error);
+    //     }
+    // }
 
+    // image upload script
     for (let i in pathArray) {
         try {
             // split folder name for AR key word
@@ -59,11 +72,6 @@ const main = async function () {
             let onlineAlbum = imgur.database.findAlbumData({ title: albumName })[0];
             let albumHash = onlineAlbum.id;
 
-
-
-            const localImageFileScript = true;
-            const localImagesPath = "C:\\LineBot\\imgur\\";
-
             let imageBinary, fileMd5;
             // local image files
             if (localImageFileScript) {
@@ -71,26 +79,31 @@ const main = async function () {
                 fileMd5 = md5(imageBinary);  // get MD5 for check
             }
 
-            // try to find existed image firt
+            // try to search image
             // resultImage = imgur.database.findImageData({ md5: fileMd5 }).filter(obj => resultImage.indexOf(obj) == -1);
             // resultImage = imgur.database.findImageData({ fileName }).filter(obj => resultImage.indexOf(obj) == -1);
             resultImage = imgur.database.findImageData({ fileName, tag: tagList.split(",")[0] }).filter(obj => resultImage.indexOf(obj) == -1);
 
             if (resultImage.length == 1) {
+                // found!!
+
                 let onlineImage = resultImage[0];
-                // console.log("file already existed(file): " + pathArray[i]);
+                console.log("file already existed(file): " + pathArray[i]);
 
                 // check album
                 if (albumHash && onlineAlbum.findImage({ id: onlineImage.id }).length == 0) {
-                    console.log("Alarm!! Image not in album!");
+                    console.log("Alarm!! Image is not in album!");
+                    // put in
                     imgur.api.album.addAlbumImages({ albumHash: albumHash, ids: [onlineImage.id] });
                     console.log();
                 }
 
                 // check tag list
                 if (onlineImage.tagList != tagList || (fileMd5 && onlineImage.md5 != fileMd5)) {
-                    console.log("Alarm!! TagList incorrect!: https://imgur.com/" + onlineImage.id);
-                    console.log(onlineImage.tagList, tagList, onlineImage.md5, fileMd5);
+                    console.log("Alarm!! TagList incorrect!" + onlineImage.id);
+                    console.log(onlineImage.tagList, onlineImage.md5);
+                    console.log(tagList, fileMd5);
+                    // update image data
                     imgur.api.image.updateImage({ imageHash: onlineImage.id, tagList, md5: fileMd5 }).then(console.log);
                     console.log();
                 }
@@ -98,15 +111,18 @@ const main = async function () {
                 // check filename
                 if (onlineImage.fileName != fileName) {
                     console.log("Alarm!! fileName incorrect!: https://imgur.com/" + onlineImage.id);
+                    // delete & upload again Manual
                     console.log();
                 }
 
+                continue;
+
             } else if (resultImage.length == 0) {
+                // not found!!
                 console.log("file is not exist: " + pathArray[i]);
 
                 if (!localImageFileScript) {
                     imageBinary = await dbox.fileDownload(pathArray[i]);
-                    asyncWriteFile(localImagesPath + pathArray[i].replaceAll("/", "\\"), imageBinary, "Binary");
                     fileMd5 = md5(imageBinary);  // get MD5 for check
                 }
 
@@ -114,19 +130,21 @@ const main = async function () {
                 console.log("upload file: " + uploadResponse.title + ", " + fileName + ", " + tagList);
                 console.log();
 
+                continue;
+
             } else {
-                console.log("file have same name: " + pathArray[i]);
+                console.log("file have same data: " + pathArray[i]);
                 // for (let i in resultImage) {
+                //     // delete all same image
                 //     imgur.api.image.imageDeletion({ imageHash: resultImage[i].id });
                 // }
+                continue;
             }
 
         } catch (error) {
             console.log(error);
         }
-
-    }
-    // */
+    } // */
 
     annaWebHook("statu");
 
