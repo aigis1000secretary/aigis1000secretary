@@ -289,14 +289,15 @@ const twitterCore = {
                         (dateNow.getMinutes() + "").padStart(2, "0") +
                         (dateNow.getSeconds() + "").padStart(2, "0") +
                         (dateNow.getMilliseconds() + "").padStart(4, "0");
+                    let data = new Buffer.from(JSON.stringify(tweet, null, 4));
 
-                    dbox.fileUpload("stream/" + dateString + ".json", binary, "add").catch(function (error) { });
+                    dbox.fileUpload("stream/" + dateString + ".json", data, "add").catch(function (error) { });
                 }
             }
         },
 
         getTweetData: function (raw) {
-            let tweet_data = { media: [] };
+            let tweet_data = { medias: [] };
 
             if (raw.extended_tweet) {
                 raw = Object.assign(raw, raw.extended_tweet);
@@ -320,7 +321,7 @@ const twitterCore = {
                     let media = raw.entities.media[i];
 
                     if (media.type == "photo") {
-                        tweet_data.media.push({
+                        tweet_data.medias.push({
                             type: media.type,
                             link: media.media_url_https,
                             url: media.url  // same with tweet text
