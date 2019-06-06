@@ -185,32 +185,22 @@ const lineBotOn = function () {
 const twitterBotOn = function () {
 
 	var callback = async function (tweet_data) {
-		// 送信する情報の定義
-		// var tweet_data = {
-		// 	name: tweet.user.name,
-		// 	screen_name: tweet.user.screen_name,
-		// 	created_at: data.created_at,
-		// 	text: data.text,
-		// 	geo: data.geo,
-		// };
 
 		for (let i in groupDatabase.data) {
 			if (!groupDatabase.data[i].alarm) continue;
 
-
 			// push text
 			await botPush(groupDatabase.data[i].name, tweet_data.text);
 
-
 			// push image
-			if (tweet_data.media.length <= 0) continue;
-			for (let j in tweet_data.media) {
-				if (tweet_data.media.type == "photo") {
-					let imageMsg = line.createImageMsg(tweet_data.media[j].link, tweet_data.media[j].link);
+			if (tweet_data.medias.length <= 0) continue;
+			for (let j in tweet_data.medias) {
+				let media = tweet_data.medias[j];
+				if (media.type == "photo") {
+					let imageMsg = line.createImageMsg(media.link, media.link);
 					await botPush(groupDatabase.data[i].name, imageMsg);
 				}
 			}
-
 		}
 	}
 
