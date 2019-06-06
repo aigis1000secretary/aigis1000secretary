@@ -13,10 +13,13 @@
     >> feature/imgurImageTitle
     imgur api update done
     image upload script update done
+
+    0.7.3.1
+    mkdirSync error fixed
 */
 
 const config = {
-    _version: "0.7.3.0",
+    _version: "0.7.3.1",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
@@ -128,7 +131,7 @@ global.asyncWriteFile = function (filePath, data, options = "utf8") {
         try {
             let path = filePath.substring(0, filePath.lastIndexOf("\\"));
 
-            if (!fs.existsSync(path)) {
+            if (path.indexOf("\\") != -1 && !fs.existsSync(path)) {
                 fs.mkdirSync(path, { recursive: true });
             }
 
@@ -147,16 +150,3 @@ global.asyncWriteFile = function (filePath, data, options = "utf8") {
         }
     });
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
