@@ -30,8 +30,14 @@ let imgurCore = {
                     // Print out the response body
                     resolve(body);
                 } else {
-                    reject(error ? error :
-                        body ? { status: body.status, message: body.data ? body.data.error : "No body data response" } :
+                    reject(error ?
+                        error :
+                        body ?
+                            {
+                                status: body.status, message: body.data ?
+                                    body.data.error :
+                                    "No body data response"
+                            } :
                             response);
                 }
             });
@@ -499,20 +505,23 @@ let imgurCore = {
             }
             return result[0];
         },
-        findImageData(filter = { id, md5, fileName, tag }) {
+        findImageData({ id, md5, fileName, tag }) {
+            let filter = { id, md5, fileName, tag };
+            Object.keys(filter).forEach((key) => (filter[key] == null) && delete filter[key]);
+
             return this.images.filter(function (image) {
-                let result = !!((filter.id) || (filter.md5) || (filter.fileName) || (filter.tag));
+                let result = (filter != {});
                 if (filter.id) {
-                    result = result && (filter.id == image.id);
+                    result &= (filter.id == image.id);
                 }
                 if (filter.md5) {
-                    result = result && (filter.md5.equali(image.md5));
+                    result &= (filter.md5.equali(image.md5));
                 }
                 if (filter.fileName) {
-                    result = result && filter.fileName.equali(image.fileName);
+                    result &= filter.fileName.equali(image.fileName);
                 }
                 if (filter.tag) {
-                    result = result && (
+                    result &= (
                         image.tagList.toUpperCase().trim().split(",").indexOf(
                             filter.tag.toUpperCase().trim()
                         ) != -1);
@@ -520,20 +529,23 @@ let imgurCore = {
                 return result;
             });
         },
-        deleteImageData(filter = { id, md5, fileName, tag }) {
+        deleteImageData({ id, md5, fileName, tag }) {
+            let filter = { id, md5, fileName, tag };
+            Object.keys(filter).forEach((key) => (filter[key] == null) && delete filter[key]);
+
             this.images = this.images.filter(function (image) {
-                let result = !!((filter.id) || (filter.md5) || (filter.fileName) || (filter.tag));
+                let result = (filter != {});
                 if (filter.id) {
-                    result = result && (filter.id == image.id);
+                    result &= (filter.id == image.id);
                 }
                 if (filter.md5) {
-                    result = result && (filter.md5.equali(image.md5));
+                    result &= (filter.md5.equali(image.md5));
                 }
                 if (filter.fileName) {
-                    result = result && filter.fileName.equali(image.fileName);
+                    result &= filter.fileName.equali(image.fileName);
                 }
                 if (filter.tag) {
-                    result = result && (
+                    result &= (
                         image.tagList.toUpperCase().trim().split(",").indexOf(
                             filter.tag.toUpperCase().trim()
                         ) != -1);
@@ -557,18 +569,24 @@ let imgurCore = {
             }
             return result[0];
         },
-        findAlbumData(filter = { id, title }) {
+        findAlbumData({ id, title }) {
+            let filter = { id, title };
+            Object.keys(filter).forEach((key) => (filter[key] == null) && delete filter[key]);
+
             return this.albums.filter(function (album) {
-                let result = !!((filter.id) || (filter.title));
+                let result = (filter != {});
                 for (let key in filter) {
                     result &= (album[key] == filter[key]);
                 }
                 return result;
             });
         },
-        deleteAlbum(filter = { id, title }) {
+        deleteAlbum({ id, title }) {
+            let filter = { id, title };
+            Object.keys(filter).forEach((key) => (filter[key] == null) && delete filter[key]);
+
             this.albums = this.albums.filter(function (album) {
-                let result = !!((filter.id) || (filter.title));
+                let result = (filter != {});
                 for (let key in filter) {
                     result &= (album[key] == filter[key]);
                 }
@@ -582,7 +600,9 @@ let imgurCore = {
             console.log("Imgur Database saving...");
 
             // object to json
-            let json = JSON.stringify([imgurCore.database.images, imgurCore.database.albums], null, 4);
+            let imagesDB = JSON.stringify(imgurCore.database.images, null, 4);
+            let albumsDB = JSON.stringify(imgurCore.database.albums, null, 4);
+
 
             // callback
             let fsCallBack = function (error, bytesRead, buffer) {
@@ -592,7 +612,8 @@ let imgurCore = {
                 }
             }
             // json to file
-            fs.writeFile("ImgurDatabase.log", json, "utf8", fsCallBack);
+            fs.writeFile("ImgurDatabase.log", imagesDB, "utf8", fsCallBack);
+            fs.writeFile("AlbumDatabase.log", albumsDB, "utf8", fsCallBack);
 
             console.log("Imgur Database saved!");
         },
@@ -616,6 +637,8 @@ let imgurCore = {
     },
 
     async autoTest() {
+        await this.init();
+
         // // Account
         // await imgurCore.api.account.albums(0).then(obj => JSON.stringify(obj, null, 4)).then(console.log);
         // await imgurCore.api.account.albumsCount().then(obj => JSON.stringify(obj, null, 4)).then(console.log);
@@ -625,7 +648,7 @@ let imgurCore = {
         // await imgurCore.api.account.imagesIds(5).then(obj => JSON.stringify(obj, null, 4)).then(console.log);
 
         // // Image
-        // let imageHash = "E4d7e8w";
+        // let imageHash = "CeraaNV";
         // let fileName = "20190524003631.jpg";
         // let imageBinary = await asyncReadFile(fileName);
         // let tagList = "付与魔術師アンリ";
@@ -638,18 +661,18 @@ let imgurCore = {
         // let albumHash = "UuqLJAz"   // test album hash
         // await imgurCore.api.album.album({ albumHash }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
         // await imgurCore.api.album.albumImages({ albumHash }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
-        // await imgurCore.api.album.albumCreation({ title: "Test", ids: ["E4d7e8w"] }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
-        // await imgurCore.api.album.updateAlbum({ albumHash, description: "" }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
+        // await imgurCore.api.album.albumCreation({ title: "Test", ids: ["CeraaNV"] }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
+        // await imgurCore.api.album.updateAlbum({ albumHash, cover: "EUY6l34" }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
         // await imgurCore.api.album.albumDeletion({albumHash}).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
         // await imgurCore.api.album.setAlbumImages({ albumHash, ids: [] }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
-        // await imgurCore.api.album.setAlbumImages({ albumHash, ids: ["uH66IWL", "E4d7e8w"] }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
-        // await imgurCore.api.album.addAlbumImages({ albumHash, ids: ["iDMq8GF"] }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
-        // await imgurCore.api.album.addAlbumImages({ albumHash, ids: ["Sb4N1jh"] }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
+        // await imgurCore.api.album.setAlbumImages({ albumHash, ids: ["Myb8VQt", "CeraaNV"] }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
+        // await imgurCore.api.album.addAlbumImages({ albumHash, ids: ["4kTvWRn"] }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
+        // await imgurCore.api.album.addAlbumImages({ albumHash, ids: ["EUY6l34"] }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
         // await imgurCore.api.album.album({ albumHash }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
 
 
         // let albumHash = "UuqLJAz"   // test album hash
-        // let imageHash = "E4d7e8w";
+        // let imageHash = "CeraaNV";
         // let rawAlbumData = await imgurCore.api.album.album({ albumHash });
         // let rawImageData = await imgurCore.api.image.image({ imageHash });
         // let image = imgurCore.database.newImageData(rawImageData);
@@ -733,20 +756,23 @@ class Album {
             }
         }
     }
-    findImage(filter = { id, md5, fileName, tags }) {
+    findImage({ id, md5, fileName, tag }) {
+        let filter = { id, md5, fileName, tag };
+        Object.keys(filter).forEach((key) => (filter[key] == null) && delete filter[key]);
+
         return this.images.filter(function (image) {
-            let result = !!((filter.id) || (filter.md5) || (filter.fileName) || (filter.tag));
+            let result = (filter != {});
             if (filter.id) {
-                result = result && (filter.id == image.id);
+                result &= (filter.id == image.id);
             }
             if (filter.md5) {
-                result = result && (filter.md5.equali(image.md5));
+                result &= (filter.md5.equali(image.md5));
             }
             if (filter.fileName) {
-                result = result && filter.fileName.equali(image.fileName);
+                result &= filter.fileName.equali(image.fileName);
             }
             if (filter.tag) {
-                result = result && (
+                result &= (
                     image.tagList.toUpperCase().trim().split(",").indexOf(
                         filter.tag.toUpperCase().trim()
                     ) != -1);
