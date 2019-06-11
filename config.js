@@ -6,23 +6,8 @@
 
 // commit
 /*
-    >> feature/searchCharacter
-    search character function fixed
-    >> feature/tweetExtendedMedia
-    retweet image function update done
-    >> feature/imgurImageTitle
-    imgur api update done
-    image upload script update done
-
-    0.7.3.1
-    mkdirSync error fixed
-
-    0.7.3.2
-    retweet image fixed
-    
-    0.7.3.3
-    image upload script upgrade
-    imgur search function bug fixed
+    >> feature/0.7.3/MTXSimulator
+    character parameter add
 */
 
 const config = {

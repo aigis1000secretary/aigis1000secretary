@@ -211,6 +211,7 @@ class CharaDatabase extends Database {
 
         data.rarity = "";
         data.class = "";
+        data.type = "";
 
         data.getMessage = function () {
             var string = "";

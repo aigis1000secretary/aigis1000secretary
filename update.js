@@ -13,7 +13,7 @@ const main = async function () {
     var result = await anna.replyAI("anna UPDATE", sourceId, userId);
     replyFunc(result);
 
-    setTimeout(function () { database.charaDatabase.saveDB(); }, 1.5 * 60 * 1000);//*/
+    setTimeout(function () { database.charaDatabase.saveDB(); }, 1 * 60 * 1000);//*/
 
 
 }; main();

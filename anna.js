@@ -460,7 +460,9 @@ const replyStamp = function (msg) {
 
 // 爬蟲
 // 爬蟲函數
-const charaDataCrawler = function (urlPath, sourceId) {
+const charaDataCrawler = function (dataObj, sourceId) {
+	let urlPath = dataObj.charaUrl;
+	let source = dataObj.source;
 	return new Promise(function (resolve, reject) {
 		// callback
 		let requestCallBack = function (error, response, body) {
@@ -470,11 +472,11 @@ const charaDataCrawler = function (urlPath, sourceId) {
 				return null;
 			}
 
-			var html = iconv.decode(new Buffer(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
+			var html = iconv.decode(Buffer.from(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
 			let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
 
 			var newData = charaDatabase.newData();
-			let rarity = ["ゴールド", "サファイア", "プラチナ", "ブラック", "ゴ｜ルド"];
+			let rarity = ["シルバー", "ゴールド", "サファイア", "プラチナ", "ブラック"];
 
 			// 搜尋所有表格
 			$("div").each(function (i, iElem) {
@@ -498,9 +500,9 @@ const charaDataCrawler = function (urlPath, sourceId) {
 								newData.class = $(this).text().trim();
 							}
 							// レア
-							if (rarity.indexOf($(this).text().trim()) != -1) {
-								let temp = $(this).text().trim();
-								newData.rarity = temp == "ゴ｜ルド" ? "ゴールド" : temp;
+							temp = $(this).text().trim().replace("｜", "ー");
+							if (rarity.indexOf(temp) != -1) {
+								newData.rarity = temp;
 							}
 						});
 					}
@@ -648,39 +650,52 @@ const charaDataCrawler = function (urlPath, sourceId) {
 							newData.skill_aw = textList_aw.join("\n");
 						}
 					}
-
-					// 統一格式
-					newData.skill = newData.skill.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
-					newData.skill_aw = newData.skill_aw.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
-					newData.ability = newData.ability.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
-					newData.ability_aw = newData.ability_aw.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
-
-					if (newData.ability.indexOf("ランダム") != -1) {
-						newData.ability = newData.ability.replaceAll("、/、", "、");
-						newData.ability = newData.ability.replaceAll("発動、", "発動：");
-						newData.ability = newData.ability.replaceAll("回復、", "回復/");
-						newData.ability = newData.ability.replaceAll("回避、", "回避/");
-						newData.ability = newData.ability.replaceAll("攻撃、", "攻撃/");
-						newData.ability = newData.ability.replaceAll("連射、", "連射/");
-						newData.ability = newData.ability.replaceAll("無視、", "無視/");
-						newData.ability = newData.ability.replaceAll("入手、", "入手/");
-						newData.ability = newData.ability.replaceAll("倍、", "倍/");
-						newData.ability = newData.ability.replaceAll("硬直なし、", "硬直なし/");
-					}
-					if (newData.ability_aw.indexOf("ランダム") != -1) {
-						newData.ability_aw = newData.ability_aw.replaceAll("、/、", "、");
-						newData.ability_aw = newData.ability_aw.replaceAll("発動、", "発動：");
-						newData.ability_aw = newData.ability_aw.replaceAll("回復、", "回復/");
-						newData.ability_aw = newData.ability_aw.replaceAll("回避、", "回避/");
-						newData.ability_aw = newData.ability_aw.replaceAll("攻撃、", "攻撃/");
-						newData.ability_aw = newData.ability_aw.replaceAll("連射、", "連射/");
-						newData.ability_aw = newData.ability_aw.replaceAll("無視、", "無視/");
-						newData.ability_aw = newData.ability_aw.replaceAll("入手、", "入手/");
-						newData.ability_aw = newData.ability_aw.replaceAll("倍、", "倍/");
-						newData.ability_aw = newData.ability_aw.replaceAll("硬直なし、", "硬直なし/");
-					}
 				}
 			});
+
+			// 統一格式
+			newData.skill = newData.skill.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
+			newData.skill_aw = newData.skill_aw.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
+			newData.ability = newData.ability.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
+			newData.ability_aw = newData.ability_aw.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
+
+			if (newData.ability.indexOf("ランダム") != -1) {
+				newData.ability = newData.ability.replaceAll("、/、", "、");
+				newData.ability = newData.ability.replaceAll("発動、", "発動：");
+				newData.ability = newData.ability.replaceAll("回復、", "回復/");
+				newData.ability = newData.ability.replaceAll("回避、", "回避/");
+				newData.ability = newData.ability.replaceAll("攻撃、", "攻撃/");
+				newData.ability = newData.ability.replaceAll("連射、", "連射/");
+				newData.ability = newData.ability.replaceAll("無視、", "無視/");
+				newData.ability = newData.ability.replaceAll("入手、", "入手/");
+				newData.ability = newData.ability.replaceAll("倍、", "倍/");
+				newData.ability = newData.ability.replaceAll("硬直なし、", "硬直なし/");
+			}
+			if (newData.ability_aw.indexOf("ランダム") != -1) {
+				newData.ability_aw = newData.ability_aw.replaceAll("、/、", "、");
+				newData.ability_aw = newData.ability_aw.replaceAll("発動、", "発動：");
+				newData.ability_aw = newData.ability_aw.replaceAll("回復、", "回復/");
+				newData.ability_aw = newData.ability_aw.replaceAll("回避、", "回避/");
+				newData.ability_aw = newData.ability_aw.replaceAll("攻撃、", "攻撃/");
+				newData.ability_aw = newData.ability_aw.replaceAll("連射、", "連射/");
+				newData.ability_aw = newData.ability_aw.replaceAll("無視、", "無視/");
+				newData.ability_aw = newData.ability_aw.replaceAll("入手、", "入手/");
+				newData.ability_aw = newData.ability_aw.replaceAll("倍、", "倍/");
+				newData.ability_aw = newData.ability_aw.replaceAll("硬直なし、", "硬直なし/");
+			}
+
+			if (source.indexOf("特殊") != -1) { newData.type = "特殊"; }
+			if (source.indexOf("ちび") != -1) { newData.type = "ちび"; }
+			if (source.indexOf("イベ") != -1) { newData.type = "イベ"; }
+			if (source.indexOf("限定") != -1 || source.indexOf("ガチャ") != -1) {
+				if (newData.name.indexOf("帝国") != -1 || newData.name == "アンジェリーネ") {
+					newData.type = "帝国ガチャ";
+				} else {
+					newData.type = "ガチャ";
+				}
+			}
+			if (newData.rarity == "サファイア") { newData.type = "限定"; }
+
 			// debugLog(newData);
 			// 新增角色資料
 			let msg = charaDatabase.addData(newData);
@@ -704,7 +719,7 @@ const allCharaDataCrawler = function (sourceId) {
 			return null;
 		}
 
-		var html = iconv.decode(new Buffer(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
+		var html = iconv.decode(Buffer.from(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
 		let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
 
 		// 搜尋所有超連結
@@ -712,11 +727,13 @@ const allCharaDataCrawler = function (sourceId) {
 
 			let buffer = $(this).attr("href");
 			if (buffer && $(this).parent().is("td") && $(this).prev().prev().children().is("img")) {
-				// console.log($(this).text());
-				allCharaUrl.push(buffer);
+				// console.log($(this).parent().parent().parent().parent().parent().parent().children().children("h3").text() + ", " + $(this).text());
+				let source = $(this).parent().parent().parent().parent().parent().parent("div[id^='content_block_']").children("div").children("h3").text();
+				allCharaUrl.push({ charaUrl: buffer, source: source });
 			}
 		});
 	}
+	request.get("https://seesaawiki.jp/aigis/d/%a5%b7%a5%eb%a5%d0%a1%bc", { encoding: "binary" }, requestCallBack);
 	request.get("http://seesaawiki.jp/aigis/d/%a5%b4%a1%bc%a5%eb%a5%c9", { encoding: "binary" }, requestCallBack);
 	request.get("http://seesaawiki.jp/aigis/d/%a5%b5%a5%d5%a5%a1%a5%a4%a5%a2", { encoding: "binary" }, requestCallBack);
 	request.get("http://seesaawiki.jp/aigis/d/%a5%d7%a5%e9%a5%c1%a5%ca", { encoding: "binary" }, requestCallBack);
@@ -750,7 +767,7 @@ const classDataCrawler = function () {
 			return null;
 		}
 
-		var html = iconv.decode(new Buffer(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
+		var html = iconv.decode(Buffer.from(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
 		let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
 
 		$("div").each(function (i, elem) {
@@ -986,7 +1003,8 @@ const searchClass = function (str) {
 }
 // value to key
 const getRarityString = function (str) {
-	if (str == "金") return "ゴールド";
+	if (str == "銀") return "シルバー";
+	else if (str == "金") return "ゴールド";
 	else if (str == "藍") return "サファイア";
 	else if (str == "白" || str == "鉑") return "プラチナ";
 	else if (str == "黑") return "ブラック";

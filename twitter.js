@@ -394,7 +394,7 @@ const httpTwitterAPI = function () {
             return null;
         }
 
-        let html = iconv.decode(new Buffer(body, "binary"), "UTF-8"); // EUC-JP to utf8 // Shift_JIS EUC-JP
+        let html = iconv.decode(Buffer.from(body, "binary"), "UTF-8"); // EUC-JP to utf8 // Shift_JIS EUC-JP
         let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
 
         // remove all hashtag
