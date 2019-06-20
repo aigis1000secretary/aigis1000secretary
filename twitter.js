@@ -183,7 +183,7 @@ const twitterCore = {
         post: function (request, response) {
             if (config.switchVar.logRequestToFile && request.body) {
                 let dateNow = new Date(Date.now());
-                let path = "twitter_webhook_post/" +
+                let path = "twitter_" +
                     dateNow.getFullYear() + "-" +
                     ((dateNow.getMonth() + 1) + "-").padStart(3, "0") +
                     (dateNow.getDate() + "-").padStart(3, "0") +
@@ -281,7 +281,7 @@ const twitterCore = {
                 // log
                 if (config.switchVar.logStreamToFile && tweet) {
                     let dateNow = new Date(Date.now());
-                    let dateString =
+                    let dateString = "twitter_" +
                         dateNow.getFullYear() + "-" +
                         ((dateNow.getMonth() + 1) + "-").padStart(3, "0") +
                         (dateNow.getDate() + "-").padStart(3, "0") +

@@ -20,32 +20,49 @@ module.exports = {
             msg = msg.toString() + JSON.stringify(msg, null, 2)
         }
 
-        if (!config.isLocalHost) {
-            await devbot.push(userId, msg);
-        } else {
-            console.log(">> " + msg);
-        }
+        await this.push(userId, msg);
     },
     botPushLog: async function (msg) {
         if (msg.constructor.name != "LineMessage" && typeof (msg) != "string") {
             msg = msg.toString() + JSON.stringify(msg, null, 2)
         }
 
-        if (!config.isLocalHost) {
-            await devbot.push(debugLogger, "@" + msg);
-        } else {
-            console.log("@> " + msg);
-        }
+        await this.push(debugLogger, "@" + msg);
     },
     botPushError: async function (msg) {
         if (msg.constructor.name != "LineMessage" && typeof (msg) != "string") {
             msg = msg.toString() + JSON.stringify(msg, null, 2)
         }
 
+        await this.push(debugLogger, "#" + msg);
+    },
+    push: async function (userId, msg) {
         if (!config.isLocalHost) {
-            await devbot.push(debugLogger, "#" + msg);
+            let result = await devbot.push(userId, msg);
+
+            if (config.switchVar.logLineBotPush) {
+                let logObject = {};
+                logObject.to = userId;
+                logObject.messages = msg;
+                logObject.result = result;
+
+                // log to dropbox
+                let dateNow = new Date(Date.now());
+                let path = (result.message == "You have reached your monthly limit." ? "linePushFail" : "linePush") +
+                    dateNow.getFullYear() + "-" +
+                    ((dateNow.getMonth() + 1) + "-").padStart(3, "0") +
+                    (dateNow.getDate() + "-").padStart(3, "0") +
+                    (dateNow.getHours() + "").padStart(2, "0") +
+                    (dateNow.getMinutes() + "").padStart(2, "0") +
+                    (dateNow.getSeconds() + "").padStart(2, "0") +
+                    (dateNow.getMilliseconds() + "").padStart(4, "0");
+                let data = new Buffer.from(JSON.stringify(logObject, null, 4));
+
+                dbox.fileUpload("linePush/" + path + ".json", data, "add").catch(function (error) { });
+
+            }
         } else {
-            console.log("#> " + msg);
+            console.log(">> " + msg);
         }
     },
 
