@@ -48,7 +48,7 @@ const lineBotOn = function () {
 			result = await anna.replyAI("anna help", sourceId, userId);
 		}
 		anna.debugLog(result);
-		line.bot.push(sourceId, result);
+		line.push(sourceId, result);
 		return true;
 	});// */
 
