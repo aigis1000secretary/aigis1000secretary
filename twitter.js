@@ -253,7 +253,7 @@ const twitterCore = {
 
                     setTimeout(function () {
                         twitterCore.stream.litsen(target, user_id, callback);
-                    }, 10 * 1000);
+                    }, 30 * 1000);
                 });
 
                 // // 接続開始時にはフォロワー情報が流れます
