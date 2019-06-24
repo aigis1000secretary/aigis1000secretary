@@ -1,4 +1,5 @@
 
+const dbox = require("./dbox.js");
 // line bot
 const linebot = require("linebot");
 const config = require("./config.js");
@@ -20,23 +21,23 @@ module.exports = {
             msg = msg.toString() + JSON.stringify(msg, null, 2)
         }
 
-        await this.push(userId, msg);
+        await module.exports.pushMsg(userId, msg);
     },
     botPushLog: async function (msg) {
         if (msg.constructor.name != "LineMessage" && typeof (msg) != "string") {
             msg = msg.toString() + JSON.stringify(msg, null, 2)
         }
 
-        await this.push(debugLogger, "@" + msg);
+        await module.exports.pushMsg(debugLogger, "@" + msg);
     },
     botPushError: async function (msg) {
         if (msg.constructor.name != "LineMessage" && typeof (msg) != "string") {
             msg = msg.toString() + JSON.stringify(msg, null, 2)
         }
 
-        await this.push(debugLogger, "#" + msg);
+        await module.exports.pushMsg(debugLogger, "#" + msg);
     },
-    push: async function (userId, msg) {
+    pushMsg: async function (userId, msg) {
         if (!config.isLocalHost) {
             let result = await devbot.push(userId, msg);
 

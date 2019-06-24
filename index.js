@@ -226,7 +226,7 @@ const timerBotOn = function () {
 			str += nd.getMinutes() + ":";
 			str += nd.getSeconds();
 
-			botPushLog(str);
+			// botPushLog(str);
 			await sleep(2 * 60 * 1000);
 		}
 		setTimeout(timer, 3 * 60 * 1000);
