@@ -225,7 +225,7 @@ const twitterCore = {
             }
 
             // console.log(target + 'のツイートを取得します。');
-            line.botPushLog(target + 'のツイートを取得します。');
+            botPushLog(target + 'のツイートを取得します。');
 
             // ストリーミングでユーザのタイムラインを監視
             bot.stream('statuses/filter', { follow: user_id }, function (stream) {
