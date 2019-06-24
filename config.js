@@ -31,10 +31,13 @@
     
     0.7.3.5
     twitter stream litsen reset delay
+
+    0.7.3.6
+    line Push function Fix
 */
 
 const config = {
-    _version: "0.7.3.5",
+    _version: "0.7.3.6",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
