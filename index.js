@@ -188,6 +188,10 @@ const twitterBotOn = function () {
 
 		for (let i in groupDatabase.data) {
 			if (!groupDatabase.data[i].alarm) continue;
+			// 14 days no ant msg idle group	14 * 24 * 60 * 60 * 1000
+			if (Date.now() - groupDatabase.data[i].timestamp > 1209600000) {
+				continue;
+			}
 
 			// push text
 			await botPush(groupDatabase.data[i].name, tweet_data.text);
