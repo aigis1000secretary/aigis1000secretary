@@ -299,20 +299,17 @@ const replyAI = async function (rawMsg, sourceId, userId) {
 
 			// 異步執行
 			let func = async function () {
-				try {
-					await charaDatabase.saveDB();
-					await charaDatabase.uploadDB(true);
+				let result = true;
+				result &= await charaDatabase.saveDB();
+				result &= await charaDatabase.uploadDB(true);
 
-					await nickDatabase.saveDB();
-					await nickDatabase.uploadDB(true);
+				result &= await nickDatabase.saveDB();
+				result &= await nickDatabase.uploadDB(true);
 
-					await classDatabase.saveDB();
-					await classDatabase.uploadDB(true);
+				result &= await classDatabase.saveDB();
+				result &= await classDatabase.uploadDB(true);
 
-					botPushLog("上傳完成!");
-				} catch (error) {
-					botPushError("上傳異常! " + error.toString());
-				}
+				result ? botPushLog("上傳完成!") : botPushError("上傳異常! " + error.toString());
 			}; func();
 
 			return "上傳中...";
@@ -1022,14 +1019,9 @@ const annaCore = {
 		nickDatabase.data = [];
 		classDatabase.data = [];
 
-		try {
-			await charaDatabase.init();
-			await nickDatabase.init();
-			await classDatabase.init();
-
-		} catch (err) {
-			debugLog(err);
-		}
+		await charaDatabase.init();
+		await nickDatabase.init();
+		await classDatabase.init();
 
 		return;
 	},

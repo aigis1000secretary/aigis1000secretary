@@ -160,17 +160,15 @@ const getFileList = async function (mainFolder) {
 
         // get AR image name
         promiseArray.push(
-            dbox.listDir(dirArray[i])
-                .then(
-                    function (fileArray) {
-
-                        for (let j in fileArray) {
-                            // set AR image full path
-                            pathArray.push(dirArray[i] + "/" + fileArray[j]);
-                            // console.log("pathArray: " + pathArray[pathArray.length - 1]);
-                        }
+            dbox.listDir(dirArray[i]).then(
+                function (fileArray) {
+                    for (let j in fileArray) {
+                        // set AR image full path
+                        pathArray.push(dirArray[i] + "/" + fileArray[j]);
+                        // console.log("pathArray: " + pathArray[pathArray.length - 1]);
                     }
-                ).catch(console.log)
+                }
+            ).catch(console.log)
         );
     }
 

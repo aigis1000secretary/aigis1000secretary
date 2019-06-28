@@ -21,8 +21,8 @@ var dboxCore = {
 			//console.log(response);
 			return true;
 		} catch (error) {
-			//console.log(error);
-			return Promise.reject(error);
+			console.log(error);
+			return false;
 		}
 	},
 	// LS
@@ -43,8 +43,8 @@ var dboxCore = {
 
 			return result;
 		} catch (error) {
-			//console.log(error);
-			return Promise.reject(error);
+			console.log(error);
+			return [];
 		}
 	},
 

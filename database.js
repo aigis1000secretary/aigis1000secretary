@@ -80,11 +80,12 @@ class Database {
             fs.existsSync(path.dirname(this.fileName)) ? {} : fs.mkdirSync(path.dirname(this.fileName), { recursive: true });
             fs.writeFileSync(this.fileName, json, "utf8")
             console.log(this.name + " saved!");
+            return true;
         } catch (err) {
             console.log(err);
             botPushError(this.name + " saving error...");
             botPushError(err);
-            // return Promise.reject(err);
+            return false;
         }
     };
 
@@ -118,11 +119,12 @@ class Database {
             }
 
             console.log(this.name + " loaded!");
+            return true;
         } catch (err) {
             console.log(err);
             botPushError(this.name + " loading error...");
             botPushError(err);
-            // return Promise.reject(err);
+            return false;
         }
     };
 
@@ -134,11 +136,12 @@ class Database {
         try {
             await dbox.fileDownloadToFile(this.fileName, this.fileName);
             console.log(this.name + " downloaded!");
+            return true;
         } catch (err) {
             console.log(err);
             botPushError(this.name + " downloading error...");
             botPushError(err);
-            // return Promise.reject(err);
+            return false;
         }
     };
 
@@ -154,43 +157,35 @@ class Database {
             }
             if (!config.isLocalHost) {
                 await dbox.fileUpload(this.fileName, binary);
-                console.log(this.name + " uploaded!");
             }
+            console.log(this.name + " uploaded!" + config.isLocalHost ? " (local)" : "");
+            return true;
         } catch (err) {
             console.log(err);
             botPushError(this.name + " uploading error...");
             botPushError(err);
-            // return Promise.reject(err);
+            return false;
         }
     };
 
     // 延時上傳
     async uploadTask(backup) {
 
-        try {
+        if (this.uploadTaskCount > 0) {
+            // counting
+            this.uploadTaskCount = this.uploadCount;
+        } else {
+            // start count
+            this.uploadTaskCount = this.uploadCount;
 
-            if (this.uploadTaskCount > 0) {
-                // counting
-                this.uploadTaskCount = this.uploadCount;
-            } else {
-                // start count
-                this.uploadTaskCount = this.uploadCount;
-
-                // count down and upload
-                while (this.uploadTaskCount > 0) {
-                    await sleep(1000);
-                    this.uploadTaskCount--;
-                }
-
-                await this.saveDB();
-                this.uploadDB(backup);
+            // count down and upload
+            while (this.uploadTaskCount > 0) {
+                await sleep(1000);
+                this.uploadTaskCount--;
             }
 
-        } catch (err) {
-            console.log(err);
-            botPushError(this.name + " uploadTask error...");
-            botPushError(err);
-            // return Promise.reject(err);
+            await this.saveDB() ? {} : botPushError(this.name + " uploadTask error...");
+            this.uploadDB(backup);
         }
     };
 

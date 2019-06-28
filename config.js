@@ -9,6 +9,7 @@
     >> feature/0.7.3/modular
     Modular start
     fs sync function update
+    try-catch
 */
 
 const config = {

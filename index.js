@@ -1,6 +1,7 @@
 // 初始化
 const config = require("./config.js");
 const anna = require("./anna.js");
+const dbox = require("./dbox.js");
 const imgur = require("./imgur.js");
 const express = require("./express.js");
 const line = require("./line.js");
@@ -90,8 +91,7 @@ const lineBotOn = function () {
 				event.reply(rMsg)
 					.then(function (data) {
 						anna.debugLog(data);
-					})
-					.catch(function (error) {
+					}).catch(function (error) {
 						anna.debugLog(error);
 					});
 				return true;
