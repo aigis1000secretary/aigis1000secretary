@@ -336,10 +336,7 @@ const twitterCore = {
 
             return tweet_data;
         },
-    },
-
-    // autoTest: async function () {
-    // }
+    }
 }
 module.exports = twitterCore;
 

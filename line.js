@@ -88,7 +88,7 @@ module.exports = {
     // 超連結選項
     // altText = "Wiki 連結"
     // label = Name
-    // url = "https://seesaawiki.jp/aigis/d/刻詠の風水士リンネ"	encodeURI_JP(url)
+    // url = "https://seesaawiki.jp/aigis/d/刻詠の風水士リンネ" encodeURI_JP(url)
     createTemplateMsg: function (altText, label, url) {
         if (label.length != url.length) return "";
         if (label.length <= 0 || 4 < label.length) return "";

@@ -13,6 +13,7 @@
     express Modular done
     command: forgot message fixed
     uploadTask message fixed
+    Space format
 */
 
 const config = {
@@ -42,7 +43,7 @@ const config = {
         IMGUR_CLIENT_ID: process.env.IMGUR_CLIENT_ID,
         IMGUR_CLIENT_SECRET: process.env.IMGUR_CLIENT_SECRET,
         // vist site: https://api.imgur.com/oauth2/authorize?client_id=84f351fab201d5a&response_type=token
-        // check REFRESH_TOKEN var from url
+        // check REFRESH_TOKEN variable from url
         IMGUR_REFRESH_TOKEN: process.env.IMGUR_REFRESH_TOKEN
     },
 
@@ -81,9 +82,9 @@ Object.freeze(config.dropbox);
 Object.freeze(config.imgur);
 Object.freeze(config.devbot);
 Object.freeze(config.twitterCfg);
-config.autoTest = function () {
-    console.log(JSON.stringify(config, null, 4));
-};
+// config.autoTest = function () {
+//     console.log(JSON.stringify(config, null, 4));
+// };
 module.exports = config;
 
 setTimeout(async function () {
