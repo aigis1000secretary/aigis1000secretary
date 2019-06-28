@@ -8,15 +8,9 @@ const imgur = require("./imgur.js");
 const line = require("./line.js");
 const twitter = require("./twitter.js");
 
-// remote system
-let botMode = "anna";
-let remoteTarget = "";
-let remoter = "";
 // groupDatabase
 const database = require("./database.js");
 let groupDatabase = database.groupDatabase;
-
-
 
 // line bot 監聽
 const lineBotOn = function () {
@@ -81,7 +75,8 @@ const lineBotOn = function () {
             let userId = !event.source.userId ? config.adminstrator : event.source.userId; // Line API bug?
             let sourceId =
                 event.source.type == "group" ? event.source.groupId :
-                    event.source.type == "room" ? event.source.roomId : userId;
+                    event.source.type == "room" ? event.source.roomId :
+                        event.source.type == "user" ? event.source.userId : "unknown";
             if (sourceId[0] != "U") {
                 groupDatabase.addData(sourceId, msg.split("\n")[0].trim(), event.timestamp);
             }
@@ -98,87 +93,45 @@ const lineBotOn = function () {
                 return true;
             };
 
-            // remote func
-            if (anna.isAdmin(sourceId)) {
-                if (msg == "remote") {
-                    // list group
-                    for (let i in groupDatabase.data) {
-                        let groupId = groupDatabase.data[i].name;
-                        let text = groupDatabase.data[i].text;
-
-                        let str = groupId + " :\n\t" + text;
-                        console.log(str);
-                        await botPush(userId, str);
-                    }
-                    return;
-
-                } else if (msg == "remote off") {
-                    botMode = "anna";
-                    remoteTarget = "";
-                    remoter = "";
-                    replyFunc("remote off");
-                    return;
-
-                } else if (msg.indexOf("remote ") == 0) {
-                    let target = msg.split(" ")[1];
-                    let i = groupDatabase.indexOf(target);
-                    if (i != -1) {
-                        botMode = "remote";
-                        remoteTarget = groupDatabase.data[i].name;
-                        remoter = userId;
-                        replyFunc("remote on " + groupDatabase.data[i].text);
-                    }
-                    return;
-                }
-            }
-            // remote mode
-            if (botMode == "remote") {
-                if (sourceId == remoteTarget) {
-                    botPush(remoter, msg);
-                    return;
-                } else if (sourceId == remoter) {
-                    botPush(remoteTarget, msg);
-                    return;
-                }
-            }
+            // // remote func
+            // if (anna.isAdmin(sourceId)) {
+            //     if (remote(msg, sourceId))
+            //         return;
+            // }
 
             // bot mode
-            // if (botMode == "anna") {
-            if (sourceId != remoter && sourceId != remoteTarget) {
-                // normal response
-                if (msg == "安娜") {
-                    replyFunc("是的！王子？");
-                    return;
+            // normal response
+            if (msg == "安娜") {
+                replyFunc("是的！王子？");
+                return;
+            }
+            // 身分驗證
+            if (userId == "U9eefeba8c0e5f8ee369730c4f983346b") {
+                if (msg == "我婆") {
+                    msg = "刻詠の風水士リンネ";
                 }
-                // 身分驗證
-                if (userId == "U9eefeba8c0e5f8ee369730c4f983346b") {
-                    if (msg == "我婆") {
-                        msg = "刻詠の風水士リンネ";
-                    }
-                }
-                // in user chat
-                if (event.source.type == "user" && msg.toUpperCase().indexOf("ANNA ") == -1 && msg.indexOf("安娜 ") == -1) {
-                    msg = "ANNA " + msg;
-                }
+            }
+            // in user chat
+            if (event.source.type == "user" && msg.toUpperCase().indexOf("ANNA ") == -1 && msg.indexOf("安娜 ") == -1) {
+                msg = "ANNA " + msg;
+            }
 
-                //
-                let result = await anna.replyAI(msg, sourceId, userId);
-                if (result != false) {
-                    replyFunc(result);
-                    return;
-                }
-
-                // egg
-                if (Math.floor(Math.random() * 10000) == 0) {
-                    replyFunc("ちくわ大明神");
-                    return;
-                }
-
-                // 無視...
-                anna.debugLog("Not a command");
+            //
+            let result = await anna.replyAI(msg, sourceId);
+            if (result != false) {
+                replyFunc(result);
                 return;
             }
 
+            // egg
+            if (Math.floor(Math.random() * 10000) == 0) {
+                replyFunc("ちくわ大明神");
+                return;
+            }
+
+            // 無視...
+            anna.debugLog("Not a command");
+            return;
         }
     });
 }
@@ -269,7 +222,6 @@ const main = async function () {
 /*
 const debugFunc = async function () {
 let sourceId = "U9eefeba8c0e5f8ee369730c4f983346b";
-let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
 let replyFunc = function (str) { console.log(">>" + str + "<<"); return str != "" && str && str != "undefined" };
 config.switchVar.debug = true;
 

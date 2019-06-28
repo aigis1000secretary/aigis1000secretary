@@ -15,7 +15,7 @@ const database = require("./database.js");
 
 // bot
 // 搜尋資料
-const replyAI = async function (rawMsg, sourceId, userId) {
+const replyAI = async function (rawMsg, sourceId) {
     debugLog("rawMsg: <" + rawMsg + ">");
 
     // flag
@@ -1022,11 +1022,10 @@ const annaCore = {
         });
         express.get("/anna/:command", async function (request, response) {
             let sourceId = config.adminstrator;
-            let userId = config.adminstrator;
             let command = request.params.command;
             let responseBody = "reply false!";
 
-            let result = await replyAI("anna " + command, sourceId, userId);
+            let result = await replyAI("anna " + command, sourceId);
             if (typeof (result) == "string") {
                 responseBody = result.replaceAll("\n", "<br>");
             } else {
@@ -1066,26 +1065,25 @@ const annaCore = {
         await imgur.init();
 
         // let sourceId = "U9eefeba8c0e5f8ee369730c4f983346b";
-        // let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
         // config.switchVar.debug = true;
 
-        // await annaCore.replyAI("anna 狀態", sourceId, userId).then(console.log);
+        // await annaCore.replyAI("anna 狀態", sourceId).then(console.log);
 
-        // await annaCore.replyAI("anna 學習 NNLK:白き射手ナナリー", sourceId, userId).then(console.log);
+        // await annaCore.replyAI("anna 學習 NNLK:白き射手ナナリー", sourceId).then(console.log);
 
-        // await annaCore.replyAI("anna NNLK", sourceId, userId).then(console.log);
-        // await annaCore.replyAI("anna 黑弓", sourceId, userId).then(console.log);
-        // await annaCore.replyAI("anna 忘記 NNLK", sourceId, userId).then(console.log);
-        // await annaCore.replyAI("anna NNLK", sourceId, userId).then(console.log);
+        // await annaCore.replyAI("anna NNLK", sourceId).then(console.log);
+        // await annaCore.replyAI("anna 黑弓", sourceId).then(console.log);
+        // await annaCore.replyAI("anna 忘記 NNLK", sourceId).then(console.log);
+        // await annaCore.replyAI("anna NNLK", sourceId).then(console.log);
 
-        // await annaCore.replyAI("anna 射", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
-        // await annaCore.replyAI("anna シャル", sourceId, userId).then(obj => console.log(obj));
-        // await annaCore.replyAI("anna 白き射手ナナリー", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
-        // await annaCore.replyAI("1528476371865.JPEG", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
-        // await annaCore.replyAI("0ab61ce0f94dc2f81b38a08f150a17fb", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
-        // await annaCore.replyAI("刻詠の風水士リンネ", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+        // await annaCore.replyAI("anna 射", sourceId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+        // await annaCore.replyAI("anna シャル", sourceId).then(obj => console.log(obj));
+        // await annaCore.replyAI("anna 白き射手ナナリー", sourceId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+        // await annaCore.replyAI("1528476371865.JPEG", sourceId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+        // await annaCore.replyAI("0ab61ce0f94dc2f81b38a08f150a17fb", sourceId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+        // await annaCore.replyAI("刻詠の風水士リンネ", sourceId).then(obj => console.log(JSON.stringify(obj, null, 4)));
 
-        // await annaCore.replyAI("anna update", sourceId, userId).then(console.log);
+        // await annaCore.replyAI("anna update", sourceId).then(console.log);
 
     }
 

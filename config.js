@@ -16,6 +16,8 @@
     Space format
     change 'var' to 'let'
     update all package
+    remote Modular done
+    remote disable
 */
 
 const config = {
