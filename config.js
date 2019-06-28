@@ -18,6 +18,8 @@
     update all package
     remote Modular done
     remote disable
+    ***lineAlpha***
+    import lineAlpha
 */
 
 const config = {
