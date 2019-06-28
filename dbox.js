@@ -1,4 +1,5 @@
 const fetch = require('isomorphic-fetch');
+const fs = require('fs');
 const Dropbox = require('dropbox').Dropbox;
 const config = require("./config.js");
 const dbox = new Dropbox({
@@ -53,7 +54,9 @@ var dboxCore = {
 
 		try {
 			let response = await dbox.filesDownload({ path: root + dirPath })
-			await asyncWriteFile(localPath, response.fileBinary, "Binary");
+
+			fs.existsSync(path.dirname(localPath)) ? {} : fs.mkdirSync(path.dirname(localPath), { recursive: true });
+			fs.writeFileSync(localPath, response.fileBinary, "Binary");
 
 		} catch (error) {
 			//console.log(error);

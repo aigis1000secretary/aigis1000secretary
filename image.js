@@ -2,6 +2,7 @@
 console.log("Image Upload Script");
 
 const fs = require("fs");
+const path = require("path");
 const dbox = require("./dbox.js");
 const imgur = require("./imgur.js");
 const md5 = function (str) { return require('crypto').createHash('md5').update(str).digest('hex'); }
@@ -9,7 +10,6 @@ const md5 = function (str) { return require('crypto').createHash('md5').update(s
 
 const main = async function () {
     await imgur.init();
-
     // delete all image from imgur
     // // // for (let i in imgur.database.images) { await imgur.image.ImageDeletion(imgur.database.images[i].id); }
 
@@ -17,9 +17,8 @@ const main = async function () {
     imgur.database.saveDatabase();
     console.log("== image.js ==");
 
-    // get image list
+    // get image list from dropbox
     let pathArray = [];
-
     let albumList = ["AutoResponse", "Character"];
     let newAlbum = false;
     for (let i in albumList) {
@@ -43,19 +42,22 @@ const main = async function () {
 
     // script parameter
     // const localImageFileScript = true;
-    const localImageFileScript = false;
     const localImagesPath = "C:\\LineBot\\imgur\\";
 
-    // // download all image
-    // for (let i in pathArray) {
-    //     console.log(pathArray[i]);
-    //     try {
-    //         let imageBinary = await dbox.fileDownload(pathArray[i]);
-    //         await asyncWriteFile(localImagesPath + pathArray[i].replaceAll("/", "\\"), imageBinary, "Binary");
-    //     } catch (error) {
-    //         console.log(error);
-    //     }
-    // }
+    /*
+    // download all image
+    for (let i in pathArray) {
+        console.log(pathArray[i]);
+        try {
+            let imageBinary = await dbox.fileDownload(pathArray[i]);
+
+            let localPath = localImagesPath + pathArray[i];
+            fs.existsSync(path.dirname(localPath)) ? {} : fs.mkdirSync(path.dirname(localPath), { recursive: true });
+            fs.writeFileSync(localPath, imageBinary, "Binary")
+        } catch (error) {
+            console.log(error);
+        }
+    }//*/
 
     // image upload script
     for (let i in pathArray) {
@@ -72,8 +74,9 @@ const main = async function () {
 
         let imageBinary, fileMd5;
         // local image files
-        if (localImageFileScript) {
-            imageBinary = await asyncReadFile(localImagesPath + pathArray[i]);
+        if (typeof localImageFileScript !== 'undefined' && localImageFileScript) {
+            if (!fs.existsSync(localImagesPath + pathArray[i])) continue;
+            imageBinary = fs.readFileSync(localImagesPath + pathArray[i]);
             fileMd5 = md5(imageBinary);  // get MD5 for check
         }
 
@@ -119,7 +122,7 @@ const main = async function () {
             // not found!!
             console.log("file is not exist: " + pathArray[i]);
 
-            if (!localImageFileScript) {
+            if (!(typeof localImageFileScript !== 'undefined' && localImageFileScript)) {
                 imageBinary = await dbox.fileDownload(pathArray[i]);
                 fileMd5 = md5(imageBinary);  // get MD5 for check
             }

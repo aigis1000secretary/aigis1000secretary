@@ -8,6 +8,7 @@
 /*
     >> feature/0.7.3/modular
     Modular start
+    fs sync function update
 */
 
 const config = {
@@ -106,40 +107,3 @@ String.prototype.equali = function (s1) {
 global.sleep = function (ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
-
-const fs = require("fs");
-global.asyncReadFile = function (filePath) {
-    return new Promise(function (resolve, reject) {
-        fs.readFile(filePath, function (err, data) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(data);
-            }
-        });
-    });
-}
-global.asyncWriteFile = function (filePath, data, options = "utf8") {
-    return new Promise(function (resolve, reject) {
-        try {
-            let path = filePath.substring(0, filePath.lastIndexOf("\\"));
-
-            if (path.indexOf("\\") != -1 && !fs.existsSync(path)) {
-                fs.mkdirSync(path, { recursive: true });
-            }
-
-            // fs.writeFileSync(filePath, data, options);
-            // resolve();
-            fs.writeFile(filePath, data, options, function (err, bytesRead, buffer) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            });
-
-        } catch (err) {
-            reject(err);
-        }
-    });
-};

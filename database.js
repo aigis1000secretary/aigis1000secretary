@@ -1,5 +1,6 @@
 
 const dbox = require("./dbox.js");
+const fs = require("fs");
 const line = require("./line.js");
 const config = require("./config.js");
 
@@ -76,7 +77,8 @@ class Database {
         var json = JSON.stringify(this.data);
 
         try {
-            await asyncWriteFile(this.fileName, json);
+            fs.existsSync(path.dirname(this.fileName)) ? {} : fs.mkdirSync(path.dirname(this.fileName), { recursive: true });
+            fs.writeFileSync(this.fileName, json, "utf8")
             console.log(this.name + " saved!");
         } catch (err) {
             console.log(err);
@@ -92,7 +94,7 @@ class Database {
 
         let obj = [];
         try {
-            let data = await asyncReadFile(this.fileName);
+            let data = fs.readFileSync(this.fileName);
 
             try {
                 obj = JSON.parse(data);
