@@ -110,9 +110,7 @@ class Database {
                         newData[key] = obj[i][key];
                     }
                 }
-                if (this.data.indexOf(newData.name) == -1) {
-                    this.data.push(newData);
-                }
+                this.addData(newData);
             }
 
             console.log(this.name + " loaded!");
@@ -202,18 +200,18 @@ class Database {
 // Character Database
 class CharaDatabase extends Database {
     newData() {
-        var data = {};
-        data.name = "";
-        data.ability = "";
-        data.ability_aw = "";
-        data.skill = "";
-        data.skill_aw = "";
+        var newData = {};
+        newData.name = "";
+        newData.ability = "";
+        newData.ability_aw = "";
+        newData.skill = "";
+        newData.skill_aw = "";
 
-        data.rarity = "";
-        data.class = "";
-        data.type = "";
+        newData.rarity = "";
+        newData.class = "";
+        newData.type = "";
 
-        data.getMessage = function () {
+        newData.getMessage = function () {
             var string = "";
 
             string += this.name + "　　" + this.rarity + "\n";
@@ -246,7 +244,7 @@ class CharaDatabase extends Database {
 
             return string;
         };
-        data.getWikiUrl = function () {
+        newData.getWikiUrl = function () {
             if (this.name.indexOf("王子") != -1) {
                 var string = "http://seesaawiki.jp/aigis/d/王子";
                 return encodeURI_JP(string);
@@ -254,13 +252,52 @@ class CharaDatabase extends Database {
             var string = "http://seesaawiki.jp/aigis/d/" + this.name;
             return encodeURI_JP(string);
         };
+        newData.format = function () {
+            // 統一格式
+            this.skill = this.skill
+                .replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
+            this.skill_aw = this.skill_aw
+                .replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
+            this.ability = this.ability
+                .replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
+            this.ability_aw = this.ability_aw
+                .replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
 
-        return data;
+            if (this.ability.indexOf("ランダム") != -1) {
+                this.ability = this.ability.replaceAll("、/、", "、");
+                this.ability = this.ability.replaceAll("発動、", "発動：");
+                this.ability = this.ability.replaceAll("回復、", "回復/");
+                this.ability = this.ability.replaceAll("回避、", "回避/");
+                this.ability = this.ability.replaceAll("攻撃、", "攻撃/");
+                this.ability = this.ability.replaceAll("連射、", "連射/");
+                this.ability = this.ability.replaceAll("無視、", "無視/");
+                this.ability = this.ability.replaceAll("入手、", "入手/");
+                this.ability = this.ability.replaceAll("倍、", "倍/");
+                this.ability = this.ability.replaceAll("硬直なし、", "硬直なし/");
+            }
+            if (this.ability_aw.indexOf("ランダム") != -1) {
+                this.ability_aw = this.ability_aw.replaceAll("、/、", "、");
+                this.ability_aw = this.ability_aw.replaceAll("発動、", "発動：");
+                this.ability_aw = this.ability_aw.replaceAll("回復、", "回復/");
+                this.ability_aw = this.ability_aw.replaceAll("回避、", "回避/");
+                this.ability_aw = this.ability_aw.replaceAll("攻撃、", "攻撃/");
+                this.ability_aw = this.ability_aw.replaceAll("連射、", "連射/");
+                this.ability_aw = this.ability_aw.replaceAll("無視、", "無視/");
+                this.ability_aw = this.ability_aw.replaceAll("入手、", "入手/");
+                this.ability_aw = this.ability_aw.replaceAll("倍、", "倍/");
+                this.ability_aw = this.ability_aw.replaceAll("硬直なし、", "硬直なし/");
+            }
+        };
+
+        return newData;
     };
 
     addData(newData) {
-        if (newData.name == "") return "";
+        if (!newData.name || newData.name == "") return "";
         // debugLog("New character <" + newData.name + "> data add...");
+
+        // 統一格式
+        newData.format();
 
         if (this.indexOf(newData.name) == -1) {
             this.data.push(newData);
@@ -271,32 +308,13 @@ class CharaDatabase extends Database {
             let i = this.indexOf(newData.name);
             let changed = false;
 
-            if (this.data[i].ability == "") {
-                this.data[i].ability = newData.ability;
-                if (this.data[i].ability != "") { changed = true; }
+            // 更新資料
+            for (let key in this.data[i]) {
+                if (this.data[i][key] == "" && newData[key] && newData[key] != "") {
+                    this.data[i][key] = newData[key];
+                    changed = true;
+                }
             }
-            if (this.data[i].ability_aw == "") {
-                this.data[i].ability_aw = newData.ability_aw;
-                if (this.data[i].ability_aw != "") { changed = true; }
-            }
-            if (this.data[i].skill == "") {
-                this.data[i].skill = newData.skill;
-                if (this.data[i].skill != "") { changed = true; }
-            }
-            if (this.data[i].skill_aw == "") {
-                this.data[i].skill_aw = newData.skill_aw;
-                if (this.data[i].skill_aw != "") { changed = true; }
-            }
-
-            if (this.data[i].rarity == "") {
-                this.data[i].rarity = newData.rarity;
-                if (this.data[i].rarity != "") { changed = true; }
-            }
-            if (this.data[i].class == "") {
-                this.data[i].class = newData.class;
-                if (this.data[i].class != "") { changed = true; }
-            }
-
             if (changed) {
                 console.log("New character <" + newData.name + "> data update complete!");
                 return "anna " + newData.name + " New character data update complete!";
@@ -310,35 +328,35 @@ class CharaDatabase extends Database {
 
 // Nickname Database
 class NickDatabase extends Database {
-    newData() {
-        var data = {};
-        data.name = "";
-        data.target = "";
+    newData(name, nick) {
+        if (name == "" || nick == "") return {};
 
-        return data;
+        var newData = {};
+        newData.name = nick;
+        newData.target = name;
+
+        return newData;
     };
 
-    addData(name, nick) {
-        if (name == "" || nick == "") return "";
+    addData(newData) {
+        if (newData == {}) return "";
 
-        if (this.indexOf(nick) == -1) {
-            var newData = this.newData();
-            newData.name = nick;
-            newData.target = name;
+        if (this.indexOf(newData.name) == -1) {
             this.data.push(newData);
         }
+        return "";
     };
 }
 
 // Class Database
 class ClassDatabase extends Database {
     newData() {
-        var data = {};
-        data.name = "";
-        data.index = [];
-        data.type = "";
+        var newClass = {};
+        newClass.name = "";
+        newClass.index = [];
+        newClass.type = "";
 
-        return data;
+        return newClass;
     };
 
     addData(newClass) {
@@ -365,25 +383,22 @@ class GroupDatabase extends Database {
         this.uploadCount = (10 * 60);
     };
 
-    newData() {
-        var data = {};
-        data.name = "";
-        data.text = "";
-        data.alarm = "";
-        data.timestamp = "";
+    newData(groupId, text, timestamp) {
+        if (groupId == "" || text == "" || timestamp == "") return {};
 
-        return data;
+        var newData = {};
+        newData.name = groupId;
+        newData.text = text;
+        newData.alarm = true;
+        newData.timestamp = timestamp;
+
+        return newData;
     };
 
-    addData(groupId, text, timestamp) {
-        if (groupId == "" || text == "" || timestamp == "") return "";
+    addData(newData) {
+        if (newData == {}) return "";
 
-        if (this.indexOf(groupId) == -1) {
-            var newData = this.newData();
-            newData.name = groupId;
-            newData.text = text;
-            newData.alarm = true;
-            newData.timestamp = timestamp;
+        if (this.indexOf(newData.name) == -1) {
             this.data.push(newData);
 
             // sort
@@ -392,7 +407,7 @@ class GroupDatabase extends Database {
             })
 
         } else {
-            let i = this.indexOf(groupId);
+            let i = this.indexOf(newData.name);
             this.data[i].text = text;
             this.data[i].timestamp = timestamp;
         }

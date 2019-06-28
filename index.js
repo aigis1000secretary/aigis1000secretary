@@ -81,7 +81,7 @@ const lineBotOn = function () {
 				event.source.type == "group" ? event.source.groupId :
 					event.source.type == "room" ? event.source.roomId : userId;
 			if (sourceId[0] != "U") {
-				groupDatabase.addData(sourceId, msg.split("\n")[0].trim(), event.timestamp);
+				groupDatabase.addData(groupDatabase.newData(sourceId, msg.split("\n")[0].trim(), event.timestamp));
 			}
 
 			// define reply function

@@ -185,8 +185,8 @@ const replyAI = async function (rawMsg, sourceId, userId) {
 				return "[學習] 看不懂...";
 			}
 
-			let arrayA = searchCharacter(keys[0].trim(), true);	// 精確搜索 Nickname
-			let arrayB = searchCharacter(keys[1].trim()).concat(searchByClass(keys[1].trim()));
+			let arrayA = searchCharacterName(keys[0].trim(), true);	// 精確搜索 Nickname
+			let arrayB = searchCharacterName(keys[1].trim()).concat(searchByClass(keys[1].trim()));
 			let countA = arrayA.length;
 			let countB = arrayB.length;
 
@@ -205,11 +205,11 @@ const replyAI = async function (rawMsg, sourceId, userId) {
 				return "[學習] 太多人了，不知道是誰";
 
 			} else {
-				var key = arrayB[0];
+				var fullName = arrayB[0];
 				var nick = keys[0];
 
 				// 異步執行
-				nickDatabase.addData(key, nick);
+				nickDatabase.addData(nickDatabase.newData(fullName, nick));
 				// wait 10 min to save
 				nickDatabase.uploadTask();
 
@@ -253,7 +253,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
 			let targetDB;
 			if (targetDBName == "CharaDatabase") {
 				targetDB = charaDatabase;
-				index = charaDatabase.indexOf(searchCharacter(indexStr)[0]);
+				index = charaDatabase.indexOf(searchCharacterName(indexStr)[0]);
 			} else if (targetDBName == "NickDatabase") {
 				targetDB = nickDatabase;
 				index = nickDatabase.indexOf(indexStr);
@@ -373,7 +373,7 @@ const searchData = function (command) {
 
 	// not class or not found
 	// 搜索名稱
-	resultArray = searchCharacter(command);
+	resultArray = searchCharacterName(command);
 	count = resultArray.length;
 	debugLog("charaResult[" + count + "]: <" + resultArray + ">");
 	if (count == 1) {
@@ -521,7 +521,7 @@ const charaDataCrawler = function (dataObj, sourceId) {
 					}
 
 					// 覚醒アビリティ
-					if ($(this).prev().children().text().trim() == "覚醒アビリティ") {
+					if ($(this).prev().children().text().trim() == "覚醒アビリティ" || $(this).prev().children().text().trim().indexOf("追加アビリティ") != -1) {
 						let temp = $(this).children("ul").text().trim().replaceAll("\n\n", "\n").replaceAll("?", "").replaceAll("？", "");
 						// format
 						temp = temp.replaceAll(" ", "、").replaceAll("\s", "、").replaceAll("\r", "、").replaceAll("　", "、");
@@ -652,37 +652,6 @@ const charaDataCrawler = function (dataObj, sourceId) {
 					}
 				}
 			});
-
-			// 統一格式
-			newData.skill = newData.skill.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
-			newData.skill_aw = newData.skill_aw.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
-			newData.ability = newData.ability.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
-			newData.ability_aw = newData.ability_aw.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
-
-			if (newData.ability.indexOf("ランダム") != -1) {
-				newData.ability = newData.ability.replaceAll("、/、", "、");
-				newData.ability = newData.ability.replaceAll("発動、", "発動：");
-				newData.ability = newData.ability.replaceAll("回復、", "回復/");
-				newData.ability = newData.ability.replaceAll("回避、", "回避/");
-				newData.ability = newData.ability.replaceAll("攻撃、", "攻撃/");
-				newData.ability = newData.ability.replaceAll("連射、", "連射/");
-				newData.ability = newData.ability.replaceAll("無視、", "無視/");
-				newData.ability = newData.ability.replaceAll("入手、", "入手/");
-				newData.ability = newData.ability.replaceAll("倍、", "倍/");
-				newData.ability = newData.ability.replaceAll("硬直なし、", "硬直なし/");
-			}
-			if (newData.ability_aw.indexOf("ランダム") != -1) {
-				newData.ability_aw = newData.ability_aw.replaceAll("、/、", "、");
-				newData.ability_aw = newData.ability_aw.replaceAll("発動、", "発動：");
-				newData.ability_aw = newData.ability_aw.replaceAll("回復、", "回復/");
-				newData.ability_aw = newData.ability_aw.replaceAll("回避、", "回避/");
-				newData.ability_aw = newData.ability_aw.replaceAll("攻撃、", "攻撃/");
-				newData.ability_aw = newData.ability_aw.replaceAll("連射、", "連射/");
-				newData.ability_aw = newData.ability_aw.replaceAll("無視、", "無視/");
-				newData.ability_aw = newData.ability_aw.replaceAll("入手、", "入手/");
-				newData.ability_aw = newData.ability_aw.replaceAll("倍、", "倍/");
-				newData.ability_aw = newData.ability_aw.replaceAll("硬直なし、", "硬直なし/");
-			}
 
 			if (source.indexOf("特殊") != -1) { newData.type = "特殊"; }
 			if (source.indexOf("ちび") != -1) { newData.type = "ちび"; }
@@ -902,7 +871,7 @@ String.prototype.tableToArray = function () {
 // Character
 var charaDatabase = database.charaDatabase;
 // 模糊搜尋
-const searchCharacter = function (key, accurate) {
+const searchCharacterName = function (key, accurate) {
 	accurate = !!accurate;
 	debugLog("searchCharacter(" + key + ", " + accurate + ")");
 
@@ -980,6 +949,18 @@ const searchCharacter = function (key, accurate) {
 		}
 	}
 	return result;
+}
+const searchCharacter = function ({ name, rarity, className, type }) {
+	let filter = { name, rarity, className, type };
+	Object.keys(filter).forEach((key) => (filter[key] == null) && delete filter[key]);
+
+	return charaDatabase.data.filter(function (chara) {
+		let result = (filter != {});
+		for (let key in filter) {
+			result &= (chara[key] == filter[key]);
+		}
+		return result;
+	});
 }
 
 // Nickname

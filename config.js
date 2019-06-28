@@ -8,6 +8,7 @@
 /*
     >> feature/0.7.3/MTXSimulator
     character parameter add
+    database adddata rebuild done
 */
 
 const config = {
