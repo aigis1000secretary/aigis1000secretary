@@ -159,7 +159,7 @@ class Database {
             if (!config.isLocalHost) {
                 await dbox.fileUpload(this.fileName, binary);
             }
-            console.log(this.name + " uploaded!" + config.isLocalHost ? " (local)" : "");
+            console.log(this.name + " uploaded!" + (config.isLocalHost ? " (local)" : ""));
             return true;
         } catch (err) {
             console.log(err);
@@ -180,13 +180,16 @@ class Database {
             this.uploadTaskCount = this.uploadCount;
 
             // count down and upload
-            while (this.uploadTaskCount > 0) {
+            while (this.uploadTaskCount > 0 && !config.isLocalHost) {
                 await sleep(1000);
                 this.uploadTaskCount--;
             }
 
-            await this.saveDB() ? {} : botPushError(this.name + " uploadTask error...");
-            this.uploadDB(backup);
+            if (await this.saveDB()) {
+                this.uploadDB(backup);
+            } else {
+                botPushError(this.name + " uploadTask error...");
+            }
         }
     };
 

@@ -222,18 +222,19 @@ const replyAI = async function (rawMsg, sourceId, userId) {
 			if (arg1 == "undefined") {
 				return false;
 			}
-			let learn = arg1;
-			debugLog("forgot: <" + learn + ">");
+			let forgot = arg1;
+			debugLog("forgot: <" + forgot + ">");
 
 			// 同步執行
-			let i = nickDatabase.indexOf(learn.trim());
+			let i = nickDatabase.indexOf(forgot.trim());
 			if (i > -1) {
+				// delete data
 				nickDatabase.data.splice(i, 1);
+				// wait 10 min to save
+				nickDatabase.uploadTask();
+				return "[學習] 忘記了!";
 			}
-			// wait 10 min to save
-			nickDatabase.uploadTask();
-
-			return "[學習] 忘記了!";
+			return false;
 
 		} else if (_isAdmin && (command == "資料庫" || command == "DB")) {
 
@@ -1065,13 +1066,13 @@ const annaCore = {
 		await this.init();
 		await imgur.init();
 
-		let sourceId = "U9eefeba8c0e5f8ee369730c4f983346b";
-		let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
+		// let sourceId = "U9eefeba8c0e5f8ee369730c4f983346b";
+		// let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
 		// config.switchVar.debug = true;
 
 		// await annaCore.replyAI("anna 狀態", sourceId, userId).then(console.log);
 
-		// await annaCore.replyAI("anna 學習 NNLK:白ナナリー", sourceId, userId).then(console.log);
+		// await annaCore.replyAI("anna 學習 NNLK:白き射手ナナリー", sourceId, userId).then(console.log);
 
 		// await annaCore.replyAI("anna NNLK", sourceId, userId).then(console.log);
 		// await annaCore.replyAI("anna 黑弓", sourceId, userId).then(console.log);
