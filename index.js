@@ -1,9 +1,9 @@
 // 初始化
 const config = require("./config.js");
+const express = require("./express.js");
 const anna = require("./anna.js");
 const dbox = require("./dbox.js");
 const imgur = require("./imgur.js");
-const express = require("./express.js");
 const line = require("./line.js");
 const twitter = require("./twitter.js");
 
@@ -239,9 +239,12 @@ const timerBotOn = function () {
 }
 
 
-
 const main = async function () {
-	express.init();
+
+	// uptimerobot
+	express.get("/uptimerobot/", function (request, response) {
+		response.send("Hello uptimerobot!");
+	});
 
 	// 讀取資料
 	await Promise.all([

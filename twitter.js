@@ -2,11 +2,15 @@
 
 // ライブラリ読み込み
 let Twitter = require('twitter');
+const express = require("./express.js");
 const request = require("request");
 const crypto = require('crypto');
 const line = require("./line.js");
 const dbox = require("./dbox.js");
 const config = require("./config.js");
+
+const bodyParser = require('body-parser');
+var jsonParser = bodyParser.json()
 
 // oauth認証に使う値
 const twitter_oauth = {
@@ -337,12 +341,23 @@ const twitterCore = {
     // autoTest: async function () {
     // }
 }
-//twitterCore.stream.litsen("Aigis1000", function () { });
 module.exports = twitterCore;
+
+// twitter webhook
+express.get("/twitterbot/:function", twitterCore.webhook.crcFunctions);
+express.get("/twitterbot/", twitterCore.webhook.get);
+express.post("/twitterbot/", jsonParser, twitterCore.webhook.post);
+
+
+
+
+
+// twitterCore.stream.litsen("Aigis1000", function () { });
 
 // twitterCore.stream.litsen("z1022001", "", function (tweet_data) {
 //     console.log(JSON.stringify(tweet_data, null, 4));
 // });
+
 
 
 /*
@@ -380,6 +395,7 @@ function searchTweet(queryArg, nextResultsMaxIdArg = null) {
         }
     });
 }//*/
+
 
 
 /*

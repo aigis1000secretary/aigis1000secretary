@@ -1,5 +1,6 @@
 
 const dbox = require("./dbox.js");
+const express = require("./express.js");
 // line bot
 const linebot = require("linebot");
 const config = require("./config.js");
@@ -118,3 +119,6 @@ module.exports = {
 botPush = module.exports.botPush;
 botPushLog = module.exports.botPushLog;
 botPushError = module.exports.botPushError;
+
+// line webhook
+express.post("/linebot/", devbot.parser());

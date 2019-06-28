@@ -1,6 +1,7 @@
 
 // 初始化
 const config = require("./config.js");
+const express = require("./express.js");
 // 爬蟲
 const request = require("request");
 const iconv = require("iconv-lite");
@@ -1015,10 +1016,29 @@ const isAdmin = function (userId) {
 const annaCore = {
 	init: async function () {
 
+		// http host
+		express.get("/", function (request, response) {
+			response.send("Anna say hello to you!")
+		});
+		express.get("/anna/:command", async function (request, response) {
+			let sourceId = config.adminstrator;
+			let userId = config.adminstrator;
+			var command = request.params.command;
+			var responseBody = "reply false!";
+
+			var result = await replyAI("anna " + command, sourceId, userId);
+			if (typeof (result) == "string") {
+				responseBody = result.replaceAll("\n", "<br>");
+			} else {
+				responseBody = JSON.stringify(result, null, 2).replaceAll("\n", "<br>");
+			}
+			response.send(responseBody);
+		});
+
+		// database
 		charaDatabase.data = [];
 		nickDatabase.data = [];
 		classDatabase.data = [];
-
 		await charaDatabase.init();
 		await nickDatabase.init();
 		await classDatabase.init();
