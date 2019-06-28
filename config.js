@@ -14,6 +14,8 @@
     command: forgot message fixed
     uploadTask message fixed
     Space format
+    change 'var' to 'let'
+    update all package
 */
 
 const config = {

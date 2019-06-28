@@ -5,7 +5,7 @@ const fs = require("fs");
 const path = require("path");
 const dbox = require("./dbox.js");
 const imgur = require("./imgur.js");
-const md5 = function (str) { return require('crypto').createHash('md5').update(str).digest('hex'); }
+const md5f = function (str) { return require('crypto').createHash('md5').update(str).digest('hex'); }
 
 
 const main = async function () {
@@ -77,7 +77,7 @@ const main = async function () {
         if (typeof localImageFileScript !== 'undefined' && localImageFileScript) {
             if (!fs.existsSync(localImagesPath + pathArray[i])) continue;
             imageBinary = fs.readFileSync(localImagesPath + pathArray[i]);
-            fileMd5 = md5(imageBinary);  // get MD5 for check
+            fileMd5 = md5f(imageBinary);  // get MD5 for check
         }
 
         // try to search image
@@ -124,7 +124,7 @@ const main = async function () {
 
             if (!(typeof localImageFileScript !== 'undefined' && localImageFileScript)) {
                 imageBinary = await dbox.fileDownload(pathArray[i]);
-                fileMd5 = md5(imageBinary);  // get MD5 for check
+                fileMd5 = md5f(imageBinary);  // get MD5 for check
             }
 
             let uploadResponse = await imgur.api.image.imageUpload({ imageBinary, fileName, albumHash, tagList });

@@ -58,7 +58,7 @@ module.exports = {
                     (dateNow.getMinutes() + "").padStart(2, "0") +
                     (dateNow.getSeconds() + "").padStart(2, "0") +
                     (dateNow.getMilliseconds() + "").padStart(4, "0");
-                let data = new Buffer.from(JSON.stringify(logObject, null, 4));
+                let data = Buffer.from(JSON.stringify(logObject, null, 4));
 
                 dbox.fileUpload("linePush/" + path + ".json", data, "add").catch(function (error) { });
 
@@ -92,7 +92,7 @@ module.exports = {
     createTemplateMsg: function (altText, label, url) {
         if (label.length != url.length) return "";
         if (label.length <= 0 || 4 < label.length) return "";
-        var replyMsg = {
+        let replyMsg = {
             type: "template",
             altText: altText,
             template: {
@@ -102,7 +102,7 @@ module.exports = {
             }
         };
         for (let i = 0; i < label.length; i++) {
-            var buttons = {
+            let buttons = {
                 type: "uri",
                 label: label[i],
                 uri: url[i]

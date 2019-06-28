@@ -9,7 +9,7 @@ const dbox = new Dropbox({
 });
 const root = config.dropbox.DROPBOX_ROOT;
 
-var dboxCore = {
+let dboxCore = {
     // const rootUrl = "https://aigis1000secretary.updog.co/";
     // https://aigis1000secretary.updog.co/%E5%88%BB%E8%A9%A0%E3%81%AE%E9%A2%A8%E6%B0%B4%E5%A3%AB%E3%83%AA%E3%83%B3%E3%83%8D/6230667.png
     // https://aigis1000secretary.updog.co/刻詠の風水士リンネ/6230667.png
@@ -29,7 +29,7 @@ var dboxCore = {
     // LS
     listDir: async function (dirPath, filter) {
         try {
-            var result = [];
+            let result = [];
             let response = await dbox.filesListFolder({ path: root + dirPath });
             //console.log(response);
 
@@ -79,7 +79,7 @@ var dboxCore = {
 
     // upload
     fileUpload: async function (dirPath, fileBinary, mode) {
-        var filesCommitInfo = {
+        let filesCommitInfo = {
             path: root + dirPath,
             contents: fileBinary,
             mode: { ".tag": ((mode) ? mode : "overwrite") },
@@ -98,14 +98,14 @@ var dboxCore = {
 
     // move
     filesBackup: async function (dirPath) {
-        var filesRelocationArg = {
+        let filesRelocationArg = {
             from_path: root + dirPath,
             to_path: root + "backup/" + dirPath,
             allow_shared_folder: true,
             autorename: true,
             allow_ownership_transfer: true
         };
-        // var filesDeleteArg = {
+        // let filesDeleteArg = {
         //     path: root + dirPath
         // };
 

@@ -19,7 +19,7 @@ const urlEncodeJP = function (str_utf8) { return urlEncode(str_utf8, "EUC-JP"); 
 const urlEncodeBIG5 = function (str_utf8) { return urlEncode(str_utf8, "BIG5"); }
 const urlEncodeUTF8 = function (str_utf8) { return urlEncode(str_utf8, "UTF-8"); }
 const encodeURI_JP = function (url) {
-    var result = "";
+    let result = "";
 
     let jpEncode = "";
     let big5Encode = "";
@@ -75,7 +75,7 @@ class Database {
         })
 
         // object to json
-        var json = JSON.stringify(this.data);
+        let json = JSON.stringify(this.data);
 
         try {
             fs.existsSync(path.dirname(this.fileName)) ? {} : fs.mkdirSync(path.dirname(this.fileName), { recursive: true });
@@ -106,7 +106,7 @@ class Database {
 
             for (let i in obj) {
                 // 建立樣板
-                var newData = this.newData();
+                let newData = this.newData();
 
                 // 讀取參數
                 for (let key in obj[i]) {
@@ -152,7 +152,7 @@ class Database {
 
         // object to json
         try {
-            var binary = new Buffer.from(JSON.stringify(this.data));
+            let binary = Buffer.from(JSON.stringify(this.data));
             if (backup) {
                 await dbox.filesBackup(this.fileName);
             }
@@ -203,7 +203,7 @@ class Database {
 // Character Database
 class CharaDatabase extends Database {
     newData() {
-        var data = {};
+        let data = {};
         data.name = "";
         data.ability = "";
         data.ability_aw = "";
@@ -214,7 +214,7 @@ class CharaDatabase extends Database {
         data.class = "";
 
         data.getMessage = function () {
-            var string = "";
+            let string = "";
 
             string += this.name + "　　" + this.rarity + "\n";
 
@@ -248,10 +248,10 @@ class CharaDatabase extends Database {
         };
         data.getWikiUrl = function () {
             if (this.name.indexOf("王子") != -1) {
-                var string = "http://seesaawiki.jp/aigis/d/王子";
+                let string = "http://seesaawiki.jp/aigis/d/王子";
                 return encodeURI_JP(string);
             }
-            var string = "http://seesaawiki.jp/aigis/d/" + this.name;
+            let string = "http://seesaawiki.jp/aigis/d/" + this.name;
             return encodeURI_JP(string);
         };
 
@@ -311,7 +311,7 @@ class CharaDatabase extends Database {
 // Nickname Database
 class NickDatabase extends Database {
     newData() {
-        var data = {};
+        let data = {};
         data.name = "";
         data.target = "";
 
@@ -322,7 +322,7 @@ class NickDatabase extends Database {
         if (name == "" || nick == "") return "";
 
         if (this.indexOf(nick) == -1) {
-            var newData = this.newData();
+            let newData = this.newData();
             newData.name = nick;
             newData.target = name;
             this.data.push(newData);
@@ -333,7 +333,7 @@ class NickDatabase extends Database {
 // Class Database
 class ClassDatabase extends Database {
     newData() {
-        var data = {};
+        let data = {};
         data.name = "";
         data.index = [];
         data.type = "";
@@ -366,7 +366,7 @@ class GroupDatabase extends Database {
     };
 
     newData() {
-        var data = {};
+        let data = {};
         data.name = "";
         data.text = "";
         data.alarm = "";
@@ -379,7 +379,7 @@ class GroupDatabase extends Database {
         if (groupId == "" || text == "" || timestamp == "") return "";
 
         if (this.indexOf(groupId) == -1) {
-            var newData = this.newData();
+            let newData = this.newData();
             newData.name = groupId;
             newData.text = text;
             newData.alarm = true;
@@ -401,10 +401,10 @@ class GroupDatabase extends Database {
     };
 }
 
-var groupDatabase = new GroupDatabase("GroupDatabase");
-var charaDatabase = new CharaDatabase("CharaDatabase");
-var nickDatabase = new NickDatabase("NickDatabase");
-var classDatabase = new ClassDatabase("ClassDatabase");
+let groupDatabase = new GroupDatabase("GroupDatabase");
+let charaDatabase = new CharaDatabase("CharaDatabase");
+let nickDatabase = new NickDatabase("NickDatabase");
+let classDatabase = new ClassDatabase("ClassDatabase");
 
 module.exports = {
     /*init() {
