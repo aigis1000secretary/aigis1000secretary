@@ -2,21 +2,24 @@
 const dbox = require("./dbox.js");
 const express = require("./express.js");
 // line bot
-const linebot = require("linebot");
 const config = require("./config.js");
-const devbot = linebot(Object.assign({}, config.devbot));
 const debugLogger = config.debugLogger;
+
+const linebot = require("linebot");
+const devBot = linebot(Object.assign({}, config.devBot));
+
+const linebotA = require("./lineAlpha/src/bot.js");
+const alphaBot = linebotA(Object.assign({}, config.alphaBot));
 
 class LineMessage {
     constructor(rawData) {
-        for (let key in rawData) {
-            this[key] = rawData[key];
-        }
+        Object.assign(this, rawData);
     };
 }
 
+const bot = alphaBot;
 module.exports = {
-    bot: devbot,
+    bot: bot,
     botPush: async function (userId, msg) {
         if (msg.constructor.name != "LineMessage" && typeof (msg) != "string") {
             msg = msg.toString() + JSON.stringify(msg, null, 2)
@@ -40,7 +43,7 @@ module.exports = {
     },
     pushMsg: async function (userId, msg) {
         if (!config.isLocalHost) {
-            let result = await devbot.push(userId, msg);
+            let result = await bot.push(userId, msg);
 
             if (config.switchVar.logLineBotPush) {
                 let logObject = {};
@@ -121,4 +124,4 @@ botPushLog = module.exports.botPushLog;
 botPushError = module.exports.botPushError;
 
 // line webhook
-express.post("/linebot/", devbot.parser());
+// express.post("/linebot/", bot.parser());

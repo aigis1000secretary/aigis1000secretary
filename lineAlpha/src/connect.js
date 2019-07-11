@@ -40,7 +40,7 @@ class LineConnect extends LineAPI {
         console.info(`Fixed by Ervan R.F @LD TEAM\n`);
 
         let auth = "module.exports = {\n" + "    authToken: '" + this.authToken + "',\n" + "    certificate: '" + res.certificate + "',\n" + "    ID: '" + mid + "',\n" + "    email: '',\n" + "    password: ''\n" + "}";
-        fs.writeFile("./lineAlpha/auth.js", auth, "utf8", function (err, bytesRead, buffer) {
+        fs.writeFile("./src/auth.js", auth, "utf8", function (err, bytesRead, buffer) {
           if (err) { console.log(err); }
         });
 

@@ -9,7 +9,7 @@ class LINE extends Command {
         this.checkReader = [];
         this.stateStatus = {
             cancel: 0,
-            kick: 0,
+            kick: 1, // bot kick
             qrp: 0, // auto disable QRcode
             invite: 1,
             antikick: 0
@@ -26,13 +26,17 @@ class LINE extends Command {
 
 
     get myBot() {
-        const bot = [config.botmid];
+        const bot = [config.botmid, 'u759a433ed5a22b3f2daa405ab2363a67'];
         return bot;
     }
     get myAdmin() {
         // const admin = ['ud7c9557e989b1f2a4e71d8f8c6e18153'];
         const admin = [];
         return admin;
+    }
+
+    isBot(param) {
+        return this.myBot.includes(param);
     }
 
     isAdminOrBot(param) {
@@ -53,15 +57,26 @@ class LINE extends Command {
     poll(operation) {
         this.getOprationType(operation);
 
+
+        if (operation.type == OpType['RECEIVE_MESSAGE']) {
+            if (this.isBot(operation.message._from)) return;
+
+            let event = this.newEvent(this, operation);
+            for (let i in this.listeners['RECEIVE_MESSAGE']) {
+                this.listeners['RECEIVE_MESSAGE'][i](event);
+            }
+        }
+
+        /*
         // 'SEND_MESSAGE' : 25, 'RECEIVE_MESSAGE' : 26,
         if (operation.type == OpType['SEND_MESSAGE'] || operation.type == OpType['RECEIVE_MESSAGE']) {
-            console.log(operation.message._from, "->", operation.message.to, ":", operation.message.text);
+            // console.log(operation.message._from, "->", operation.message.to, ":", operation.message.text);
             let message = new Message(operation.message);
             this.receiverID = message.to = (operation.message.to === this.myBot[0]) ? operation.message._from : operation.message.to;
             Object.assign(message, { ct: operation.createdTime.toString() });
             this.textMessage(message)
         }
-
+    
         // 'NOTIFIED_UPDATE_GROUP' : 11,
         if (operation.type == OpType['NOTIFIED_UPDATE_GROUP'] && !this.isAdminOrBot(operation.param2) && this.stateStatus.qrp == 1) {
             // kick who enable QRcode
@@ -70,7 +85,7 @@ class LINE extends Command {
             // disable QRcode
             this.qrOpenClose();
         }
-
+    
         // 'NOTIFIED_KICKOUT_FROM_GROUP' : 19,
         if (operation.type == OpType['NOTIFIED_KICKOUT_FROM_GROUP'] && this.stateStatus.antikick == 1) {
             // anti kick
@@ -84,7 +99,7 @@ class LINE extends Command {
                 this._kickMember(operation.param1, [operation.param2]);
             }
         }
-
+    
         // 'NOTIFIED_READ_MESSAGE' : 55,
         if (operation.type == OpType['NOTIFIED_READ_MESSAGE']) {
             //ada reader
@@ -106,27 +121,27 @@ class LINE extends Command {
                 }
             }
         }
-
+    
         // 'NOTIFIED_INVITE_INTO_GROUP' : 13,
         if (operation.type == OpType['NOTIFIED_INVITE_INTO_GROUP']) { // diinvite
             if (this.stateStatus.cancel == 1) {
                 this._cancel(operation.param1, [this.mybot[0]]);
             }
-
+    
             if (this.stateStatus.invite == 1 || this.isAdminOrBot(operation.param2)) {
                 this._acceptGroupInvitation(operation.param1);
             } else {
                 // UnhandledPromiseRejectionWarning: TalkException: TalkException
                 // this._rejectGroupInvitation(operation.param1);
             }
-        }
+        }*/
     }
-
+    /*
     async command(msg, reply) {
         if (this.messages.text !== null) {
             // if (this.messages.text === msg.trim()) {
             if (msg.equali(this.messages.text)) {
-                console.log("command: " + msg);
+                // console.log("command: " + msg);
                 if (typeof reply === 'function') {
                     let result = await reply();
                     if (typeof result !== 'undefined') {
@@ -136,17 +151,17 @@ class LINE extends Command {
                 }
                 if (Array.isArray(reply)) {
                     reply.map((v) => {
-                        console.log("reply: " + v);
+                        // console.log("reply: " + v);
                         this._sendMessage(this.messages, v);
                     })
                     return;
                 }
-                console.log("reply: " + reply);
+                // console.log("reply: " + reply);
                 return this._sendMessage(this.messages, reply);
             }
         }
-    }
-
+    }//*/
+    /*
     async textMessage(messages) {
         this.messages = messages;
         let payload = (this.messages.text !== null) ? this.messages.text.split(' ').splice(1).join(' ') : '';
@@ -209,7 +224,7 @@ class LINE extends Command {
         //     this._sendMessage(seq,lyrics);
         // }
 
-    }
+    }//*/
 
 }
 

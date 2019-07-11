@@ -54,11 +54,20 @@ const config = {
     },
 
     // line
-    devbot: {
+    devBot: {
         // https://developers.line.biz/console/channel/1612493892/basic/
         channelId: process.env.LINE_CHANNEL_ID,
         channelSecret: process.env.LINE_CHANNEL_SECRET,
         channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN
+    },
+
+    // line alpha
+    alphaBot: {
+        authToken: process.env.LINE_ALPHA_ACCESS_TOKEN,
+        certificate: process.env.LINE_ALPHA_CERTIFICATE,
+        ID: process.env.LINE_ALPHA_ID,
+        email: process.env.LINE_ALPHA_EMAIL,
+        password: process.env.LINE_ALPHA_PASSWORD
     },
 
     // twitter
@@ -86,7 +95,7 @@ const config = {
 
 Object.freeze(config.dropbox);
 Object.freeze(config.imgur);
-Object.freeze(config.devbot);
+Object.freeze(config.devBot);
 Object.freeze(config.twitterCfg);
 // config.autoTest = function () {
 //     console.log(JSON.stringify(config, null, 4));

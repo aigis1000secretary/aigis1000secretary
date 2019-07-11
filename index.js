@@ -16,7 +16,8 @@ let groupDatabase = database.groupDatabase;
 const lineBotOn = function () {
 
     // wellcome msg
-    line.bot.on("memberJoined", async function (event) {
+    line.bot.on("NOTIFIED_ACCEPT_GROUP_INVITATION", async function (event) {
+        // line.bot.on("memberJoined", async function (event) {
         if (config.switchVar.logRequestToFile && event) {
             let dateNow = new Date(Date.now());
             let path = "line_bot_on_memberJoined/" +
@@ -49,7 +50,8 @@ const lineBotOn = function () {
     });// */
 
     // normal msg
-    line.bot.on("message", async function (event) {
+    line.bot.on("RECEIVE_MESSAGE", async function (event) {
+        // line.bot.on("message", async function (event) {
         if (config.switchVar.logRequestToFile && event) {
             let dateNow = new Date(Date.now());
             let path = "line_bot_on_message/" +

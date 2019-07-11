@@ -325,8 +325,10 @@ class LineAPI {
     let head = await unirest.head(uri, async (res) => {
       let formatFile = res.headers['content-type'].split('/')[1].toLowerCase();
       let locationFile = __dirname + `/tmp/${Math.floor(Math.random() * 100)}.${formatFile}`;
-      await unirest.get(uri).end().pipe(fs.createWriteStream(locationFile));
-      return this._sendFile(message, locationFile, media);
+      let writerStream = fs.createWriteStream(locationFile)
+      await unirest.get(uri).end().pipe(writerStream);
+      await new Promise(resolve => writerStream.on('finish', function () { resolve(); }));
+      return await this._sendFile(message, locationFile, media);
     });
   }
 
@@ -401,7 +403,8 @@ class LineAPI {
           ver: '1.0'
         })
       };
-      return this
+
+      return await new Promise(resolve => this
         .postContent(config.LINE_POST_CONTENT_URL, data, filepath)
         .then((res) => {
           if (res.err) {
@@ -418,8 +421,9 @@ class LineAPI {
               console.log(`successfully deleted ${filepath}`);
             });
           }
-
-        });
+        })
+        .then(() => { resolve() })
+      );
     });
   }
 
