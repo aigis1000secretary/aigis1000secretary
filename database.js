@@ -169,10 +169,10 @@ class Database {
 
             if (this.uploadTaskCount > 0) {
                 // counting
-                this.uploadTaskCount = this.uploadCount;
+                this.uploadTaskCount = config.isLocalHost ? 5 : this.uploadCount;
             } else {
                 // start count
-                this.uploadTaskCount = this.uploadCount;
+                this.uploadTaskCount = config.isLocalHost ? 5 : this.uploadCount;;
 
                 // count down and upload
                 while (this.uploadTaskCount > 0) {
