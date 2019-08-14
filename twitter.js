@@ -224,8 +224,8 @@ const twitterCore = {
                 user_id = await twitterCore.stream.getUserId(target);
             }
 
-            // console.log(target + 'のツイートを取得します。');
-            botPushLog(target + 'のツイートを取得します。');
+            console.log(target + 'のツイートを取得します。');
+            // botPushLog(target + 'のツイートを取得します。');
 
             // ストリーミングでユーザのタイムラインを監視
             bot.stream('statuses/filter', { follow: user_id }, function (stream) {
@@ -238,8 +238,7 @@ const twitterCore = {
 
                 // エラー時は再接続を試みた方がいいかもしれません(未検証)
                 stream.on('error', function (rawData) {
-                    line.botPushLog("stream.on = error\ngetTweetData: ");
-                    line.botPushLog(JSON.stringify(rawData, null, 4));
+                    line.botPushError("stream.on = error\ngetTweetData: \n" + JSON.stringify(rawData, null, 4));
 
                     let tweet = rawData.source;
                     twitterCore.stream.getStreamData(tweet, target, callback);
@@ -248,8 +247,8 @@ const twitterCore = {
                 // 接続が切れた際の再接続
                 stream.on('end', function (tweet) {
                     stream.destroy();
-                    // console.log(target + 'のツイートを取得終了。');
-                    line.botPushLog(target + 'のツイートを取得終了。');
+                    console.log(target + 'のツイートを取得終了。');
+                    // botPushLog(target + 'のツイートを取得終了。');
 
                     setTimeout(function () {
                         twitterCore.stream.litsen(target, user_id, callback);
