@@ -8,6 +8,10 @@
 /*
     >> feature/0.7.3/searchClass
     search class function added
+    >> feature/0.7.3/newImageTagger
+    new image online set tag function
+    rebuild image.js
+    add imgur api function
 */
 
 const config = {
