@@ -6,47 +6,10 @@
 
 // commit
 /*
-    >> feature/searchCharacter
-    search character function fixed
-    >> feature/tweetExtendedMedia
-    retweet image function update done
-    >> feature/imgurImageTitle
-    imgur api update done
-    image upload script update done
-
-    0.7.3.1
-    mkdirSync error fixed
-
-    0.7.3.2
-    retweet image fixed
-    
-    0.7.3.3
-    image upload script upgrade
-    imgur search function bug fixed
-    
-    0.7.3.4
-    line@2.0 push monthly limit
-    log to file for count
-    format log to file path
-    
-    0.7.3.5
-    twitter stream litsen reset delay
-
-    0.7.3.6
-    line Push function Fix
-
-    0.7.3.7
-    block idle group line push fot line2.0 push limit
-    package-lock update
-
-    0.7.3.8
-    chara database update script bug fixed
-
-    0.7.3.9
-    twitter log push msg off
-
-    0.7.3.10
-    dropbox logger path change
+    >> feature/0.7.3/newImageTagger
+    new image online set tag function
+    rebuild image.js
+    add imgur api function
 */
 
 const config = {

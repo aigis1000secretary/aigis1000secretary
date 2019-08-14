@@ -447,7 +447,7 @@ let imgurCore = {
             // POST Add Images to an Album
             async addAlbumImages({ albumHash, ids }) {
                 try {
-                    console.log("POST Add Images to an Album " + albumHash);
+                    console.log("POST Add " + ids + " to an Album " + albumHash);
                     // Configure the request
                     let options = {
                         url: IMGUR_API_URL + "album/" + albumHash + "/add",
@@ -463,19 +463,16 @@ let imgurCore = {
                     console.log(error);
                     return {};
                 }
-            }
-            /*// POST Remove Images from an Album // Deprecation ?
-            , async removeAlbumImages({ albumHash, ids }) {
+            },
+            // POST Remove Images from an Album // Deprecation ?
+            async removeAlbumImages({ albumHash, ids }) {
                 try {
-                    console.log("POST Remove Images from an Album " + albumHash);
+                    console.log("POST Remove " + ids + " from an Album " + albumHash);
+                    let idList = (ids.length == 1 ? ids[0] : ids.join(","));
                     // Configure the request
                     let options = {
-                        url: IMGUR_API_URL + "album/" + albumHash + "/remove_images",
-                        method: "POST",
-                        // Set the POST body
-                        formData: {
-                            ids: ids
-                        }
+                        url: IMGUR_API_URL + "album/" + albumHash + "/remove_images/?ids=" + ids.join(","),
+                        method: "DELETE",
                     };
                     return (await imgurCore._apiRequest(options)).data;
 
@@ -483,7 +480,7 @@ let imgurCore = {
                     console.log(error);
                     return {};
                 }
-            }//*/
+            }//
         }
     },
 

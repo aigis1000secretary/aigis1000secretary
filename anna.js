@@ -7,6 +7,7 @@ const iconv = require("iconv-lite");
 const cheerio = require("cheerio");
 
 const imgur = require("./imgur.js");
+const dbox = require("./dbox.js");
 const line = require("./line.js");
 // 資料庫
 const database = require("./database.js");
@@ -108,7 +109,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
             return line.createTemplateMsg("圖片空間",
                 ["上傳新照片", "線上圖庫"],
                 ["https://www.dropbox.com/request/FhIsMnWVRtv30ZL2Ty69",
-                    "https://www.dropbox.com/sh/vonsrxzy79nkpah/AAD4p6TwZF44GHP5f6gdEh3ba?dl=0"]);
+                    "https://www.dropbox.com/sh/ij3wbm64ynfs7n7/AACmNemWzDhjUBycEMcmos6ha?dl=0"]);
 
         } else if (command == "工具" || command == "TOOL") {
             // tool
@@ -325,6 +326,53 @@ const replyAI = async function (rawMsg, sourceId, userId) {
         } else if (_isAdmin && (command == "初始化" || command == "INIT")) {
             await annaCore.init();
             return "初始化完成!";
+
+        } else if (_isAdmin && (command == "NEW")) {
+            if (arg1 == "undefined") {
+                let imgArray = imgur.database.findImageData({ tag: "NewImages" });
+
+                let replyMsg = [];
+                if (imgArray.length > 0) {
+                    let i = Math.floor(Math.random() * imgArray.length);
+                    replyMsg.push(line.createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
+                    replyMsg.push(line.createTextMsg(imgArray[i].md5 + " [" + i + "/" + imgArray.length + "]"));
+                    console.log(imgArray[i].md5 + " [" + i + "/" + imgArray.length + "]");
+                } else {
+                    replyMsg = "沒有新照片";
+                }
+                return replyMsg;
+
+            } else {
+                let imgArray = imgur.database.findImageData({ md5: arg1 });
+                if (imgArray.length != 1) { return "md5錯誤! " + imgArray.length + " result!"; }
+
+                if (arg2 == "undefined") {
+                    return line.createImageMsg(imgArray[0].imageLink, imgArray[0].thumbnailLink);
+
+                } else if (arg2 != "undefined") {
+                    let charaArray = searchCharacter(arg2).concat(searchByClass(arg2.trim()));
+                    if (charaArray.length > 1) {
+                        return "搜尋不明確: " + charaArray;
+                    }
+                    if (charaArray.length == 1) {
+                        target = charaArray[0].trim();
+                        // move image file
+                        dbox.filesMove("NewImages/NewImages/" + imgArray[0].fileName, "Character/" + target + "/" + imgArray[0].fileName)
+                            .catch((e) => console.log("分類錯誤! "));
+
+                        // set taglist
+                        imgur.api.image.updateImage({ imageHash: imgArray[0].id, tagList: "Character," + target });
+
+                        let albumHash = imgur.database.findAlbumData({ title: "Character" })[0].id;
+                        imgur.api.album.addAlbumImages({ albumHash: albumHash, ids: [imgArray[0].id] });
+
+                        albumHash = imgur.database.findAlbumData({ title: "NewImages" })[0].id;
+                        imgur.api.album.removeAlbumImages({ albumHash: albumHash, ids: [imgArray[0].id] });
+                        return "分類完成";
+                    }
+                }
+            }
+            return "";
 
         }
 
@@ -1089,6 +1137,9 @@ const annaCore = {
 
         // await annaCore.replyAI("anna update", sourceId, userId).then(console.log);
 
+        // await annaCore.replyAI("anna new ", sourceId, userId).then(console.log);
+        // await annaCore.replyAI("anna new 0f96ddbcf983dc854b3bb803c4159d5b ", sourceId, userId).then(console.log);
+        // await annaCore.replyAI("anna new 0f96ddbcf983dc854b3bb803c4159d5b NNL", sourceId, userId).then(console.log);
     }
 
 }; module.exports = annaCore;
