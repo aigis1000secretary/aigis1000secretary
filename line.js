@@ -59,7 +59,7 @@ module.exports = {
                     (dateNow.getMilliseconds() + "").padStart(4, "0");
                 let data = new Buffer.from(JSON.stringify(logObject, null, 4));
 
-                dbox.fileUpload("linePush/" + path + ".json", data, "add").catch(function (error) { });
+                dbox.fileUpload("linePush/" + ((dateNow.getMonth() + 1) + "/").padStart(3, "0") + path + ".json", data, "add").catch(function (error) { });
 
             }
         } else {
