@@ -6,6 +6,8 @@
 
 // commit
 /*
+    >> feature/0.7.3/searchClass
+    search class function added
 */
 
 const config = {

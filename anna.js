@@ -70,7 +70,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
             replyMsg += "狀態: 確認目前版本，資料庫資料筆數。\n(>>安娜 狀態)\n\n";
             replyMsg += "照片: 上傳角色附圖的網路空間(DropBox)。\n(>>安娜 照片)\n\n";
             replyMsg += "工具: 千年戰爭Aigis實用工具。\n(>>安娜 工具)\n\n";
-            replyMsg += "職業: 列出資料庫現有職業。\n\n";
+            replyMsg += "職業: 列出/搜尋資料庫現有職業。\n(>>安娜 職業 恋)\n\n";
             replyMsg += "廣播: 開關廣播功能，廣播內容有官方推特即時轉播以及週四定期維護前提醒。\n\n";
             replyMsg += "學習: 用來教會安娜角色的暱稱。\n(>>安娜 學習 NNL:射手ナナリー)\n\n";
 
@@ -141,19 +141,25 @@ const replyAI = async function (rawMsg, sourceId, userId) {
             return replyMsg;
 
         } else if (command == "職業") {
-            let classDB = classDatabase.data;
-            var replyMsgA = "";
-            var replyMsgB = "";
+            let classDB = (arg1 == "undefined" ? classDatabase.data :
+                classDatabase.data.filter(function (classData) {
+                    if (arg1 == "近" && classData.type == "近接型")
+                        return true;
+                    if (arg1 == "遠" && classData.type == "遠距離型")
+                        return true;
+                    return (classData.name.indexOf(arg1) != -1);
+                }));
+
+            classDB.sort(function (A, B) {
+                return A.type.localeCompare(B.type)
+            })
+
+            let replyMsg = "";
             for (let i in classDB) {
-                if (classDB[i].type == "近接型") {
-                    replyMsgA += classDB[i].index.join(",\t") + "\n";
-                } else if (classDB[i].type == "遠距離型") {
-                    replyMsgB += classDB[i].index.join(",\t") + "\n";
-                }
+                replyMsg += classDB[i].index.join(",\t") + "\n";
             }
-            replyMsgA = replyMsgA.trim();
-            replyMsgB = replyMsgB.trim();
-            return replyMsgA + "\n" + replyMsgB;
+            replyMsg = replyMsg.trim();
+            return (replyMsg == "" ? "找不到呢..." : replyMsg);
 
         } else if (command == "廣播") {
 
@@ -1065,13 +1071,14 @@ const annaCore = {
     autoTest: async function () {
 
         await this.init();
-        await imgur.init();
+        // await imgur.init();
 
         let sourceId = "U9eefeba8c0e5f8ee369730c4f983346b";
         let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
-        // config.switchVar.debug = true;
+        config.switchVar.debug = true;
 
         // await annaCore.replyAI("anna 狀態", sourceId, userId).then(console.log);
+        await annaCore.replyAI("anna 職業", sourceId, userId).then(console.log);
 
         // await annaCore.replyAI("anna 學習 NNLK:白ナナリー", sourceId, userId).then(console.log);
 
