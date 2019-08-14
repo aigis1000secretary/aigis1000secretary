@@ -4,7 +4,7 @@ console.log("Image Upload Script");
 const fs = require("fs");
 const dbox = require("./dbox.js");
 const imgur = require("./imgur.js");
-const md5 = function (str) { return require('crypto').createHash('md5').update(str).digest('hex'); }
+const md5f = function (str) { return require('crypto').createHash('md5').update(str).digest('hex'); }
 
 
 const main = async function () {
@@ -20,7 +20,7 @@ const main = async function () {
     // get image list
     let pathArray = [];
 
-    let albumList = ["AutoResponse", "Character"];
+    let albumList = ["AutoResponse", "Character", "NewImages"];
     let newAlbum = false;
     for (let i in albumList) {
         let albumName = albumList[i];
@@ -41,11 +41,6 @@ const main = async function () {
     console.log("GET DBox Images count: " + pathArray.length);
     // console.log("pathArray = " + JSON.stringify(pathArray, null, 4));
 
-    // script parameter
-    // const localImageFileScript = true;
-    const localImageFileScript = false;
-    const localImagesPath = "C:\\LineBot\\imgur\\";
-
     // // download all image
     // for (let i in pathArray) {
     //     console.log(pathArray[i]);
@@ -62,82 +57,75 @@ const main = async function () {
         // split folder name for AR key word
         let parameter = pathArray[i].split("/");
         let albumName = parameter[0];
-        let tagList = parameter[0] + "," + parameter[1];
+        let tagList = (parameter[0] == parameter[1] ? parameter[0] : parameter[0] + "," + parameter[1]);
         let fileName = parameter[2];
         // console.log(albumName + ", " + tagList + ", " + fileName);
 
         let resultImage = [];
         let onlineAlbum = imgur.database.findAlbumData({ title: albumName })[0];
         let albumHash = onlineAlbum.id;
+        let imageBinary = "", fileMd5 = "";
 
-        let imageBinary, fileMd5;
-        // local image files
-        if (localImageFileScript) {
-            imageBinary = await asyncReadFile(localImagesPath + pathArray[i]);
-            fileMd5 = md5(imageBinary);  // get MD5 for check
+        // filename check
+        resultImage = imgur.database.findImageData({ fileName, tag: tagList.split(",")[1] });
+        // md5 check
+        if (resultImage.length != 1) {
+            try {
+                imageBinary = await dbox.fileDownload(pathArray[i]);
+                fileMd5 = md5f(imageBinary);  // get MD5 for check
+                resultImage = imgur.database.findImageData({ md5: fileMd5 });
+            } catch (error) {
+                console.log(error);
+                continue;
+            }
         }
 
-        // try to search image
-        // resultImage = imgur.database.findImageData({ md5: fileMd5 }).filter(obj => resultImage.indexOf(obj) == -1);
-        // resultImage = imgur.database.findImageData({ fileName }).filter(obj => resultImage.indexOf(obj) == -1);
-        resultImage = imgur.database.findImageData({ fileName, tag: tagList.split(",")[1] }).filter(obj => resultImage.indexOf(obj) == -1);
+        if (resultImage.length == 0) {
+            // upload
+            console.log("file is not exist: " + pathArray[i]);
 
-        if (resultImage.length == 1) {
-            // found!!
-
+            if (imageBinary == "") imageBinary = await dbox.fileDownload(pathArray[i]);
+            let uploadResponse = await imgur.api.image.imageUpload({ imageBinary, fileName, albumHash, tagList });
+            console.log("upload file: " + uploadResponse.title + ", " + fileName + ", " + tagList);
+            console.log("");
+        } else if (resultImage.length == 1) {
+            // check data
             let onlineImage = resultImage[0];
-            console.log("file already existed(file): " + pathArray[i]);
+            // console.log("file already existed(file): " + pathArray[i]);
 
             // check album
             if (albumHash && onlineAlbum.findImage({ id: onlineImage.id }).length == 0) {
                 console.log("Alarm!! Image is not in album!");
                 // put in
                 imgur.api.album.addAlbumImages({ albumHash: albumHash, ids: [onlineImage.id] });
-                console.log();
+                console.log("");
             }
 
             // check tag list
-            if (onlineImage.tagList != tagList || (fileMd5 && onlineImage.md5 != fileMd5)) {
+            if (onlineImage.tagList != tagList) {
                 console.log("Alarm!! TagList incorrect! " + onlineImage.id);
                 console.log(onlineImage.tagList, onlineImage.md5);
                 console.log(tagList, fileMd5);
                 // update image data
                 imgur.api.image.updateImage({ imageHash: onlineImage.id, tagList, md5: fileMd5 });
-                console.log();
+                console.log("");
             }
 
             // check filename
             if (onlineImage.fileName != fileName) {
                 console.log("Alarm!! fileName incorrect!: https://imgur.com/" + onlineImage.id);
                 // delete & upload again Manual
-                console.log();
+                console.log("");
             }
-
-            continue;
-
-        } else if (resultImage.length == 0) {
-            // not found!!
-            console.log("file is not exist: " + pathArray[i]);
-
-            if (!localImageFileScript) {
-                imageBinary = await dbox.fileDownload(pathArray[i]);
-                fileMd5 = md5(imageBinary);  // get MD5 for check
-            }
-
-            let uploadResponse = await imgur.api.image.imageUpload({ imageBinary, fileName, albumHash, tagList });
-            console.log("upload file: " + uploadResponse.title + ", " + fileName + ", " + tagList);
-            console.log();
-
-            continue;
-
-        } else {
+        } else if (resultImage.length > 1) {
+            // double upload
             console.log("file have same data: " + pathArray[i]);
             for (let i in resultImage) {
                 // delete all same image
                 if (i != 0) imgur.api.image.imageDeletion({ imageHash: resultImage[i].id });
             }
-            continue;
         }
+        continue;
 
     } // */
 

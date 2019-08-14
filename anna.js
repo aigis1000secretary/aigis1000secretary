@@ -7,6 +7,7 @@ const iconv = require("iconv-lite");
 const cheerio = require("cheerio");
 
 const imgur = require("./imgur.js");
+const dbox = require("./dbox.js");
 const line = require("./line.js");
 // 資料庫
 const database = require("./database.js");
@@ -70,7 +71,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
             replyMsg += "狀態: 確認目前版本，資料庫資料筆數。\n(>>安娜 狀態)\n\n";
             replyMsg += "照片: 上傳角色附圖的網路空間(DropBox)。\n(>>安娜 照片)\n\n";
             replyMsg += "工具: 千年戰爭Aigis實用工具。\n(>>安娜 工具)\n\n";
-            replyMsg += "職業: 列出資料庫現有職業。\n\n";
+            replyMsg += "職業: 列出/搜尋資料庫現有職業。\n(>>安娜 職業 恋)\n\n";
             replyMsg += "廣播: 開關廣播功能，廣播內容有官方推特即時轉播以及週四定期維護前提醒。\n\n";
             replyMsg += "學習: 用來教會安娜角色的暱稱。\n(>>安娜 學習 NNL:射手ナナリー)\n\n";
 
@@ -108,7 +109,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
             return line.createTemplateMsg("圖片空間",
                 ["上傳新照片", "線上圖庫"],
                 ["https://www.dropbox.com/request/FhIsMnWVRtv30ZL2Ty69",
-                    "https://www.dropbox.com/sh/vonsrxzy79nkpah/AAD4p6TwZF44GHP5f6gdEh3ba?dl=0"]);
+                    "https://www.dropbox.com/sh/ij3wbm64ynfs7n7/AACmNemWzDhjUBycEMcmos6ha?dl=0"]);
 
         } else if (command == "工具" || command == "TOOL") {
             // tool
@@ -141,19 +142,25 @@ const replyAI = async function (rawMsg, sourceId, userId) {
             return replyMsg;
 
         } else if (command == "職業") {
-            let classDB = classDatabase.data;
-            var replyMsgA = "";
-            var replyMsgB = "";
+            let classDB = (arg1 == "undefined" ? classDatabase.data :
+                classDatabase.data.filter(function (classData) {
+                    if (arg1 == "近" && classData.type == "近接型")
+                        return true;
+                    if (arg1 == "遠" && classData.type == "遠距離型")
+                        return true;
+                    return (classData.name.indexOf(arg1) != -1);
+                }));
+
+            classDB.sort(function (A, B) {
+                return A.type.localeCompare(B.type)
+            })
+
+            let replyMsg = "";
             for (let i in classDB) {
-                if (classDB[i].type == "近接型") {
-                    replyMsgA += classDB[i].index.join(",\t") + "\n";
-                } else if (classDB[i].type == "遠距離型") {
-                    replyMsgB += classDB[i].index.join(",\t") + "\n";
-                }
+                replyMsg += classDB[i].index.join(",\t") + "\n";
             }
-            replyMsgA = replyMsgA.trim();
-            replyMsgB = replyMsgB.trim();
-            return replyMsgA + "\n" + replyMsgB;
+            replyMsg = replyMsg.trim();
+            return (replyMsg == "" ? "找不到呢..." : replyMsg);
 
         } else if (command == "廣播") {
 
@@ -325,6 +332,53 @@ const replyAI = async function (rawMsg, sourceId, userId) {
         } else if (_isAdmin && (command == "初始化" || command == "INIT")) {
             await annaCore.init();
             return "初始化完成!";
+
+        } else if (_isAdmin && (command == "NEW")) {
+            if (arg1 == "undefined") {
+                let imgArray = imgur.database.findImageData({ tag: "NewImages" });
+
+                let replyMsg = [];
+                if (imgArray.length > 0) {
+                    let i = Math.floor(Math.random() * imgArray.length);
+                    replyMsg.push(line.createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
+                    replyMsg.push(line.createTextMsg(imgArray[i].md5 + " [" + i + "/" + imgArray.length + "]"));
+                    console.log(imgArray[i].md5 + " [" + i + "/" + imgArray.length + "]");
+                } else {
+                    replyMsg = "沒有新照片";
+                }
+                return replyMsg;
+
+            } else {
+                let imgArray = imgur.database.findImageData({ md5: arg1 });
+                if (imgArray.length != 1) { return "md5錯誤! " + imgArray.length + " result!"; }
+
+                if (arg2 == "undefined") {
+                    return line.createImageMsg(imgArray[0].imageLink, imgArray[0].thumbnailLink);
+
+                } else if (arg2 != "undefined") {
+                    let charaArray = searchCharacter(arg2).concat(searchByClass(arg2.trim()));
+                    if (charaArray.length > 1) {
+                        return "搜尋不明確: " + charaArray;
+                    }
+                    if (charaArray.length == 1) {
+                        target = charaArray[0].trim();
+                        // move image file
+                        dbox.filesMove("NewImages/NewImages/" + imgArray[0].fileName, "Character/" + target + "/" + imgArray[0].fileName)
+                            .catch((e) => console.log("分類錯誤! "));
+
+                        // set taglist
+                        imgur.api.image.updateImage({ imageHash: imgArray[0].id, tagList: "Character," + target });
+
+                        let albumHash = imgur.database.findAlbumData({ title: "Character" })[0].id;
+                        imgur.api.album.addAlbumImages({ albumHash: albumHash, ids: [imgArray[0].id] });
+
+                        albumHash = imgur.database.findAlbumData({ title: "NewImages" })[0].id;
+                        imgur.api.album.removeAlbumImages({ albumHash: albumHash, ids: [imgArray[0].id] });
+                        return "分類完成";
+                    }
+                }
+            }
+            return "";
 
         }
 
@@ -1065,13 +1119,14 @@ const annaCore = {
     autoTest: async function () {
 
         await this.init();
-        await imgur.init();
+        // await imgur.init();
 
         let sourceId = "U9eefeba8c0e5f8ee369730c4f983346b";
         let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
-        // config.switchVar.debug = true;
+        config.switchVar.debug = true;
 
         // await annaCore.replyAI("anna 狀態", sourceId, userId).then(console.log);
+        await annaCore.replyAI("anna 職業", sourceId, userId).then(console.log);
 
         // await annaCore.replyAI("anna 學習 NNLK:白ナナリー", sourceId, userId).then(console.log);
 
@@ -1089,6 +1144,9 @@ const annaCore = {
 
         // await annaCore.replyAI("anna update", sourceId, userId).then(console.log);
 
+        // await annaCore.replyAI("anna new ", sourceId, userId).then(console.log);
+        // await annaCore.replyAI("anna new 0f96ddbcf983dc854b3bb803c4159d5b ", sourceId, userId).then(console.log);
+        // await annaCore.replyAI("anna new 0f96ddbcf983dc854b3bb803c4159d5b NNL", sourceId, userId).then(console.log);
     }
 
 }; module.exports = annaCore;
