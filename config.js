@@ -12,10 +12,13 @@
     new image online set tag function
     rebuild image.js
     add imgur api function
+
+    0.7.4.1
+    change online tagger Msg
 */
 
 const config = {
-    _version: "0.7.4.0",
+    _version: "0.7.4.1",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正

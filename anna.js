@@ -341,8 +341,9 @@ const replyAI = async function (rawMsg, sourceId, userId) {
                 if (imgArray.length > 0) {
                     let i = Math.floor(Math.random() * imgArray.length);
                     replyMsg.push(line.createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
-                    replyMsg.push(line.createTextMsg(imgArray[i].md5 + " [" + i + "/" + imgArray.length + "]"));
-                    console.log(imgArray[i].md5 + " [" + i + "/" + imgArray.length + "]");
+                    replyMsg.push(line.createTextMsg("[" + i + "/" + imgArray.length + "]"));
+                    replyMsg.push(line.createTextMsg("new " + imgArray[i].md5 + " "));
+                    // console.log(imgArray[i].md5 + " [" + i + "/" + imgArray.length + "]");
                 } else {
                     replyMsg = "沒有新照片";
                 }
