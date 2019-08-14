@@ -193,7 +193,7 @@ const twitterCore = {
                     (dateNow.getMilliseconds() + "").padStart(4, "0");
                 let data = new Buffer.from(JSON.stringify(request.body, null, 4));
 
-                dbox.fileUpload("webhook/" + path + ".json", data, "add").catch(function (error) { });
+                dbox.fileUpload("webhook/" + ((dateNow.getMonth() + 1) + "/").padStart(3, "0") + path + ".json", data, "add").catch(function (error) { });
             }
             response.send("200 OK");
         }
@@ -290,7 +290,7 @@ const twitterCore = {
                         (dateNow.getMilliseconds() + "").padStart(4, "0");
                     let data = new Buffer.from(JSON.stringify(tweet, null, 4));
 
-                    dbox.fileUpload("stream/" + dateString + ".json", data, "add").catch(function (error) { });
+                    dbox.fileUpload("stream/" + ((dateNow.getMonth() + 1) + "/").padStart(3, "0") + dateString + ".json", data, "add").catch(function (error) { });
                 }
             }
         },
