@@ -19,10 +19,13 @@
     CharaDataCrawler update
     database sort method
     deprecated new buffer()
+
+    0.7.4.3
+    anti update ddos
 */
 
 const config = {
-    _version: "0.7.4.2",
+    _version: "0.7.4.3",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
