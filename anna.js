@@ -764,9 +764,9 @@ const charaDataCrawler = function (urlPath, sourceId) {
     });
 };
 // 爬所有角色
+let allCharaUrl = [];
 const allCharaDataCrawler = function (sourceId) {
     console.log("AllCharaData Crawling...");
-    let allCharaUrl = [];
 
     // callback
     let requestCallBack = function (error, response, body) {
@@ -782,7 +782,7 @@ const allCharaDataCrawler = function (sourceId) {
         $("a").each(function (i, elem) {
 
             let buffer = $(this).attr("href");
-            if (buffer && $(this).parent().is("td") && buffer.indexOf("http") == 0 && buffer.indexOf("%b2%a6%bb%d2") == -1) {
+            if (buffer && $(this).parent().is("td") && buffer.indexOf("http") == 0 && allCharaUrl.indexOf(buffer) == -1 && buffer.indexOf("%b2%a6%bb%d2") == -1) {
                 // console.log($(this).text());
                 allCharaUrl.push(buffer);
             }
@@ -799,8 +799,6 @@ const allCharaDataCrawler = function (sourceId) {
 
     setTimeout(async function () {
         let promiseArray = [];
-        allCharaUrl = allCharaUrl.filter((el, i, arr) => { return arr.indexOf(el) === i; });
-        allCharaUrl = allCharaUrl.sort((A, B) => { return A.localeCompare(B); });
         while (allCharaUrl.length > 0) {
             // 50 thread
             for (let i = 0; i < 50; i++) {
@@ -1135,7 +1133,7 @@ const annaCore = {
 
         // await charaDatabase.loadDB();
         // await charaDatabase.saveDB();
-        
+
         let sourceId = "U9eefeba8c0e5f8ee369730c4f983346b";
         let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
         // config.switchVar.debug = true;
