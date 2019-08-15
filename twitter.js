@@ -191,7 +191,7 @@ const twitterCore = {
                     (dateNow.getMinutes() + "").padStart(2, "0") +
                     (dateNow.getSeconds() + "").padStart(2, "0") +
                     (dateNow.getMilliseconds() + "").padStart(4, "0");
-                let data = new Buffer.from(JSON.stringify(request.body, null, 4));
+                let data = Buffer.from(JSON.stringify(request.body, null, 4));
 
                 dbox.fileUpload("webhook/" + ((dateNow.getMonth() + 1) + "/").padStart(3, "0") + path + ".json", data, "add").catch(function (error) { });
             }
@@ -288,7 +288,7 @@ const twitterCore = {
                         (dateNow.getMinutes() + "").padStart(2, "0") +
                         (dateNow.getSeconds() + "").padStart(2, "0") +
                         (dateNow.getMilliseconds() + "").padStart(4, "0");
-                    let data = new Buffer.from(JSON.stringify(tweet, null, 4));
+                    let data = Buffer.from(JSON.stringify(tweet, null, 4));
 
                     dbox.fileUpload("stream/" + ((dateNow.getMonth() + 1) + "/").padStart(3, "0") + dateString + ".json", data, "add").catch(function (error) { });
                 }
@@ -393,7 +393,7 @@ const httpTwitterAPI = function () {
             return null;
         }
 
-        let html = iconv.decode(new Buffer(body, "binary"), "UTF-8"); // EUC-JP to utf8 // Shift_JIS EUC-JP
+        let html = iconv.decode(Buffer.from(body, "binary"), "UTF-8"); // EUC-JP to utf8 // Shift_JIS EUC-JP
         let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
 
         // remove all hashtag

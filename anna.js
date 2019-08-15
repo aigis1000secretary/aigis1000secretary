@@ -525,11 +525,11 @@ const charaDataCrawler = function (urlPath, sourceId) {
                 return null;
             }
 
-            var html = iconv.decode(new Buffer(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
+            var html = iconv.decode(Buffer.from(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
             let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
 
             var newData = charaDatabase.newData();
-            let rarity = ["ゴールド", "サファイア", "プラチナ", "ブラック", "ゴ｜ルド"];
+            let rarity = ["アイアン", "ブロンズ", "シルバー", "ゴールド", "サファイア", "プラチナ", "ブラック", "シルバ｜", "ゴ｜ルド"];
 
             // 搜尋所有表格
             $("div").each(function (i, iElem) {
@@ -554,8 +554,8 @@ const charaDataCrawler = function (urlPath, sourceId) {
                             }
                             // レア
                             if (rarity.indexOf($(this).text().trim()) != -1) {
-                                let temp = $(this).text().trim();
-                                newData.rarity = temp == "ゴ｜ルド" ? "ゴールド" : temp;
+                                let temp = $(this).text().trim().replace("｜", "ー");
+                                newData.rarity = temp;
                             }
                         });
                     }
@@ -748,6 +748,8 @@ const charaDataCrawler = function (urlPath, sourceId) {
                         newData.ability_aw = newData.ability_aw.replaceAll("倍、", "倍/");
                         newData.ability_aw = newData.ability_aw.replaceAll("硬直なし、", "硬直なし/");
                     }
+
+                    newData.urlName = urlPath.replace("https://seesaawiki.jp/aigis/d/", "");
                 }
             });
             // debugLog(newData);
@@ -773,14 +775,14 @@ const allCharaDataCrawler = function (sourceId) {
             return null;
         }
 
-        var html = iconv.decode(new Buffer(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
+        var html = iconv.decode(Buffer.from(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
         let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
 
         // 搜尋所有超連結
         $("a").each(function (i, elem) {
 
             let buffer = $(this).attr("href");
-            if (buffer && $(this).parent().is("td") && $(this).prev().prev().children().is("img")) {
+            if (buffer && $(this).parent().is("td") && buffer.indexOf("http") == 0 && buffer.indexOf("%b2%a6%bb%d2") == -1) {
                 // console.log($(this).text());
                 allCharaUrl.push(buffer);
             }
@@ -791,8 +793,14 @@ const allCharaDataCrawler = function (sourceId) {
     request.get("http://seesaawiki.jp/aigis/d/%a5%d7%a5%e9%a5%c1%a5%ca", { encoding: "binary" }, requestCallBack);
     request.get("http://seesaawiki.jp/aigis/d/%a5%d6%a5%e9%a5%c3%a5%af", { encoding: "binary" }, requestCallBack);
 
+    request.get("https://seesaawiki.jp/aigis/d/%cc%be%c1%b0%bd%e7%b0%ec%cd%f7", { encoding: "binary" }, requestCallBack);
+    request.get("https://seesaawiki.jp/aigis/d/%bc%c2%c1%f5%bd%e7%b0%ec%cd%f7", { encoding: "binary" }, requestCallBack);
+    request.get("https://seesaawiki.jp/aigis/d/%c2%b0%c0%ad%ca%cc%b0%ec%cd%f7", { encoding: "binary" }, requestCallBack);
+
     setTimeout(async function () {
         let promiseArray = [];
+        allCharaUrl = allCharaUrl.filter((el, i, arr) => { return arr.indexOf(el) === i; });
+        allCharaUrl = allCharaUrl.sort((A, B) => { return A.localeCompare(B); });
         while (allCharaUrl.length > 0) {
             // 50 thread
             for (let i = 0; i < 50; i++) {
@@ -819,7 +827,7 @@ const classDataCrawler = function () {
             return null;
         }
 
-        var html = iconv.decode(new Buffer(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
+        var html = iconv.decode(Buffer.from(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
         let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
 
         $("div").each(function (i, elem) {
@@ -1055,7 +1063,10 @@ const searchClass = function (str) {
 }
 // value to key
 const getRarityString = function (str) {
-    if (str == "金") return "ゴールド";
+    if (str == "鐵") return "アイアン";
+    else if (str == "銅") return "ブロンズ";
+    else if (str == "銀") return "シルバー";
+    else if (str == "金") return "ゴールド";
     else if (str == "藍") return "サファイア";
     else if (str == "白" || str == "鉑") return "プラチナ";
     else if (str == "黑") return "ブラック";
@@ -1122,12 +1133,15 @@ const annaCore = {
         await this.init();
         // await imgur.init();
 
+        // await charaDatabase.loadDB();
+        // await charaDatabase.saveDB();
+        
         let sourceId = "U9eefeba8c0e5f8ee369730c4f983346b";
         let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
-        config.switchVar.debug = true;
+        // config.switchVar.debug = true;
 
         // await annaCore.replyAI("anna 狀態", sourceId, userId).then(console.log);
-        await annaCore.replyAI("anna 職業", sourceId, userId).then(console.log);
+        // await annaCore.replyAI("anna 職業", sourceId, userId).then(console.log);
 
         // await annaCore.replyAI("anna 學習 NNLK:白ナナリー", sourceId, userId).then(console.log);
 
@@ -1139,6 +1153,7 @@ const annaCore = {
         // await annaCore.replyAI("anna 射", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
         // await annaCore.replyAI("anna シャル", sourceId, userId).then(obj => console.log(obj));
         // await annaCore.replyAI("anna 白き射手ナナリー", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+        // await annaCore.replyAI("anna 王子通常", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
         // await annaCore.replyAI("1528476371865.JPEG", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
         // await annaCore.replyAI("0ab61ce0f94dc2f81b38a08f150a17fb", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
         // await annaCore.replyAI("刻詠の風水士リンネ", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
