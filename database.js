@@ -64,16 +64,17 @@ class Database {
     };
 
     // 儲存資料
-    async saveDB() {
+    async saveDB(sordMethod) {
         console.log(this.name + " saving...");
 
         // sort
-        this.data.sort(function (A, B) {
-            return A.name.localeCompare(B.name)
-        })
+        if (!sordMethod) { sordMethod = function (A, B) { return A.name.localeCompare(B.name) }; }
+        this.data.sort(sordMethod);
 
         // object to json
-        var json = JSON.stringify(this.data);
+        var json = config.isLocalHost ?
+            JSON.stringify(this.data, null, 4) :
+            JSON.stringify(this.data);
 
         try {
             await asyncWriteFile(this.fileName, json);
@@ -146,7 +147,7 @@ class Database {
 
         // object to json
         try {
-            var binary = new Buffer.from(JSON.stringify(this.data));
+            var binary = Buffer.from(JSON.stringify(this.data));
             if (backup) {
                 await dbox.filesBackup(this.fileName);
             }
@@ -208,6 +209,7 @@ class CharaDatabase extends Database {
         data.ability_aw = "";
         data.skill = "";
         data.skill_aw = "";
+        data.urlName = "";
 
         data.rarity = "";
         data.class = "";
@@ -246,12 +248,7 @@ class CharaDatabase extends Database {
             return string;
         };
         data.getWikiUrl = function () {
-            if (this.name.indexOf("王子") != -1) {
-                var string = "http://seesaawiki.jp/aigis/d/王子";
-                return encodeURI_JP(string);
-            }
-            var string = "http://seesaawiki.jp/aigis/d/" + this.name;
-            return encodeURI_JP(string);
+            return "http://seesaawiki.jp/aigis/d/" + this.urlName;
         };
 
         return data;
@@ -295,6 +292,10 @@ class CharaDatabase extends Database {
                 this.data[i].class = newData.class;
                 if (this.data[i].class != "") { changed = true; }
             }
+            if (this.data[i].urlName == "") {
+                this.data[i].urlName = newData.urlName;
+                if (this.data[i].urlName != "") { changed = true; }
+            }
 
             if (changed) {
                 console.log("New character <" + newData.name + "> data update complete!");
@@ -304,6 +305,11 @@ class CharaDatabase extends Database {
                 return "";
             }
         };
+    };
+
+    // 儲存資料
+    async saveDB() {
+        return super.saveDB((A, B) => { return (A.rarity == B.rarity) ? A.name.localeCompare(B.name) : A.rarity.localeCompare(B.rarity) });
     };
 }
 

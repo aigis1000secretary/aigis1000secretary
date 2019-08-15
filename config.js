@@ -15,10 +15,14 @@
 
     0.7.4.1
     change online tagger Msg
+    0.7.4.2
+    CharaDataCrawler update
+    database sort method
+    deprecated new buffer()
 */
 
 const config = {
-    _version: "0.7.4.1",
+    _version: "0.7.4.2",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
