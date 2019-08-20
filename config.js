@@ -15,6 +15,7 @@
 
     0.7.4.1
     change online tagger Msg
+
     0.7.4.2
     CharaDataCrawler update
     database sort method
@@ -25,10 +26,13 @@
 
     0.7.4.4
     new image command bug fixed
+
+    0.7.4.5
+    update script fixed
 */
 
 const config = {
-    _version: "0.7.4.4",
+    _version: "0.7.4.5",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正

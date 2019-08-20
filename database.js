@@ -143,6 +143,7 @@ class Database {
 
     // 上傳備份
     async uploadDB(backup) {
+        if (config.isLocalHost) return;
         console.log(this.name + " uploading...");
 
         // object to json
@@ -151,10 +152,8 @@ class Database {
             if (backup) {
                 await dbox.filesBackup(this.fileName);
             }
-            if (!config.isLocalHost) {
-                await dbox.fileUpload(this.fileName, binary);
-                console.log(this.name + " uploaded!");
-            }
+            await dbox.fileUpload(this.fileName, binary);
+            console.log(this.name + " uploaded!");
         } catch (err) {
             console.log(err);
             botPushError(this.name + " uploading error...");
