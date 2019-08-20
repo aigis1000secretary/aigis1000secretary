@@ -786,7 +786,13 @@ const allCharaDataCrawler = function (sourceId) {
         $("a").each(function (i, elem) {
 
             let buffer = $(this).attr("href");
-            if (buffer && $(this).parent().is("td") && buffer.indexOf("http") == 0 && allCharaUrl.indexOf(buffer) == -1 && buffer.indexOf("%b2%a6%bb%d2") == -1) {
+            if (buffer && $(this).parent().is("td") &&
+                buffer.indexOf("http") == 0 &&
+                buffer.indexOf("seesaawiki.jp/aigis/d/") != -1 &&
+                buffer.indexOf("/class") == -1 &&
+                buffer.indexOf("#") == -1 &&
+                allCharaUrl.indexOf(buffer) == -1 &&
+                buffer.indexOf("%b2%a6%bb%d2") == -1) {
                 // console.log($(this).text());
                 allCharaUrl.push(buffer);
             }
