@@ -22,10 +22,13 @@
 
     0.7.4.3
     anti update ddos
+
+    0.7.4.4
+    new image command bug fixed
 */
 
 const config = {
-    _version: "0.7.4.3",
+    _version: "0.7.4.4",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正

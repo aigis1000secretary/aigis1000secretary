@@ -375,6 +375,10 @@ const replyAI = async function (rawMsg, sourceId, userId) {
 
                         albumHash = imgur.database.findAlbumData({ title: "NewImages" })[0].id;
                         imgur.api.album.removeAlbumImages({ albumHash: albumHash, ids: [imgArray[0].id] });
+
+                        // update imgur database
+                        imgur.database.deleteImageData({ id: imgArray[0].id });
+
                         return "分類完成";
                     }
                 }
