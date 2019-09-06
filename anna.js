@@ -453,12 +453,9 @@ const searchData = function (command) {
 // 搜索職業
 const searchByClass = function (command) {
     // 搜索職業
-    if (command.indexOf("金") != 0 && command.indexOf("藍") != 0 && command.indexOf("白") != 0 &&
-        command.indexOf("鉑") != 0 && command.indexOf("白金") != 0 && command.indexOf("黑") != 0) {
-        return [];
-    }
     // 分割命令
     let _rarity = getRarityString(command[0]);
+    if (_rarity == "NULL") { return []; }
     let _class = command.indexOf("白金") == 0 ? searchClass(command.substring(2).trim()) : searchClass(command.substring(1).trim());
     debugLog("_rarity + _class: <" + _rarity + " + " + _class + ">");
 
