@@ -9,6 +9,7 @@ const cheerio = require("cheerio");
 const imgur = require("./imgur.js");
 const dbox = require("./dbox.js");
 const line = require("./line.js");
+const imgUploader = require("./image.js");
 // 資料庫
 const database = require("./database.js");
 
@@ -66,7 +67,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
 
         } else if (command == "指令" || command == "HELP") {
             // help
-            var replyMsg = "歡迎使用政務官小安娜 v" + config._version + "\n\n";
+            let replyMsg = "歡迎使用政務官小安娜 v" + config._version + "\n\n";
 
             replyMsg += "狀態: 確認目前版本，資料庫資料筆數。\n(>>安娜 狀態)\n\n";
             replyMsg += "照片: 上傳角色附圖的網路空間(DropBox)。\n(>>安娜 照片)\n\n";
@@ -74,22 +75,23 @@ const replyAI = async function (rawMsg, sourceId, userId) {
             replyMsg += "職業: 列出/搜尋資料庫現有職業。\n(>>安娜 職業 恋)\n\n";
             replyMsg += "廣播: 開關廣播功能，廣播內容有官方推特即時轉播以及週四定期維護前提醒。\n\n";
             replyMsg += "學習: 用來教會安娜角色的暱稱。\n(>>安娜 學習 NNL:射手ナナリー)\n\n";
+            replyMsg += "上傳: 手動上傳資料庫。\n\n";
+            replyMsg += "更新: 讀取 wiki 進行資料庫更新。\n\n";
 
             replyMsg += "\n";
             replyMsg += "直接輸入稀有度+職業可以搜索角色\n(>>安娜 黑弓) *推薦使用\n\n";
-            replyMsg += "輸入關鍵字可進行暱稱搜索&模糊搜索\n(>>安娜 NNL)\n(>>安娜 射手ナナリー)";
+            replyMsg += "輸入關鍵字可進行暱稱搜索&模糊搜索\n(>>安娜 NNL)\n(>>安娜 射手ナナリー)\n\n";
 
             if (!_isAdmin) {
                 return replyMsg;
             }
 
-            replyMsg += "\n";
             replyMsg += "忘記: 刪除特定暱稱。\n(>>安娜 忘記 NNL)\n\n";
             replyMsg += "資料庫: 直接修改資料庫內容。\n(>>資料庫 CharaDatabase NNL.ability_aw)\n\n";
-            replyMsg += "上傳: 手動上傳資料庫更新。\n\n";
-            replyMsg += "更新: 手動上傳資料庫更新。";
+            replyMsg += "NEW: 線上圖庫手動新增TAG。\n\n";
+            replyMsg += "NEWIMG: dropbox 圖庫同步至 imgur。\n\n";
 
-            return replyMsg;
+            return replyMsg.trim();
 
         } else if (command == "狀態" || command == "STATU") {
             // status
@@ -222,6 +224,33 @@ const replyAI = async function (rawMsg, sourceId, userId) {
 
                 return "[學習] 嗯！記住了！";
             }
+        } else if (command == "上傳" || command == "UPLOAD") {
+
+            // 異步執行
+            let func = async function () {
+                try {
+                    await charaDatabase.saveDB();
+                    await charaDatabase.uploadDB(true);
+
+                    await nickDatabase.saveDB();
+                    await nickDatabase.uploadDB(true);
+
+                    await classDatabase.saveDB();
+                    await classDatabase.uploadDB(true);
+
+                    botPushLog("上傳完成!");
+                } catch (error) {
+                    botPushError("上傳異常! " + error.toString());
+                }
+            }; func();
+
+            return "上傳中...";
+
+        } else if (command == "更新" || command == "UPDATE") {
+            allCharaDataCrawler(sourceId);
+            classDataCrawler();
+            return "更新中...";
+
         } else if (_isAdmin && command == "忘記") {
             // forgot
             // <arg1>
@@ -302,36 +331,13 @@ const replyAI = async function (rawMsg, sourceId, userId) {
                 return "修改成功";
 
             }
-        } else if (command == "上傳" || command == "UPLOAD") {
-
-            // 異步執行
-            let func = async function () {
-                try {
-                    await charaDatabase.saveDB();
-                    await charaDatabase.uploadDB(true);
-
-                    await nickDatabase.saveDB();
-                    await nickDatabase.uploadDB(true);
-
-                    await classDatabase.saveDB();
-                    await classDatabase.uploadDB(true);
-
-                    botPushLog("上傳完成!");
-                } catch (error) {
-                    botPushError("上傳異常! " + error.toString());
-                }
-            }; func();
-
-            return "上傳中...";
-
-        } else if (command == "更新" || command == "UPDATE") {
-            allCharaDataCrawler(sourceId);
-            classDataCrawler();
-            return "更新中...";
-
         } else if (_isAdmin && (command == "初始化" || command == "INIT")) {
             await annaCore.init();
             return "初始化完成!";
+
+        } else if (_isAdmin && (command == "NEWIMG")) {
+            await imgUploader.upload();
+            return "上傳圖檔中...";
 
         } else if (_isAdmin && (command == "NEW")) {
             if (arg1 == "undefined") {
@@ -392,7 +398,6 @@ const replyAI = async function (rawMsg, sourceId, userId) {
         result = searchData(command);
         if (result != false) {
             return result;
-
         }
     }
 
