@@ -45,7 +45,7 @@ const lineBotOn = function () {
         // 呼叫定型文
         var result = anna.replyStamp("新人");
         if (result == false) {
-            result = await anna.replyAI("anna help", sourceId, userId);
+            result = "歡迎使用政務官小安娜 v" + config._version + ", 輸入(安娜 HELP)以取得更多訊息";
         }
         anna.debugLog(result);
         line.push(sourceId, result);
@@ -258,7 +258,7 @@ const main = async function () {
     timerBotOn();
 
     console.log("=====*****Anna secretary online*****=====");
-    botPushLog("Anna secretary online");
+    // botPushLog("Anna secretary online");
 
 }; main();
 

@@ -231,7 +231,7 @@ const twitterCore = {
             bot.stream('statuses/filter', { follow: user_id }, function (stream) {
                 // Streamingの開始と受取
                 stream.on('data', function (tweet) {
-                    console.log("stream.on = data")
+                    // console.log("stream.on = data")
 
                     twitterCore.stream.getStreamData(tweet, target, callback);
                 });
