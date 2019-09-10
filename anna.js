@@ -172,8 +172,9 @@ const replyAI = async function (rawMsg, sourceId, userId) {
                 database.groupDatabase.data[i].alarm = alarm;
 
                 let func = async function () {
-                    await database.groupDatabase.saveDB();
-                    database.groupDatabase.uploadDB(false);
+                    if (await database.groupDatabase.saveDB()) {
+                        database.groupDatabase.uploadDB(false);
+                    }
                 }; func();	// 異步儲存
 
                 return "切換廣播開關，目前為: " + (alarm ? "開" : "關");
@@ -229,14 +230,17 @@ const replyAI = async function (rawMsg, sourceId, userId) {
             // 異步執行
             let func = async function () {
                 try {
-                    await charaDatabase.saveDB();
-                    await charaDatabase.uploadDB(true);
+                    if (await charaDatabase.saveDB()) {
+                        await charaDatabase.uploadDB(true);
+                    }
 
-                    await nickDatabase.saveDB();
-                    await nickDatabase.uploadDB(true);
+                    if (await nickDatabase.saveDB()) {
+                        await nickDatabase.uploadDB(true);
+                    }
 
-                    await classDatabase.saveDB();
-                    await classDatabase.uploadDB(true);
+                    if (await classDatabase.saveDB()) {
+                        await classDatabase.uploadDB(true);
+                    }
 
                     botPushLog("上傳完成!");
                 } catch (error) {
@@ -853,9 +857,9 @@ const classDataCrawler = function () {
                     $(this).children().children().children().children().children().each(function (i, elem) {
 
                         let str = $(this).text().trim();
-                        let i = str.indexOf("\/");
-                        if (i != -1) {
-                            str = str.substring(0, i);
+                        let str_i = str.indexOf("\/");
+                        if (str_i != -1) {
+                            str = str.substring(0, str_i);
                         }
 
                         if (str.trim() == "" || str.indexOf("編集") != -1) {

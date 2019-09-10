@@ -1,3 +1,5 @@
+
+const fs = require('fs');
 const fetch = require('isomorphic-fetch');
 const Dropbox = require('dropbox').Dropbox;
 const config = require("./config.js");
@@ -53,11 +55,17 @@ let dboxCore = {
 
         try {
             let response = await dbox.filesDownload({ path: root + dirPath })
-            await writeFileSync(localPath, response.fileBinary, { encoding: "Binary" });
+
+            // let filePath = localPath.substring(0, localPath.lastIndexOf("/"));
+            // if (filePath.indexOf("\\") != -1 && !fs.existsSync(filePath)) {
+            //     fs.mkdirSync(filePath, { recursive: true });
+            // }
+
+            await fs.writeFileSync(localPath, response.fileBinary, { encoding: "Binary" });
 
             return true;
         } catch (error) {
-            //console.log(error);
+            console.log(error);
             return false;
         }
     },
@@ -136,6 +144,16 @@ let dboxCore = {
         } catch (error) {
             // console.log(error.error);
             return Promise.reject(error);
+        }
+    },
+
+    filesDelete: async function (path) {
+        console.log("filesDelete: " + path);
+        try {
+            await dbox.filesDelete({ path: root + path });
+        } catch (error) {
+            console.log(error.error);
+            return;// Promise.reject(error);
         }
     },
 

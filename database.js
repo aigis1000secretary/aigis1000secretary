@@ -1,4 +1,5 @@
 
+const fs = require('fs');
 const dbox = require("./dbox.js");
 const line = require("./line.js");
 const config = require("./config.js");
@@ -45,14 +46,13 @@ class Database {
         this.uploadTaskCount = -1;
 
         this.uploadCount = (28 * 60);
+        this.sordMethod = (A, B) => A.name.localeCompare(B.name);
     };
 
     newData() { };
     addData() { };
 
-    toString() {
-        return "Database: " + this.name + ", upload timer: " + this.uploadCount;
-    };
+    toString() { return "Database: " + this.name + ", upload timer: " + this.uploadCount; };
 
     indexOf(key) {
         for (let i in this.data) {
@@ -64,12 +64,11 @@ class Database {
     };
 
     // 儲存資料
-    async saveDB(sordMethod) {
+    async saveDB() {
         console.log(this.name + " saving...");
 
         // sort
-        if (!sordMethod) { sordMethod = function (A, B) { return A.name.localeCompare(B.name) }; }
-        this.data.sort(sordMethod);
+        this.data.sort(this.sordMethod);
 
         // object to json
         let json = config.isLocalHost ?
@@ -77,13 +76,13 @@ class Database {
             JSON.stringify(this.data);
 
         try {
-            await writeFileSync(this.fileName, json);
+            await fs.writeFileSync(this.fileName, json);
             console.log(this.name + " saved!");
+            return true;
         } catch (err) {
-            console.log(err);
-            botPushError(this.name + " saving error...");
-            botPushError(err);
-            // return Promise.reject(err);
+            console.log(this.name + " saving error...\n" + err);
+            botPushError(this.name + " saving error...\n" + err);
+            return false;
         }
     };
 
@@ -93,7 +92,7 @@ class Database {
 
         let obj = [];
         try {
-            let data = await readFileSync(this.fileName);
+            let data = await fs.readFileSync(this.fileName);
 
             try {
                 obj = JSON.parse(data);
@@ -117,11 +116,11 @@ class Database {
             }
 
             console.log(this.name + " loaded!");
+            return true;
         } catch (err) {
-            console.log(err);
-            botPushError(this.name + " loading error...");
-            botPushError(err);
-            // return Promise.reject(err);
+            console.log(this.name + " loading error...\n" + err);
+            botPushError(this.name + " loading error...\n" + err);
+            return false;
         }
     };
 
@@ -132,17 +131,17 @@ class Database {
         // download json
         if (await dbox.fileDownloadToFile(this.fileName, this.fileName)) {
             console.log(this.name + " downloaded!");
+            return true;
         } else {
-            console.log(err);
+            console.log(this.name + " downloading error...");
             botPushError(this.name + " downloading error...");
-            botPushError(err);
-            // return Promise.reject(err);
+            return false;
         }
     };
 
     // 上傳備份
     async uploadDB(backup) {
-        if (config.isLocalHost) return;
+        if (config.isLocalHost) return true;
         console.log(this.name + " uploading...");
 
         // object to json
@@ -153,41 +152,36 @@ class Database {
             }
             await dbox.fileUpload(this.fileName, binary);
             console.log(this.name + " uploaded!");
+            return true;
         } catch (err) {
-            console.log(err);
-            botPushError(this.name + " uploading error...");
-            botPushError(err);
-            // return Promise.reject(err);
+            console.log(this.name + " uploading error...\n" + err);
+            botPushError(this.name + " uploading error...\n" + err);
+            return false;
         }
     };
 
     // 延時上傳
     async uploadTask(backup) {
 
-        try {
+        if (this.uploadTaskCount > 0) {
+            // counting
+            this.uploadTaskCount = config.isLocalHost ? 5 : this.uploadCount;
+        } else {
+            // start count
+            this.uploadTaskCount = config.isLocalHost ? 5 : this.uploadCount;;
 
-            if (this.uploadTaskCount > 0) {
-                // counting
-                this.uploadTaskCount = config.isLocalHost ? 5 : this.uploadCount;
-            } else {
-                // start count
-                this.uploadTaskCount = config.isLocalHost ? 5 : this.uploadCount;;
-
-                // count down and upload
-                while (this.uploadTaskCount > 0) {
-                    await sleep(1000);
-                    this.uploadTaskCount--;
-                }
-
-                await this.saveDB();
-                this.uploadDB(backup);
+            // count down and upload
+            while (this.uploadTaskCount > 0) {
+                await sleep(1000);
+                this.uploadTaskCount--;
             }
 
-        } catch (err) {
-            console.log(err);
-            botPushError(this.name + " uploadTask error...");
-            botPushError(err);
-            // return Promise.reject(err);
+            if (await this.saveDB()) {
+                if (await this.uploadDB(backup)) { return true; }
+            }
+            console.log(this.name + " Task upload error...");
+            botPushError(this.name + " Task upload error...");
+            return false;
         }
     };
 
@@ -200,6 +194,11 @@ class Database {
 
 // Character Database
 class CharaDatabase extends Database {
+    constructor(dbName) {
+        super(dbName);
+        this.sordMethod = (A, B) => { return (A.rarity == B.rarity) ? A.name.localeCompare(B.name) : A.rarity.localeCompare(B.rarity) };
+    };
+
     newData() {
         let data = {};
         data.name = "";
@@ -265,49 +264,23 @@ class CharaDatabase extends Database {
             let i = this.indexOf(newData.name);
             let changed = false;
 
-            if (this.data[i].ability == "") {
-                this.data[i].ability = newData.ability;
-                if (this.data[i].ability != "") { changed = true; }
-            }
-            if (this.data[i].ability_aw == "") {
-                this.data[i].ability_aw = newData.ability_aw;
-                if (this.data[i].ability_aw != "") { changed = true; }
-            }
-            if (this.data[i].skill == "") {
-                this.data[i].skill = newData.skill;
-                if (this.data[i].skill != "") { changed = true; }
-            }
-            if (this.data[i].skill_aw == "") {
-                this.data[i].skill_aw = newData.skill_aw;
-                if (this.data[i].skill_aw != "") { changed = true; }
-            }
-
-            if (this.data[i].rarity == "") {
-                this.data[i].rarity = newData.rarity;
-                if (this.data[i].rarity != "") { changed = true; }
-            }
-            if (this.data[i].class == "") {
-                this.data[i].class = newData.class;
-                if (this.data[i].class != "") { changed = true; }
-            }
-            if (this.data[i].urlName == "") {
-                this.data[i].urlName = newData.urlName;
-                if (this.data[i].urlName != "") { changed = true; }
+            let keys = ["ability", "ability_aw", "skill", "skill_aw", "rarity", "class", "urlName"];
+            for (let j in keys) {
+                let key = keys[j];
+                if (this.data[i][key] == "" && newData[key]) {
+                    if (newData[key] != "") { changed = true; }
+                    this.data[i][key] = newData[key];
+                }
             }
 
             if (changed) {
                 console.log("New character <" + newData.name + "> data update complete!");
                 return "anna " + newData.name + " New character data update complete!";
             } else {
-                console.log("Character <" + newData.name + "> data is existed!");
+                // console.log("Character <" + newData.name + "> data is existed!");
                 return "";
             }
         };
-    };
-
-    // 儲存資料
-    async saveDB() {
-        return super.saveDB((A, B) => { return (A.rarity == B.rarity) ? A.name.localeCompare(B.name) : A.rarity.localeCompare(B.rarity) });
     };
 }
 
@@ -355,7 +328,7 @@ class ClassDatabase extends Database {
             return "New Class <" + newClass.name + "> add complete!";
 
         } else {
-            console.log("Class <" + newClass.name + "> is existed!");
+            // console.log("Class <" + newClass.name + "> is existed!");
             return "";
         }
     };
