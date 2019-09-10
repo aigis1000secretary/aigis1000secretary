@@ -333,6 +333,20 @@ const twitterCore = {
         },
     },
 
+    api: {
+        getTweet: function (id) {
+            return new Promise(function (resolve, reject) {
+                bot.get('statuses/show/' + id, { include_entities: true, include_ext_alt_text: true }, (error, tweet, response) => {
+                    // error ? console.log("error", JSON.stringify(error, null, 4)) : {};
+                    // tweet ? console.log("tweet", JSON.stringify(tweet, null, 4)) : {};
+                    // response ? console.log("response", JSON.stringify(response, null, 4)) : {};
+                    // twitterCore.stream.getStreamData(tweet[0], "Aigis1000", (obj) => console.log(JSON.stringify(obj, null, 4)));
+                    resolve(twitterCore.stream.getTweetData(tweet));
+                });
+            });
+        }
+    },
+
     // autoTest: async function () {
     // }
 }
@@ -345,17 +359,19 @@ module.exports = twitterCore;
 
 
 /*
-searchTweet('『冥闇の剣士アンブレ』が登場！');
+let count = 0;
+searchTweet('(from:Aigis1000)');
 function searchTweet(queryArg, nextResultsMaxIdArg = null) {
-    bot.get('search/tweets', { q: queryArg, count: 100, max_id: nextResultsMaxIdArg }, (error, searchData, response) => {
+    bot.get('search/tweets', { q: queryArg, count: 10000, max_id: nextResultsMaxIdArg }, (error, searchData, response) => {
         for (item in searchData.statuses) {
             let tweet = searchData.statuses[item];
             // console.log('@' + tweet.user.screen_name + ' : ' + tweet.text); //実際に使う場合はここでファイルへ書き出しなどといった処理を行うことになると思います
 
             // if (!tweet.retweeted_status) {
             if (tweet.user.screen_name == "Aigis1000") {
-                console.log('@' + tweet.user.screen_name + '\n >>' + tweet.text); //実際に使う場合はここでファイルへ書き出しなどといった処理を行うことになると思います
-                console.log(JSON.stringify(tweet, null, 4));
+                // console.log('@' + tweet.user.screen_name + '\n >>' + tweet.text); //実際に使う場合はここでファイルへ書き出しなどといった処理を行うことになると思います
+                console.log('@' + tweet.user.screen_name + ' >> ' + tweet.created_at + ' >> ' + tweet.id + ' >> ' + (++count)); //実際に使う場合はここでファイルへ書き出しなどといった処理を行うことになると思います
+                // console.log(JSON.stringify(tweet, null, 4));
             }
         }
 
@@ -380,6 +396,16 @@ function searchTweet(queryArg, nextResultsMaxIdArg = null) {
     });
 }//*/
 
+/* showTweet("651955440129978368");
+function showTweet(id) {
+    bot.get('statuses/lookup', { id, include_entities: true, include_ext_alt_text: true }, (error, tweet, response) => {
+        // bot.get('statuses/show/' + id, { include_entities: true, include_ext_alt_text: true }, (error, tweet, response) => {
+        // error ? console.log("error", JSON.stringify(error, null, 4)) : {};
+        tweet ? console.log("tweet", JSON.stringify(tweet, null, 4)) : {};
+        // response ? console.log("response", JSON.stringify(response, null, 4)) : {};
+        twitterCore.stream.getStreamData(tweet[0], "Aigis1000", (obj) => console.log(JSON.stringify(obj, null, 4)));
+    });
+}//*/
 
 /*
 const httpTwitterAPI = function () {

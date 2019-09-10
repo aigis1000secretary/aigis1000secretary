@@ -1,7 +1,9 @@
 
 // const fs = require("fs");
+const anna = require("./anna.js");
 const dbox = require("./dbox.js");
 const imgur = require("./imgur.js");
+const twitter = require("./twitter.js");
 const md5f = function (str) { return require('crypto').createHash('md5').update(str).digest('hex'); }
 
 
@@ -83,6 +85,7 @@ const main = async function () {
                 if (uploadResponse == null) { break; }
                 console.log("upload file: " + uploadResponse.title + ", " + fileName + ", " + tagList);
                 console.log("");
+                await sleep(10000);
             }
         } else if (resultImage.length == 1) {
             // check data
@@ -179,7 +182,30 @@ const annaWebHook = function (command) {
 }
 */
 
+const twitterImageSearch = async function () {
+    let imgArray = imgur.database.findImageData({ tag: "NewImages" });
+    if (imgArray.length > 0) {
+
+        let _regex1 = /^Aigis1000-\d{18,19}-\d{8}_\d{6}/;
+        let _regex2 = /\d{18,19}/;
+        for (let i in imgArray) {
+            let img = imgArray[i];
+
+            let fn = img.fileName;
+            if (_regex1.test(fn)) {
+                let tweetId = _regex2.exec(fn);
+                let data = await twitter.api.getTweet(tweetId);
+                console.log(tweetId);
+                console.log(img.md5);
+                console.log(await anna.searchData(data.text));
+
+            }
+            break;
+        }
+    }
+}
 
 module.exports = {
-    upload: main
+    upload: main,
+    twitterImageSearch: twitterImageSearch
 };

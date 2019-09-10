@@ -340,7 +340,8 @@ const replyAI = async function (rawMsg, sourceId, userId) {
             return "初始化完成!";
 
         } else if (_isAdmin && (command == "NEWIMG")) {
-            await imgUploader.upload();
+            await imgUploader.twitterImageSearch();
+            // await imgUploader.upload();
             return "上傳圖檔中...";
 
         } else if (_isAdmin && (command == "NEW")) {
@@ -1137,6 +1138,9 @@ const annaCore = {
     // charaDataCrawler: charaDataCrawler,
     // allCharaDataCrawler: allCharaDataCrawler,
     // classDataCrawler: classDataCrawler,
+
+    // image.js
+    searchData: searchData,
 
     // debug
     debugLog: debugLog,
