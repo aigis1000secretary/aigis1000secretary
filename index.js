@@ -12,7 +12,7 @@ let remoteTarget = "";
 let remoter = "";
 // groupDatabase
 const database = require("./database.js");
-var groupDatabase = database.groupDatabase;
+let groupDatabase = database.groupDatabase;
 
 
 
@@ -43,7 +43,7 @@ const lineBotOn = function () {
                 event.source.type == "room" ? event.source.roomId : userId;
 
         // 呼叫定型文
-        var result = anna.replyStamp("新人");
+        let result = anna.replyStamp("新人");
         if (result == false) {
             result = "歡迎使用政務官小安娜 v" + config._version + ", 輸入(安娜 HELP)以取得更多訊息";
         }
@@ -73,7 +73,7 @@ const lineBotOn = function () {
         // 文字事件
         if (event.message.type == "text") {
             // 取出文字內容
-            var msg = event.message.text.trim()
+            let msg = event.message.text.trim()
             anna.debugLog(event);
             // get source id
             let userId = !event.source.userId ? config.adminstrator : event.source.userId;	// Line API bug?
@@ -85,7 +85,7 @@ const lineBotOn = function () {
             }
 
             // define reply function
-            var replyFunc = function (rMsg) {
+            let replyFunc = function (rMsg) {
                 anna.debugLog(rMsg);
                 event.reply(rMsg)
                     .then(function (data) {
@@ -161,7 +161,7 @@ const lineBotOn = function () {
                 }
 
                 //
-                var result = await anna.replyAI(msg, sourceId, userId);
+                let result = await anna.replyAI(msg, sourceId, userId);
                 if (result != false) {
                     replyFunc(result);
                     return;
@@ -184,7 +184,7 @@ const lineBotOn = function () {
 // twitter bot 監聽
 const twitterBotOn = function () {
 
-    var callback = async function (tweet_data) {
+    let callback = async function (tweet_data) {
 
         for (let i in groupDatabase.data) {
             if (!groupDatabase.data[i].alarm) continue;
@@ -217,7 +217,7 @@ const twitterBotOn = function () {
 
 const timerBotOn = function () {
 
-    var timer = async function () {
+    let timer = async function () {
         let nd = new Date(Date.now());
         if (nd.getMinutes() < 5) {
 
@@ -268,7 +268,7 @@ const main = async function () {
 const debugFunc = async function () {
 	let sourceId = "U9eefeba8c0e5f8ee369730c4f983346b";
 	let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
-	var replyFunc = function (str) { console.log(">>" + str + "<<"); return str != "" && str && str != "undefined" };
+	let replyFunc = function (str) { console.log(">>" + str + "<<"); return str != "" && str && str != "undefined" };
 	config.switchVar.debug = true;
 
 }

@@ -91,7 +91,7 @@ module.exports = {
     createTemplateMsg: function (altText, label, url) {
         if (label.length != url.length) return "";
         if (label.length <= 0 || 4 < label.length) return "";
-        var replyMsg = {
+        let replyMsg = {
             type: "template",
             altText: altText,
             template: {
@@ -101,7 +101,7 @@ module.exports = {
             }
         };
         for (let i = 0; i < label.length; i++) {
-            var buttons = {
+            let buttons = {
                 type: "uri",
                 label: label[i],
                 uri: url[i]

@@ -647,7 +647,7 @@ let imgurCore = {
         // // Image
         // let imageHash = "CeraaNV";
         // let fileName = "20190524003631.jpg";
-        // let imageBinary = await asyncReadFile(fileName);
+        // let imageBinary = await readFileSync(fileName);
         // let tagList = "付与魔術師アンリ";
         // await imgurCore.api.image.image({ imageHash }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));
         // await imgurCore.api.image.imageUpload({ imageBinary, fileName }).then(obj => console.log(JSON.stringify(obj, null, 4))).catch(obj => console.log(JSON.stringify(obj, null, 4)));

@@ -1,4 +1,4 @@
-﻿
+
 // todo
 /*
     wait check tweet stream log file
@@ -131,39 +131,39 @@ global.sleep = function (ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-const fs = require("fs");
-global.asyncReadFile = function (filePath) {
-    return new Promise(function (resolve, reject) {
-        fs.readFile(filePath, function (err, data) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(data);
-            }
-        });
-    });
-}
-global.asyncWriteFile = function (filePath, data, options = "utf8") {
-    return new Promise(function (resolve, reject) {
-        try {
-            let path = filePath.substring(0, filePath.lastIndexOf("\\"));
+// const fs = require("fs");
+// global.asyncReadFile = function (filePath) {
+//     return new Promise(function (resolve, reject) {
+//         fs.readFile(filePath, function (err, data) {
+//             if (err) {
+//                 reject(err);
+//             } else {
+//                 resolve(data);
+//             }
+//         });
+//     });
+// }
+// global.asyncWriteFile = function (filePath, data, options = "utf8") {
+//     return new Promise(function (resolve, reject) {
+//         try {
+//             let path = filePath.substring(0, filePath.lastIndexOf("\\"));
 
-            if (path.indexOf("\\") != -1 && !fs.existsSync(path)) {
-                fs.mkdirSync(path, { recursive: true });
-            }
+//             if (path.indexOf("\\") != -1 && !fs.existsSync(path)) {
+//                 fs.mkdirSync(path, { recursive: true });
+//             }
 
-            // fs.writeFileSync(filePath, data, options);
-            // resolve();
-            fs.writeFile(filePath, data, options, function (err, bytesRead, buffer) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            });
+//             // fs.writeFileSync(filePath, data, options);
+//             // resolve();
+//             fs.writeFile(filePath, data, options, function (err, bytesRead, buffer) {
+//                 if (err) {
+//                     reject(err);
+//                 } else {
+//                     resolve();
+//                 }
+//             });
 
-        } catch (err) {
-            reject(err);
-        }
-    });
-};
+//         } catch (err) {
+//             reject(err);
+//         }
+//     });
+// };

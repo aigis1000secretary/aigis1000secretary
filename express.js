@@ -6,7 +6,7 @@ const twitter = require("./twitter.js");
 const bodyParser = require('body-parser');
 const anna = require("./anna.js");
 const config = require("./config.js");
-var jsonParser = bodyParser.json()
+let jsonParser = bodyParser.json()
 
 const app = express();
 const server = app.listen(process.env.PORT || 8080, function () {
@@ -25,10 +25,10 @@ module.exports = {
         app.get("/anna/:command", async function (request, response) {
             let sourceId = config.adminstrator;
             let userId = config.adminstrator;
-            var command = request.params.command;
-            var responseBody = "reply false!";
+            let command = request.params.command;
+            let responseBody = "reply false!";
 
-            var result = await anna.replyAI("anna " + command, sourceId, userId);
+            let result = await anna.replyAI("anna " + command, sourceId, userId);
             if (typeof (result) == "string") {
                 responseBody = result.replaceAll("\n", "<br>");
             } else {
@@ -52,9 +52,10 @@ module.exports = {
 
         // hotfix
         try {
-            await dbox.fileDownloadToFile("hotfix.js", "./hotfix.js");
-            hotfix = require("./hotfix.js");
-            app.get("/hotfix/:function", hotfix.hotfix);
+            if (await dbox.fileDownloadToFile("hotfix.js", "./hotfix.js")) {
+                hotfix = require("./hotfix.js");
+                app.get("/hotfix/:function", hotfix.hotfix);
+            }
         } catch (err) {
             console.log("hotfix error ", err);
         }

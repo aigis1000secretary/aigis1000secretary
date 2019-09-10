@@ -51,7 +51,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
             return "debug = " + (config.switchVar.debug ? "on" : "off");
 
         } else if (command.length == 1) {		// 定型文
-            var result = replyStamp(command);
+            let result = replyStamp(command);
             if (result != false) {
                 return result;
             } else {
@@ -97,7 +97,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
             // status
             await imgur.init();
 
-            var replyMsg = "";
+            let replyMsg = "";
 
             replyMsg += "目前版本 v" + config._version + "\n";
             replyMsg += "資料庫內有 " + charaDatabase.data.length + " 筆角色資料\n";
@@ -115,10 +115,10 @@ const replyAI = async function (rawMsg, sourceId, userId) {
 
         } else if (command == "工具" || command == "TOOL") {
             // tool
-            var templateMsgA, templateMsgB;
+            let templateMsgA, templateMsgB;
 
-            var tagArray = [];
-            var urlArray = [];
+            let tagArray = [];
+            let urlArray = [];
             tagArray.push("特殊合成表");
             urlArray.push("https://seesaawiki.jp/aigis/d/%C6%C3%BC%EC%B9%E7%C0%AE%C9%BD");
             tagArray.push("經驗值計算機");
@@ -139,7 +139,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
             // urlArray.push("http://sennenaigis.blog.fc2.com/");
             templateMsgB = line.createTemplateMsg("實用工具 (2)", tagArray, urlArray);
 
-            var replyMsg = [templateMsgA, templateMsgB];
+            let replyMsg = [templateMsgA, templateMsgB];
 
             return replyMsg;
 
@@ -168,7 +168,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
 
             let i = database.groupDatabase.indexOf(sourceId)
             if (i != -1) {
-                var alarm = !database.groupDatabase.data[i].alarm;
+                let alarm = !database.groupDatabase.data[i].alarm;
                 database.groupDatabase.data[i].alarm = alarm;
 
                 let func = async function () {
@@ -207,15 +207,15 @@ const replyAI = async function (rawMsg, sourceId, userId) {
 
             } else if (countB == 0) {
                 let replyMsgs = ["不認識的人呢...", "那是誰？"];
-                var replyMsg = "[學習] " + replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
+                let replyMsg = "[學習] " + replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
                 return replyMsg;
 
             } else if (countB > 1) {
                 return "[學習] 太多人了，不知道是誰";
 
             } else {
-                var key = arrayB[0];
-                var nick = keys[0];
+                let key = arrayB[0];
+                let nick = keys[0];
 
                 // 異步執行
                 nickDatabase.addData(key, nick);
@@ -304,7 +304,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
                 return "不明的目標!";
             }
             if (msg2 == "DEL") {
-                var name = targetDB.data[index].name;
+                let name = targetDB.data[index].name;
                 targetDB.data.splice(index, 1);
                 return targetDB.name + "." + name + " 刪除成功!";
             }
@@ -320,7 +320,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
                 return reply.trim();
             }
             if (msg2 == "undefined" || msg2 == "") {
-                var replyMsg = [];
+                let replyMsg = [];
                 replyMsg.push(line.createTextMsg("請換行輸入項目內容."));
                 replyMsg.push(line.createTextMsg(targetDB.data[index][propertyStr]));
                 return replyMsg;
@@ -394,7 +394,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
         }
 
         // 搜尋資料
-        var result = false;
+        let result = false;
         result = searchData(command);
         if (result != false) {
             return result;
@@ -402,7 +402,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
     }
 
     // 呼叫定型文圖片
-    var result = false;
+    let result = false;
     result = replyStamp(command);
     if (result != false) {
         return result;
@@ -411,7 +411,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
     if (callAnna) {
         // 404
         let replyMsgs = ["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"];
-        var replyMsg = replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
+        let replyMsg = replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
         return replyMsg;
     }
     return false;
@@ -453,16 +453,13 @@ const searchData = function (command) {
 // 搜索職業
 const searchByClass = function (command) {
     // 搜索職業
-    if (command.indexOf("金") != 0 && command.indexOf("藍") != 0 && command.indexOf("白") != 0 &&
-        command.indexOf("鉑") != 0 && command.indexOf("白金") != 0 && command.indexOf("黑") != 0) {
-        return [];
-    }
     // 分割命令
     let _rarity = getRarityString(command[0]);
+    if (_rarity == "NULL") { return []; }
     let _class = command.indexOf("白金") == 0 ? searchClass(command.substring(2).trim()) : searchClass(command.substring(1).trim());
     debugLog("_rarity + _class: <" + _rarity + " + " + _class + ">");
 
-    var result = [];
+    let result = [];
     // 遍歷角色資料庫
     for (let i in charaDatabase.data) {
         let obj = charaDatabase.data[i];
@@ -480,7 +477,7 @@ const generateCharaData = function (charaName) {
     let obj = charaDatabase.data[i];
 
     if (i != -1) {
-        var replyMsg = [];
+        let replyMsg = [];
         replyMsg.push(line.createTextMsg(obj.getMessage()));
 
         let imgArray = imgur.database.findImageData({ tag: charaName });
@@ -501,7 +498,7 @@ const generateCharaData = function (charaName) {
 const replyStamp = function (msg) {
     debugLog("replyStamp(" + msg + ")");
 
-    var replyMsg = [];
+    let replyMsg = [];
 
     let imgArray = imgur.database.findImageData({ tag: msg });
     if (imgArray.length > 0) {
@@ -534,10 +531,10 @@ const charaDataCrawler = function (urlPath, sourceId) {
                 return null;
             }
 
-            var html = iconv.decode(Buffer.from(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
+            let html = iconv.decode(Buffer.from(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
             let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
 
-            var newData = charaDatabase.newData();
+            let newData = charaDatabase.newData();
             let rarity = ["アイアン", "ブロンズ", "シルバー", "ゴールド", "サファイア", "プラチナ", "ブラック", "シルバ｜", "ゴ｜ルド"];
 
             // 搜尋所有表格
@@ -784,7 +781,7 @@ const allCharaDataCrawler = function (sourceId) {
             return null;
         }
 
-        var html = iconv.decode(Buffer.from(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
+        let html = iconv.decode(Buffer.from(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
         let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
 
         // 搜尋所有超連結
@@ -840,7 +837,7 @@ const classDataCrawler = function () {
             return null;
         }
 
-        var html = iconv.decode(Buffer.from(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
+        let html = iconv.decode(Buffer.from(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
         let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
 
         $("div").each(function (i, elem) {
@@ -855,8 +852,8 @@ const classDataCrawler = function () {
                     // 遍歷表格內容
                     $(this).children().children().children().children().children().each(function (i, elem) {
 
-                        var str = $(this).text().trim();
-                        var i = str.indexOf("\/");
+                        let str = $(this).text().trim();
+                        let i = str.indexOf("\/");
                         if (i != -1) {
                             str = str.substring(0, i);
                         }
@@ -865,7 +862,7 @@ const classDataCrawler = function () {
                             return;
                         }
 
-                        var newData = classDatabase.newData();
+                        let newData = classDatabase.newData();
                         newData.name = str;
                         newData.index.push(str);
                         if ($("title").text().indexOf("近接型") != -1) {
@@ -894,7 +891,7 @@ const classDataCrawler = function () {
 };
 // HTML table to array
 String.prototype.tableToArray = function () {
-    var result = [];
+    let result = [];
     let html = this.replaceAll("<br>", "\n");
     let i, j, k;
 
@@ -973,7 +970,7 @@ String.prototype.tableToArray = function () {
 
 // 資料庫
 // Character
-var charaDatabase = database.charaDatabase;
+let charaDatabase = database.charaDatabase;
 // 模糊搜尋
 const searchCharacter = function (key, accurate) {
     accurate = !!accurate;
@@ -1056,10 +1053,10 @@ const searchCharacter = function (key, accurate) {
 }
 
 // Nickname
-var nickDatabase = database.nickDatabase;
+let nickDatabase = database.nickDatabase;
 
 // Class
-var classDatabase = database.classDatabase;
+let classDatabase = database.classDatabase;
 // 搜尋職業
 const searchClass = function (str) {
     debugLog("searchClass(" + str + ")");

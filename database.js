@@ -17,7 +17,7 @@ const urlEncodeJP = function (str_utf8) { return urlEncode(str_utf8, "EUC-JP"); 
 const urlEncodeBIG5 = function (str_utf8) { return urlEncode(str_utf8, "BIG5"); }
 const urlEncodeUTF8 = function (str_utf8) { return urlEncode(str_utf8, "UTF-8"); }
 const encodeURI_JP = function (url) {
-    var result = "";
+    let result = "";
 
     let jpEncode = "";
     let big5Encode = "";
@@ -72,12 +72,12 @@ class Database {
         this.data.sort(sordMethod);
 
         // object to json
-        var json = config.isLocalHost ?
+        let json = config.isLocalHost ?
             JSON.stringify(this.data, null, 4) :
             JSON.stringify(this.data);
 
         try {
-            await asyncWriteFile(this.fileName, json);
+            await writeFileSync(this.fileName, json);
             console.log(this.name + " saved!");
         } catch (err) {
             console.log(err);
@@ -93,7 +93,7 @@ class Database {
 
         let obj = [];
         try {
-            let data = await asyncReadFile(this.fileName);
+            let data = await readFileSync(this.fileName);
 
             try {
                 obj = JSON.parse(data);
@@ -103,7 +103,7 @@ class Database {
 
             for (let i in obj) {
                 // 建立樣板
-                var newData = this.newData();
+                let newData = this.newData();
 
                 // 讀取參數
                 for (let key in obj[i]) {
@@ -130,10 +130,9 @@ class Database {
         console.log(this.name + " downloading...");
 
         // download json
-        try {
-            await dbox.fileDownloadToFile(this.fileName, this.fileName);
+        if (await dbox.fileDownloadToFile(this.fileName, this.fileName)) {
             console.log(this.name + " downloaded!");
-        } catch (err) {
+        } else {
             console.log(err);
             botPushError(this.name + " downloading error...");
             botPushError(err);
@@ -148,7 +147,7 @@ class Database {
 
         // object to json
         try {
-            var binary = Buffer.from(JSON.stringify(this.data));
+            let binary = Buffer.from(JSON.stringify(this.data));
             if (backup) {
                 await dbox.filesBackup(this.fileName);
             }
@@ -202,7 +201,7 @@ class Database {
 // Character Database
 class CharaDatabase extends Database {
     newData() {
-        var data = {};
+        let data = {};
         data.name = "";
         data.ability = "";
         data.ability_aw = "";
@@ -214,7 +213,7 @@ class CharaDatabase extends Database {
         data.class = "";
 
         data.getMessage = function () {
-            var string = "";
+            let string = "";
 
             string += this.name + "　　" + this.rarity + "\n";
 
@@ -315,7 +314,7 @@ class CharaDatabase extends Database {
 // Nickname Database
 class NickDatabase extends Database {
     newData() {
-        var data = {};
+        let data = {};
         data.name = "";
         data.target = "";
 
@@ -326,7 +325,7 @@ class NickDatabase extends Database {
         if (name == "" || nick == "") return "";
 
         if (this.indexOf(nick) == -1) {
-            var newData = this.newData();
+            let newData = this.newData();
             newData.name = nick;
             newData.target = name;
             this.data.push(newData);
@@ -337,7 +336,7 @@ class NickDatabase extends Database {
 // Class Database
 class ClassDatabase extends Database {
     newData() {
-        var data = {};
+        let data = {};
         data.name = "";
         data.index = [];
         data.type = "";
@@ -370,7 +369,7 @@ class GroupDatabase extends Database {
     };
 
     newData() {
-        var data = {};
+        let data = {};
         data.name = "";
         data.text = "";
         data.alarm = "";
@@ -383,7 +382,7 @@ class GroupDatabase extends Database {
         if (groupId == "" || text == "" || timestamp == "") return "";
 
         if (this.indexOf(groupId) == -1) {
-            var newData = this.newData();
+            let newData = this.newData();
             newData.name = groupId;
             newData.text = text;
             newData.alarm = true;
@@ -405,23 +404,17 @@ class GroupDatabase extends Database {
     };
 }
 
-var groupDatabase = new GroupDatabase("GroupDatabase");
-var charaDatabase = new CharaDatabase("CharaDatabase");
-var nickDatabase = new NickDatabase("NickDatabase");
-var classDatabase = new ClassDatabase("ClassDatabase");
+let groupDatabase = new GroupDatabase("GroupDatabase");
+let charaDatabase = new CharaDatabase("CharaDatabase");
+let nickDatabase = new NickDatabase("NickDatabase");
+let classDatabase = new ClassDatabase("ClassDatabase");
 
 module.exports = {
-    /*init() {
-
-    },*/
-
-
     groupDatabase: groupDatabase,
     charaDatabase: charaDatabase,
     nickDatabase: nickDatabase,
     classDatabase: classDatabase
 };
-
 
 
 /*
@@ -433,8 +426,6 @@ const debugFunc = async function () {
     console.log(a);
     await ClassDatabase.saveDB();
     await ClassDatabase.uploadDB(true);
-
-
 }
 
 setTimeout(debugFunc, 1 * 100);// */
