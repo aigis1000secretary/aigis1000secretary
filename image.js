@@ -7,7 +7,7 @@ const md5f = function (str) { return require('crypto').createHash('md5').update(
 
 const main = async function () {
     console.log("Image Upload Script");
-    await imgur.init();
+    // await imgur.init();
 
     // delete all image from imgur
     // // // for (let i in imgur.database.images) { await imgur.image.ImageDeletion(imgur.database.images[i].id); }
@@ -38,10 +38,10 @@ const main = async function () {
     // // download all image
     // for (let i in pathArray) {
     //     console.log(pathArray[i]);
-    //     try {
-    //         let imageBinary = await dbox.fileDownload(pathArray[i]);
+    //     let imageBinary = await dbox.fileDownload(pathArray[i]);
+    //     if (imageBinary) {
     //         fs.writeFileSync(localImagesPath + pathArray[i].replaceAll("/", "\\"), imageBinary, "Binary");
-    //     } catch (error) {
+    //     } else {
     //         console.log(error);
     //     }
     // }
@@ -57,19 +57,19 @@ const main = async function () {
 
         let resultImage = [];
         let onlineAlbum = imgur.database.findAlbumData({ title: albumName })[0];
+        if (onlineAlbum.length == 0) { console.log("findAlbumData error: " + albumName); }
         let albumHash = onlineAlbum.id;
-        let imageBinary = "", fileMd5 = "";
+        let imageBinary = null, fileMd5 = "";
 
         // filename check
         resultImage = imgur.database.findImageData({ fileName, tag: tagList.split(",")[1] });
         if (resultImage.length != 1) {
             // md5 check
-            try {
-                imageBinary = await dbox.fileDownload(pathArray[i]);
+            imageBinary = await dbox.fileDownload(pathArray[i]);
+            if (imageBinary) {
                 fileMd5 = md5f(imageBinary);  // get MD5 for check
                 resultImage = imgur.database.findImageData({ md5: fileMd5 });
-            } catch (error) {
-                console.log(error);
+            } else {
                 continue;
             }
         }
@@ -77,10 +77,13 @@ const main = async function () {
         if (resultImage.length == 0) {
             // upload
             console.log("file is not exist: " + pathArray[i]);
-            if (imageBinary == "") imageBinary = await dbox.fileDownload(pathArray[i]);
-            let uploadResponse = await imgur.api.image.imageUpload({ imageBinary, fileName, albumHash, tagList });
-            console.log("upload file: " + uploadResponse.title + ", " + fileName + ", " + tagList);
-            console.log("");
+            if (!imageBinary) imageBinary = await dbox.fileDownload(pathArray[i]);
+            if (imageBinary) {
+                let uploadResponse = await imgur.api.image.imageUpload({ imageBinary, fileName, albumHash, tagList });
+                if (uploadResponse == null) { break; }
+                console.log("upload file: " + uploadResponse.title + ", " + fileName + ", " + tagList);
+                console.log("");
+            }
         } else if (resultImage.length == 1) {
             // check data
             // console.log("file already existed(file): " + pathArray[i]);
@@ -142,15 +145,13 @@ const getFileList = async function (mainFolder) {
         // get AR image name
         promiseArray.push(
             dbox.listDir(dirArray[i])
-                .then(
-                    function (fileArray) {
-
-                        for (let j in fileArray) {
-                            // set AR image full path
-                            pathArray.push(dirArray[i] + "/" + fileArray[j]);
-                            // console.log("pathArray: " + pathArray[pathArray.length - 1]);
-                        }
+                .then(function (fileArray) {
+                    for (let j in fileArray) {
+                        // set AR image full path
+                        pathArray.push(dirArray[i] + "/" + fileArray[j]);
+                        // console.log("pathArray: " + pathArray[pathArray.length - 1]);
                     }
+                }
                 ).catch(console.log)
         );
     }

@@ -52,7 +52,7 @@ module.exports = {
 
         // hotfix
         try {
-            if (await dbox.fileDownloadToFile("hotfix.js", "./hotfix.js")) {
+            if (await dbox.fileDownloadToFile("hotfix.js")) {
                 hotfix = require("./hotfix.js");
                 app.get("/hotfix/:function", hotfix.hotfix);
             }

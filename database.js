@@ -129,7 +129,7 @@ class Database {
         console.log(this.name + " downloading...");
 
         // download json
-        if (await dbox.fileDownloadToFile(this.fileName, this.fileName)) {
+        if (await dbox.fileDownloadToFile(this.fileName)) {
             console.log(this.name + " downloaded!");
             return true;
         } else {
@@ -145,15 +145,13 @@ class Database {
         console.log(this.name + " uploading...");
 
         // object to json
-        try {
-            let binary = Buffer.from(JSON.stringify(this.data));
-            if (backup) {
-                await dbox.filesBackup(this.fileName);
-            }
-            await dbox.fileUpload(this.fileName, binary);
+        if (backup) { await dbox.filesBackup(this.fileName); }
+
+        let binary = Buffer.from(JSON.stringify(this.data));
+        if (await dbox.fileUpload(this.fileName, binary)) {
             console.log(this.name + " uploaded!");
             return true;
-        } catch (err) {
+        } else {
             console.log(this.name + " uploading error...\n" + err);
             botPushError(this.name + " uploading error...\n" + err);
             return false;

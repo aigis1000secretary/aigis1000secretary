@@ -277,7 +277,7 @@ let imgurCore = {
 
                 } catch (error) {
                     console.log(error);
-                    return {};
+                    return null;
                 }
             },
             // DEL Image Deletion

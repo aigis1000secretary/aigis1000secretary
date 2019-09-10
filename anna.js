@@ -374,8 +374,9 @@ const replyAI = async function (rawMsg, sourceId, userId) {
                     if (charaArray.length == 1) {
                         target = charaArray[0].trim();
                         // move image file
-                        dbox.filesMove("NewImages/NewImages/" + imgArray[0].fileName, "Character/" + target + "/" + imgArray[0].fileName)
-                            .catch((e) => console.log("分類錯誤! "));
+                        if (!dbox.filesMove("NewImages/NewImages/" + imgArray[0].fileName, "Character/" + target + "/" + imgArray[0].fileName)) {
+                            console.log("分類錯誤!");
+                        }
 
                         // set taglist
                         imgur.api.image.updateImage({ imageHash: imgArray[0].id, tagList: "Character," + target });

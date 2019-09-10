@@ -1,5 +1,6 @@
 
 const fs = require('fs');
+const path = require('path');
 const fetch = require('isomorphic-fetch');
 const Dropbox = require('dropbox').Dropbox;
 const config = require("./config.js");
@@ -9,7 +10,7 @@ const dbox = new Dropbox({
 });
 const root = config.dropbox.DROPBOX_ROOT;
 
-let dboxCore = {
+module.exports = {
     // const rootUrl = "https://aigis1000secretary.updog.co/";
     // https://aigis1000secretary.updog.co/%E5%88%BB%E8%A9%A0%E3%81%AE%E9%A2%A8%E6%B0%B4%E5%A3%AB%E3%83%AA%E3%83%B3%E3%83%8D/6230667.png
     // https://aigis1000secretary.updog.co/刻詠の風水士リンネ/6230667.png
@@ -50,34 +51,35 @@ let dboxCore = {
     },
 
     // download
-    fileDownloadToFile: async function (dirPath, localPath) {
-        if (!localPath) localPath = dirPath;
-
+    fileDownloadToFile: async function (base, localPath) {
         try {
-            let response = await dbox.filesDownload({ path: root + dirPath })
+            let onlinePath = path.format({ root, base });
+            if (!localPath) localPath = "." + path.normalize(onlinePath);
 
-            // let filePath = localPath.substring(0, localPath.lastIndexOf("/"));
-            // if (filePath.indexOf("\\") != -1 && !fs.existsSync(filePath)) {
-            //     fs.mkdirSync(filePath, { recursive: true });
-            // }
+            let parse = path.parse(localPath);
+            let folderPath = parse.root + parse.dir;
+            if (!fs.existsSync(folderPath)) { fs.mkdirSync(folderPath, { recursive: true }); }
 
+            let response = await dbox.filesDownload({ path: onlinePath });
             await fs.writeFileSync(localPath, response.fileBinary, { encoding: "Binary" });
 
             return true;
         } catch (error) {
             console.log(error);
+            // console.log(JSON.stringify(error, null, 4));
             return false;
         }
     },
-    //fileDownloadToFile("刻詠の風水士リンネ/6230667.png", "6230667.png");
-    fileDownload: async function (dirPath) {
+    //fileDownloadToFile("刻詠の風水士リンネ/6230667.png");
+    fileDownload: async function (base) {
         try {
-            let response = await dbox.filesDownload({ path: root + dirPath })
+            let onlinePath = path.format({ root, base });
+            let response = await dbox.filesDownload({ path: onlinePath });
             return response.fileBinary;
 
         } catch (error) {
-            //console.log(error);
-            return Promise.reject(error);
+            console.log(error);
+            return null;
         }
     },
 
@@ -94,10 +96,10 @@ let dboxCore = {
 
         try {
             await dbox.filesUpload(filesCommitInfo);
-
+            return true;
         } catch (error) {
-            //console.log(error);
-            return Promise.reject(error);
+            console.log(error);
+            return false;
         }
     },
 
@@ -117,10 +119,10 @@ let dboxCore = {
         try {
             await dbox.filesCopy(filesRelocationArg);
             // await dbox.filesDelete(filesDeleteArg);
-
+            return !false;
         } catch (error) {
-            // console.log(error);
-            return Promise.reject(error);
+            console.log(error);
+            return false;
         }
     },
 
@@ -140,10 +142,10 @@ let dboxCore = {
         try {
             await dbox.filesCopy(filesRelocationArg);
             await dbox.filesDelete(filesDeleteArg);
-
+            return !false;
         } catch (error) {
-            // console.log(error.error);
-            return Promise.reject(error);
+            console.log(error);
+            return false;
         }
     },
 
@@ -151,19 +153,20 @@ let dboxCore = {
         console.log("filesDelete: " + path);
         try {
             await dbox.filesDelete({ path: root + path });
+            return !false;
         } catch (error) {
             console.log(error.error);
-            return;// Promise.reject(error);
+            return false;
         }
     },
 
-}; module.exports = dboxCore
+};
 
 
 /*
 const debugFunc = function() {
 
-	module.exports.listDir("").then(function(obj){console.log(obj);});
+	dboxCore.listDir("").then(function(obj){console.log(obj);});
 
 }
 setTimeout(debugFunc, 1 * 1000);*/
