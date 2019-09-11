@@ -19,8 +19,8 @@ const lineBotOn = function () {
         if (config.switchVar.logRequestToFile && event) {
             dbox.logToFile("webhook/", "memberJoined", event);
         }
-
         // anna.debugLog(event);
+
         let userId = event.source.userId || config.adminstrator;	// Line API bug?
         let sourceId = event.source.groupId || event.source.roomId || userId;
 
@@ -29,7 +29,6 @@ const lineBotOn = function () {
         if (result == false) {
             result = "歡迎使用政務官小安娜 v" + config._version + ", 輸入(安娜 HELP)以取得更多訊息";
         }
-        anna.debugLog(result);
         line.push(sourceId, result);
         return true;
     });// */
@@ -39,18 +38,17 @@ const lineBotOn = function () {
         if (config.switchVar.logRequestToFile && event) {
             dbox.logToFile("webhook/", "message", event);
         }
-        // anna.debugLog(event);
 
         // 文字事件
         if (event.message.type == "text") {
+            anna.debugLog(event + "\n");
+
             // 取出文字內容
             let msg = event.message.text.trim()
-            anna.debugLog(event);
+
             // get source id
-            let userId = !event.source.userId ? config.adminstrator : event.source.userId;	// Line API bug?
-            let sourceId =
-                event.source.type == "group" ? event.source.groupId :
-                    event.source.type == "room" ? event.source.roomId : userId;
+            let userId = event.source.userId || config.adminstrator;	// Line API bug?
+            let sourceId = event.source.groupId || event.source.roomId || userId;
             if (sourceId[0] != "U") {
                 groupDatabase.addData(sourceId, msg.split("\n")[0].trim(), event.timestamp);
             }
@@ -58,13 +56,7 @@ const lineBotOn = function () {
             // define reply function
             let replyFunc = function (rMsg) {
                 anna.debugLog(rMsg);
-                event.reply(rMsg)
-                    .then(function (data) {
-                        anna.debugLog(data);
-                    })
-                    .catch(function (error) {
-                        anna.debugLog(error);
-                    });
+                event.reply(rMsg).then(anna.debugLog).catch(anna.debugLog);
                 return true;
             };
 
@@ -87,20 +79,22 @@ const lineBotOn = function () {
                 }
 
                 //
-                let result = await anna.replyAI(msg, sourceId, userId);
-                if (result != false) {
-                    replyFunc(result);
-                    return;
-                }
+                anna.replyAI(msg, sourceId, userId).then((result) => {
+                    if (result != false) {
+                        replyFunc(result);
+                        return;
+                    }
 
-                // egg
-                if (Math.floor(Math.random() * 10000) == 0) {
-                    replyFunc("ちくわ大明神");
-                    return;
-                }
+                    // egg
+                    if (Math.floor(Math.random() * 10000) == 0) {
+                        replyFunc("ちくわ大明神");
+                        return;
+                    }
 
-                // 無視...
-                anna.debugLog("Not a command");
+                    // 無視...
+                    anna.debugLog("Not a command");
+                    return;
+                })
                 return;
             }
 
@@ -117,12 +111,14 @@ const twitterBotOn = function () {
             // 14 days no ant msg idle group	3 * 24 * 60 * 60 * 1000
             if (Date.now() - groupDatabase.data[i].timestamp > 259200000) {
                 groupDatabase.data[i].alarm = false;
-                groupDatabase.uploadTask(false);
+                groupDatabase.uploadTask();
                 continue;
             }
 
+            let pushList = [];
+
             // push text
-            await botPush(groupDatabase.data[i].name, tweet_data.text);
+            pushList.push(groupDatabase.data[i].name, tweet_data.text);
 
             // push image
             if (tweet_data.medias.length <= 0) continue;
@@ -130,8 +126,12 @@ const twitterBotOn = function () {
                 let media = tweet_data.medias[j];
                 if (media.type == "photo") {
                     let imageMsg = line.createImageMsg(media.link, media.link);
-                    await botPush(groupDatabase.data[i].name, imageMsg);
+                    pushList.push(groupDatabase.data[i].name, imageMsg);
                 }
+            }
+
+            while (pushList.length > 0) {
+                line.pushMsg(groupDatabase.data[i].name, pushList.splice(0, 3));
             }
         }
     }
@@ -196,7 +196,6 @@ const debugFunc = async function () {
 	let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
 	let replyFunc = function (str) { console.log(">>" + str + "<<"); return str != "" && str && str != "undefined" };
 	config.switchVar.debug = true;
-
 }
 
 

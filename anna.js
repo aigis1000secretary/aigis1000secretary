@@ -172,9 +172,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
                 database.groupDatabase.data[i].alarm = alarm;
 
                 let func = async function () {
-                    if (database.groupDatabase.saveDB()) {
-                        database.groupDatabase.uploadDB(false);
-                    }
+                    database.groupDatabase.uploadDB();
                 }; func();	// 異步儲存
 
                 return "切換廣播開關，目前為: " + (alarm ? "開" : "關");
@@ -228,25 +226,11 @@ const replyAI = async function (rawMsg, sourceId, userId) {
         } else if (command == "上傳" || command == "UPLOAD") {
 
             // 異步執行
-            let func = async function () {
-                try {
-                    if (charaDatabase.saveDB()) {
-                        await charaDatabase.uploadDB(true);
-                    }
-
-                    if (nickDatabase.saveDB()) {
-                        await nickDatabase.uploadDB(true);
-                    }
-
-                    if (classDatabase.saveDB()) {
-                        await classDatabase.uploadDB(true);
-                    }
-
-                    botPushLog("上傳完成!");
-                } catch (error) {
-                    botPushError("上傳異常! " + error.toString());
-                }
-            }; func();
+            Promise.all(
+                [charaDatabase.uploadDB(),
+                nickDatabase.uploadDB(),
+                classDatabase.uploadDB()])
+                .then((result) => { result ? botPushLog("上傳完成!") : botPushError("上傳異常! ") });
 
             return "上傳中...";
 

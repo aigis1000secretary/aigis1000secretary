@@ -39,11 +39,12 @@ const encodeURI_JP = function (url) {
 }
 
 class Database {
-    constructor(dbName) {
+    constructor(dbName, backup) {
         this.name = dbName;
         this.fileName = dbName + ".json";
         this.data = [];
         this.uploadTaskCount = -1;
+        this.backup = backup;
 
         this.uploadCount = (28 * 60);
         this.sordMethod = (A, B) => A.name.localeCompare(B.name);
@@ -64,7 +65,7 @@ class Database {
     };
 
     // 儲存資料
-    saveDB() {
+    async saveDB() {
         console.log(this.name + " saving...");
 
         // sort
@@ -140,12 +141,14 @@ class Database {
     };
 
     // 上傳備份
-    async uploadDB(backup) {
+    async uploadDB() {
+        if (!await this.saveDB()) return false;
+
         if (config.isLocalHost) { console.log(this.name + " uploadDB(Dry)"); return true; }
         console.log(this.name + " uploading...");
 
         // object to json
-        if (backup) { await dbox.filesBackup(this.fileName); }
+        if (this.backup) { await dbox.filesBackup(this.fileName); }
 
         let binary = Buffer.from(JSON.stringify(this.data));
         if (await dbox.fileUpload(this.fileName, binary)) {
@@ -159,7 +162,7 @@ class Database {
     };
 
     // 延時上傳
-    async uploadTask(backup) {
+    async uploadTask() {
 
         if (this.uploadTaskCount > 0) {
             // counting
@@ -174,26 +177,26 @@ class Database {
                 this.uploadTaskCount--;
             }
 
-            if (this.saveDB()) {
-                if (await this.uploadDB(backup)) { return true; }
-            }
-            console.log(this.name + " Task upload error...");
-            botPushError(this.name + " Task upload error...");
-            return false;
+            this.uploadDB().then((result) => {
+                if (!result) {
+                    console.log(this.name + " Task upload error...");
+                    botPushError(this.name + " Task upload error...");
+                }
+            });
         }
     };
 
     // init
     async init() {
         await this.downloadDB();
-        await this.loadDB();
+        this.loadDB();
     };
 }
 
 // Character Database
 class CharaDatabase extends Database {
-    constructor(dbName) {
-        super(dbName);
+    constructor(dbName, backup) {
+        super(dbName, backup);
         this.sordMethod = (A, B) => { return (A.rarity == B.rarity) ? A.name.localeCompare(B.name) : A.rarity.localeCompare(B.rarity) };
     };
 
@@ -334,8 +337,8 @@ class ClassDatabase extends Database {
 
 // Group Database
 class GroupDatabase extends Database {
-    constructor(dbName) {
-        super(dbName);
+    constructor(dbName, backup) {
+        super(dbName, backup);
         this.uploadCount = (10 * 60);
     };
 
@@ -370,15 +373,15 @@ class GroupDatabase extends Database {
             this.data[i].text = text;
             this.data[i].timestamp = timestamp;
         }
-        this.uploadTask(false);
+        this.uploadTask();
         return "";
     };
 }
 
-let groupDatabase = new GroupDatabase("GroupDatabase");
-let charaDatabase = new CharaDatabase("CharaDatabase");
-let nickDatabase = new NickDatabase("NickDatabase");
-let classDatabase = new ClassDatabase("ClassDatabase");
+let groupDatabase = new GroupDatabase("GroupDatabase", false);
+let charaDatabase = new CharaDatabase("CharaDatabase", true);
+let nickDatabase = new NickDatabase("NickDatabase", true);
+let classDatabase = new ClassDatabase("ClassDatabase", true);
 
 module.exports = {
     groupDatabase: groupDatabase,
@@ -395,8 +398,7 @@ const debugFunc = async function () {
     await ClassDatabase.loadDB();
     let a = ClassDatabase.indexOf("アコライト");
     console.log(a);
-    await ClassDatabase.saveDB();
-    await ClassDatabase.uploadDB(true);
+    await ClassDatabase.uploadDB();
 }
 
 setTimeout(debugFunc, 1 * 100);// */

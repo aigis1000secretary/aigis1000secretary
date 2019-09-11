@@ -16,7 +16,7 @@ const server = app.listen(process.env.PORT || 8080, function () {
 });
 
 module.exports = {
-    init: async function () {
+    init: function () {
 
         // http host
         app.get("/", function (request, response) {
@@ -51,14 +51,12 @@ module.exports = {
         app.post("/twitterbot/", jsonParser, twitter.webhook.post);
 
         // hotfix
-        try {
-            if (await dbox.fileDownloadToFile("hotfix.js")) {
+        dbox.fileDownloadToFile("hotfix.js").then((result) => {
+            if (result) {
                 hotfix = require("./hotfix.js");
                 app.get("/hotfix/:function", hotfix.hotfix);
             }
-        } catch (err) {
-            console.log("hotfix error ", err);
-        }
+        }).catch((error) => console.log("hotfix error ", error))
     },
 };
 module.exports.init();

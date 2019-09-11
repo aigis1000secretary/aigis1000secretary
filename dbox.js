@@ -88,7 +88,7 @@ module.exports = {
         let filesCommitInfo = {
             path: root + dirPath,
             contents: fileBinary,
-            mode: { ".tag": ((mode) ? mode : "overwrite") },
+            mode: { ".tag": (mode || "overwrite") },
             autorename: false,
             mute: true
         };
@@ -118,7 +118,7 @@ module.exports = {
         try {
             await dbox.filesCopy(filesRelocationArg);
             // await dbox.filesDelete(filesDeleteArg);
-            return !false;
+            return true;
         } catch (error) {
             console.log(error);
             return false;
@@ -141,7 +141,7 @@ module.exports = {
         try {
             await dbox.filesCopy(filesRelocationArg);
             await dbox.filesDelete(filesDeleteArg);
-            return !false;
+            return true;
         } catch (error) {
             console.log(error);
             return false;
@@ -153,7 +153,7 @@ module.exports = {
         console.log("filesDelete: " + path);
         try {
             await dbox.filesDelete({ path: root + path });
-            return !false;
+            return true;
         } catch (error) {
             console.log(error.error);
             return false;

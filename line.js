@@ -16,42 +16,32 @@ class LineMessage {
 
 module.exports = {
     bot: devbot,
-    botPush: async function (userId, msg) {
-        if (msg.constructor.name != "LineMessage" && typeof (msg) != "string") {
-            msg = msg.toString() + JSON.stringify(msg, null, 2)
-        }
-
-        await module.exports.pushMsg(userId, msg);
+    botPush: function (userId, msg) {
+        module.exports.pushMsg(userId, "", msg);
     },
-    botPushLog: async function (msg) {
-        if (msg.constructor.name != "LineMessage" && typeof (msg) != "string") {
-            msg = msg.toString() + JSON.stringify(msg, null, 2)
-        }
-
-        await module.exports.pushMsg(debugLogger, "@" + msg);
+    botPushLog: function (msg) {
+        module.exports.pushMsg(debugLogger, "log", msg);
     },
-    botPushError: async function (msg) {
-        if (msg.constructor.name != "LineMessage" && typeof (msg) != "string") {
-            msg = msg.toString() + JSON.stringify(msg, null, 2)
-        }
-
-        await module.exports.pushMsg(debugLogger, "#" + msg);
+    botPushError: function (msg) {
+        module.exports.pushMsg(debugLogger, "logError", msg);
     },
-    pushMsg: async function (userId, msg) {
+    pushMsg: function (userId, type, msg) {
         if (!config.isLocalHost) {
-            let result = await devbot.push(userId, msg);
+            devbot.push(userId, msg).then((result => {
+                if (config.switchVar.logLineBotPush) {
+                    let logObject = {
+                        to: userId,
+                        type: type,
+                        messages: msg,
+                        result: result
+                    };
 
-            if (config.switchVar.logLineBotPush) {
-                let logObject = {};
-                logObject.to = userId;
-                logObject.messages = msg;
-                logObject.result = result;
-
-                // log to dropbox
-                dbox.logToFile("linePush/", (result.message == "You have reached your monthly limit." ? "linePushFail" : "linePush"), logObject);
-            }
+                    // log to dropbox
+                    dbox.logToFile("linePush/", (result.message == "You have reached your monthly limit." ? "linePushFail" : "linePush"), logObject);
+                }
+            }));
         } else {
-            console.log(">> " + msg);
+            console.log(type + ">> " + JSON.stringify(msg, null, 2));
         }
     },
 
@@ -69,7 +59,7 @@ module.exports = {
         return new LineMessage({
             type: "image",
             originalContentUrl: image,
-            previewImageUrl: (!thumbnail ? image : thumbnail)
+            previewImageUrl: (thumbnail || image)
         });
     },
     // 超連結選項

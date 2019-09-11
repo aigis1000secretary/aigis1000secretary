@@ -290,7 +290,7 @@ const twitterCore = {
             tweet_data.timestamp_ms = raw.timestamp_ms;
 
             // tweet text
-            tweet_data.text = raw.full_text ? raw.full_text : raw.text;
+            tweet_data.text = raw.full_text || raw.text;
 
             // tweet media
             if (raw.entities.media && Array.isArray(raw.entities.media)) {

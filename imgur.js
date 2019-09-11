@@ -700,8 +700,8 @@ class Image {
     };
     _constructor({ id, title, description, name, link }) {
         this.fileName = name;
-        this.md5 = (description) ? description : "";;
-        this.tagList = (title) ? title : "";
+        this.md5 = description || "";;
+        this.tagList = title || "";
         this.id = id; // imageHash
         this.imageLink = link;
         this.thumbnailLink = (link) ? link.replace(this.id, this.id + "m") : "";
