@@ -83,7 +83,6 @@ module.exports = {
         }
     },
 
-
     // upload
     fileUpload: async function (dirPath, fileBinary, mode) {
         let filesCommitInfo = {
@@ -149,6 +148,7 @@ module.exports = {
         }
     },
 
+    // delete
     filesDelete: async function (path) {
         console.log("filesDelete: " + path);
         try {
@@ -158,6 +158,22 @@ module.exports = {
             console.log(error.error);
             return false;
         }
+    },
+
+    // 
+    logToFile: function (base, name, data) {
+        let dateNow = new Date(Date.now());
+        let path = (dateNow.getMonth() + 1).toString().padStart(2, "0") + "/" + name + +"_" +
+            dateNow.getFullYear().toString().padStart(4, "0") + "-" +
+            (dateNow.getMonth() + 1).toString().padStart(2, "0") + "-" +
+            dateNow.getDate().toString().padStart(2, "0") + "-" +
+            dateNow.getHours().toString().padStart(2, "0") +
+            dateNow.getMinutes().toString().padStart(2, "0") +
+            dateNow.getSeconds().toString().padStart(2, "0") +
+            dateNow.getMilliseconds().toString().padStart(4, "0");
+
+        let binary = Buffer.from(JSON.stringify(data, null, 4))
+        dbox.fileUpload(base + path + ".json", binary, "add").catch(console.log);
     },
 
 };

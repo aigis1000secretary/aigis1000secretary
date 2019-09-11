@@ -182,18 +182,7 @@ const twitterCore = {
         },
         post: function (request, response) {
             if (config.switchVar.logRequestToFile && request.body) {
-                let dateNow = new Date(Date.now());
-                let path = "twitter_" +
-                    dateNow.getFullYear() + "-" +
-                    ((dateNow.getMonth() + 1) + "-").padStart(3, "0") +
-                    (dateNow.getDate() + "-").padStart(3, "0") +
-                    (dateNow.getHours() + "").padStart(2, "0") +
-                    (dateNow.getMinutes() + "").padStart(2, "0") +
-                    (dateNow.getSeconds() + "").padStart(2, "0") +
-                    (dateNow.getMilliseconds() + "").padStart(4, "0");
-                let data = Buffer.from(JSON.stringify(request.body, null, 4));
-
-                dbox.fileUpload("webhook/" + ((dateNow.getMonth() + 1) + "/").padStart(3, "0") + path + ".json", data, "add").catch(function (error) { });
+                dbox.logToFile("webhook/", "twitter", request.body);
             }
             response.send("200 OK");
         }
@@ -279,18 +268,7 @@ const twitterCore = {
 
                 // log
                 if (config.switchVar.logStreamToFile && tweet) {
-                    let dateNow = new Date(Date.now());
-                    let dateString = "twitter_" +
-                        dateNow.getFullYear() + "-" +
-                        ((dateNow.getMonth() + 1) + "-").padStart(3, "0") +
-                        (dateNow.getDate() + "-").padStart(3, "0") +
-                        (dateNow.getHours() + "").padStart(2, "0") +
-                        (dateNow.getMinutes() + "").padStart(2, "0") +
-                        (dateNow.getSeconds() + "").padStart(2, "0") +
-                        (dateNow.getMilliseconds() + "").padStart(4, "0");
-                    let data = Buffer.from(JSON.stringify(tweet, null, 4));
-
-                    dbox.fileUpload("stream/" + ((dateNow.getMonth() + 1) + "/").padStart(3, "0") + dateString + ".json", data, "add").catch(function (error) { });
+                    dbox.logToFile("stream/", "twitter", tweet);
                 }
             }
         },

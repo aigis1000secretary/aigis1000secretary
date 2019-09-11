@@ -48,19 +48,7 @@ module.exports = {
                 logObject.result = result;
 
                 // log to dropbox
-                let dateNow = new Date(Date.now());
-                let path = (result.message == "You have reached your monthly limit." ? "linePushFail" : "linePush") +
-                    dateNow.getFullYear() + "-" +
-                    ((dateNow.getMonth() + 1) + "-").padStart(3, "0") +
-                    (dateNow.getDate() + "-").padStart(3, "0") +
-                    (dateNow.getHours() + "").padStart(2, "0") +
-                    (dateNow.getMinutes() + "").padStart(2, "0") +
-                    (dateNow.getSeconds() + "").padStart(2, "0") +
-                    (dateNow.getMilliseconds() + "").padStart(4, "0");
-                let data = Buffer.from(JSON.stringify(logObject, null, 4));
-
-                dbox.fileUpload("linePush/" + ((dateNow.getMonth() + 1) + "/").padStart(3, "0") + path + ".json", data, "add").catch(function (error) { });
-
+                dbox.logToFile("linePush/", (result.message == "You have reached your monthly limit." ? "linePushFail" : "linePush"), logObject);
             }
         } else {
             console.log(">> " + msg);

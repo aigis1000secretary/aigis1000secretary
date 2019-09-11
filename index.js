@@ -2,6 +2,7 @@
 const config = require("./config.js");
 const anna = require("./anna.js");
 const imgur = require("./imgur.js");
+const dbox = require("./dbox.js");
 const express = require("./express.js");
 const line = require("./line.js");
 const twitter = require("./twitter.js");
@@ -16,25 +17,12 @@ const lineBotOn = function () {
     // wellcome msg
     line.bot.on("memberJoined", async function (event) {
         if (config.switchVar.logRequestToFile && event) {
-            let dateNow = new Date(Date.now());
-            let path = "line_bot_on_memberJoined/" +
-                dateNow.getFullYear() + "-" +
-                ((dateNow.getMonth() + 1) + "-").padStart(3, "0") +
-                (dateNow.getDate() + "-").padStart(3, "0") +
-                (dateNow.getHours() + "").padStart(2, "0") +
-                (dateNow.getMinutes() + "").padStart(2, "0") +
-                (dateNow.getSeconds() + "").padStart(2, "0") +
-                (dateNow.getMilliseconds() + "").padStart(4, "0");
-            let data = Buffer.from(JSON.stringify(event, null, 4));
-
-            dbox.fileUpload("webhook/" + ((dateNow.getMonth() + 1) + "/").padStart(3, "0") + path + ".json", data, "add").catch(function (error) { });
+            dbox.logToFile("webhook/", "memberJoined", event);
         }
 
         // anna.debugLog(event);
-        let userId = !event.source.userId ? config.adminstrator : event.source.userId;	// Line API bug?
-        let sourceId =
-            event.source.type == "group" ? event.source.groupId :
-                event.source.type == "room" ? event.source.roomId : userId;
+        let userId = event.source.userId || config.adminstrator;	// Line API bug?
+        let sourceId = event.source.groupId || event.source.roomId || userId;
 
         // 呼叫定型文
         let result = anna.replyStamp("新人");
@@ -49,18 +37,7 @@ const lineBotOn = function () {
     // normal msg
     line.bot.on("message", async function (event) {
         if (config.switchVar.logRequestToFile && event) {
-            let dateNow = new Date(Date.now());
-            let path = "line_bot_on_message/" +
-                dateNow.getFullYear() + "-" +
-                ((dateNow.getMonth() + 1) + "-").padStart(3, "0") +
-                (dateNow.getDate() + "-").padStart(3, "0") +
-                (dateNow.getHours() + "").padStart(2, "0") +
-                (dateNow.getMinutes() + "").padStart(2, "0") +
-                (dateNow.getSeconds() + "").padStart(2, "0") +
-                (dateNow.getMilliseconds() + "").padStart(4, "0");
-            let data = Buffer.from(JSON.stringify(event, null, 4));
-
-            dbox.fileUpload("webhook/" + ((dateNow.getMonth() + 1) + "/").padStart(3, "0") + path + ".json", data, "add").catch(function (error) { });
+            dbox.logToFile("webhook/", "message", event);
         }
         // anna.debugLog(event);
 
