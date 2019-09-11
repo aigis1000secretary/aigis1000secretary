@@ -6,15 +6,9 @@ const express = require("./express.js");
 const line = require("./line.js");
 const twitter = require("./twitter.js");
 
-// remote system
-let botMode = "anna";
-let remoteTarget = "";
-let remoter = "";
 // groupDatabase
 const database = require("./database.js");
 let groupDatabase = database.groupDatabase;
-
-
 
 // line bot 監聽
 const lineBotOn = function () {
@@ -97,53 +91,8 @@ const lineBotOn = function () {
                 return true;
             };
 
-            // remote func
-            if (anna.isAdmin(sourceId)) {
-                if (msg == "remote") {
-                    // list group
-                    for (let i in groupDatabase.data) {
-                        let groupId = groupDatabase.data[i].name;
-                        let text = groupDatabase.data[i].text;
-
-                        let str = groupId + " :\n\t" + text;
-                        console.log(str);
-                        await botPush(userId, str);
-                    }
-                    return;
-
-                } else if (msg == "remote off") {
-                    botMode = "anna";
-                    remoteTarget = "";
-                    remoter = "";
-                    replyFunc("remote off");
-                    return;
-
-                } else if (msg.indexOf("remote ") == 0) {
-                    let target = msg.split(" ")[1];
-                    let i = groupDatabase.indexOf(target);
-                    if (i != -1) {
-                        botMode = "remote";
-                        remoteTarget = groupDatabase.data[i].name;
-                        remoter = userId;
-                        replyFunc("remote on " + groupDatabase.data[i].text);
-                    }
-                    return;
-                }
-            }
-            // remote mode
-            if (botMode == "remote") {
-                if (sourceId == remoteTarget) {
-                    botPush(remoter, msg);
-                    return;
-                } else if (sourceId == remoter) {
-                    botPush(remoteTarget, msg);
-                    return;
-                }
-            }
-
             // bot mode
-            // if (botMode == "anna") {
-            if (sourceId != remoter && sourceId != remoteTarget) {
+            if (botMode == "anna") {
                 // normal response
                 if (msg == "安娜") {
                     replyFunc("是的！王子？");
