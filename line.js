@@ -100,7 +100,7 @@ module.exports = {
                 actions: []
             }
         };
-        for (let i = 0; i < label.length; i++) {
+        for (let i = 0; i < label.length; ++i) {
             let buttons = {
                 type: "uri",
                 label: label[i],

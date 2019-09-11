@@ -34,7 +34,7 @@ module.exports = {
             let response = await dbox.filesListFolder({ path: root + dirPath });
             //console.log(response);
 
-            for (let i = 0; i < response.entries.length; i++) {
+            for (let i = 0; i < response.entries.length; ++i) {
                 //result.push(response.entries[i].name + ", " + response.entries[i][".tag"]); continue;
                 if (!filter) {
                     result.push(response.entries[i].name)
@@ -61,7 +61,7 @@ module.exports = {
             if (!fs.existsSync(folderPath)) { fs.mkdirSync(folderPath, { recursive: true }); }
 
             let response = await dbox.filesDownload({ path: onlinePath });
-            await fs.writeFileSync(localPath, response.fileBinary, { encoding: "Binary" });
+            fs.writeFileSync(localPath, response.fileBinary, { encoding: "Binary" });
 
             return true;
         } catch (error) {

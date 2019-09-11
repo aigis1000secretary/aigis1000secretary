@@ -15,7 +15,6 @@ const main = async function () {
     // // // for (let i in imgur.database.images) { await imgur.image.ImageDeletion(imgur.database.images[i].id); }
 
     // save database
-    // imgur.database.saveDatabase();
     console.log("== image.js ==");
 
     // get dropbox image list
@@ -197,7 +196,7 @@ const twitterImageSearch = async function () {
                 let data = await twitter.api.getTweet(tweetId);
                 console.log(tweetId);
                 console.log(img.md5);
-                console.log(await anna.searchData(data.text));
+                console.log(anna.searchData(data.text));
 
             }
             break;

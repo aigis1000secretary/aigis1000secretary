@@ -347,15 +347,11 @@ const twitterCore = {
         }
     },
 
-    // autoTest: async function () {
-    // }
-}
-//twitterCore.stream.litsen("Aigis1000", function () { });
-module.exports = twitterCore;
+    /*autoTest: async function () {
+        twitterCore.stream.litsen("Aigis1000", "", console.log);
+    }//*/
+}; module.exports = twitterCore;
 
-// twitterCore.stream.litsen("z1022001", "", function (tweet_data) {
-//     console.log(JSON.stringify(tweet_data, null, 4));
-// });
 
 
 /*

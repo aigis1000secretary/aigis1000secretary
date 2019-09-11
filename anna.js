@@ -172,7 +172,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
                 database.groupDatabase.data[i].alarm = alarm;
 
                 let func = async function () {
-                    if (await database.groupDatabase.saveDB()) {
+                    if (database.groupDatabase.saveDB()) {
                         database.groupDatabase.uploadDB(false);
                     }
                 }; func();	// 異步儲存
@@ -230,15 +230,15 @@ const replyAI = async function (rawMsg, sourceId, userId) {
             // 異步執行
             let func = async function () {
                 try {
-                    if (await charaDatabase.saveDB()) {
+                    if (charaDatabase.saveDB()) {
                         await charaDatabase.uploadDB(true);
                     }
 
-                    if (await nickDatabase.saveDB()) {
+                    if (nickDatabase.saveDB()) {
                         await nickDatabase.uploadDB(true);
                     }
 
-                    if (await classDatabase.saveDB()) {
+                    if (classDatabase.saveDB()) {
                         await classDatabase.uploadDB(true);
                     }
 
@@ -631,14 +631,14 @@ const charaDataCrawler = function (urlPath, sourceId) {
                             }
                         }
                         // remove empty
-                        for (let i = 0; i < skilList.length; i++) {
+                        for (let i = 0; i < skilList.length; ++i) {
                             if (skilList[i].length == 0) {
                                 skilList.splice(i, 1);
                                 i--;
                             }
                         }
                         // remove same skill (lv1~lv4)
-                        for (let i = 0; i < skilList.length; i++) {
+                        for (let i = 0; i < skilList.length; ++i) {
                             if (i < skilList.length - 1 && skilList[i][0] == skilList[i + 1][0]) {
                                 skilList.splice(i, 1);
                                 i--;
@@ -694,14 +694,14 @@ const charaDataCrawler = function (urlPath, sourceId) {
                             }
                         }
                         // remove empty
-                        for (let i = 0; i < skilList.length; i++) {
+                        for (let i = 0; i < skilList.length; ++i) {
                             if (skilList[i].length == 0) {
                                 skilList.splice(i, 1);
                                 i--;
                             }
                         }
                         // remove same skill (lv1~lv4)
-                        for (let i = 0; i < skilList.length; i++) {
+                        for (let i = 0; i < skilList.length; ++i) {
                             if (i < skilList.length - 1 && skilList[i][1] == skilList[i + 1][1]) {
                                 skilList.splice(i, 1);
                                 i--;
@@ -819,7 +819,7 @@ const allCharaDataCrawler = function (sourceId) {
         let promiseArray = [];
         while (allCharaUrl.length > 0) {
             // 50 thread
-            for (let i = 0; i < 50; i++) {
+            for (let i = 0; i < 50; ++i) {
                 if (allCharaUrl.length > 0) {
                     promiseArray.push(charaDataCrawler(allCharaUrl.pop(), sourceId));
                 }
@@ -1005,14 +1005,14 @@ const searchCharacter = function (key, accurate) {
         let ketMetrics = new Array(key.length);
         let sourceName = "@" + obj.name;
         // 逐字搜尋
-        for (let i = 0; i < key.length; i++) {
+        for (let i = 0; i < key.length; ++i) {
             ketMetrics[i] = sourceName.indexOf(key[i]);
             if (ketMetrics[i] != -1) {
                 sourceName = sourceName.replace(sourceName[ketMetrics[i]], "@");
             }
         }
         // 計算權重
-        for (let i = 0; i < ketMetrics.length; i++) {
+        for (let i = 0; i < ketMetrics.length; ++i) {
             if (ketMetrics[i] != -1) {
                 metrics += metricsA;	// 同字元
 
@@ -1066,7 +1066,7 @@ let classDatabase = database.classDatabase;
 // 搜尋職業
 const searchClass = function (str) {
     debugLog("searchClass(" + str + ")");
-    // for (let i = 0; i < classDatabase.length; i++) {
+    // for (let i = 0; i < classDatabase.length; ++i) {
     for (let i in classDatabase.data) {
 
         for (let j in classDatabase.data[i].index) {
@@ -1153,7 +1153,7 @@ const annaCore = {
         // await imgur.init();
 
         // await charaDatabase.loadDB();
-        // await charaDatabase.saveDB();
+        //  charaDatabase.saveDB();
 
         let sourceId = "U9eefeba8c0e5f8ee369730c4f983346b";
         let userId = "U9eefeba8c0e5f8ee369730c4f983346b";

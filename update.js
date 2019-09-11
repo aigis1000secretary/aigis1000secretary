@@ -1,4 +1,4 @@
-﻿
+
 // 初始化
 let anna = require("./anna.js");
 const database = require("./database.js");
@@ -13,7 +13,7 @@ const main = async function () {
     let result = await anna.replyAI("anna UPDATE", sourceId, userId);
     replyFunc(result);
 
-    setTimeout(function () { database.charaDatabase.saveDB(); }, 1.5 * 60 * 1000);//*/
+    setTimeout(database.charaDatabase.saveDB(), 1.5 * 60 * 1000);//*/
 
 
 }; main();

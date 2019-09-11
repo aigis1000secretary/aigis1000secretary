@@ -9,7 +9,7 @@ const iconv = require("iconv-lite");
 const urlEncode = function (str_utf8, codePage) {
     let buffer = iconv.encode(str_utf8, codePage);
     let str = "";
-    for (let i = 0; i < buffer.length; i++) {
+    for (let i = 0; i < buffer.length; ++i) {
         str += "%" + buffer[i].toString(16);
     }
     return str.toUpperCase();
@@ -24,7 +24,7 @@ const encodeURI_JP = function (url) {
     let big5Encode = "";
     let uriEncode = "";
 
-    for (let i = 0; i < url.length; i++) {
+    for (let i = 0; i < url.length; ++i) {
         jpEncode = urlEncodeJP(url[i]);
         big5Encode = urlEncodeBIG5(url[i]);
         uriEncode = encodeURI(url[i]);
@@ -64,7 +64,7 @@ class Database {
     };
 
     // 儲存資料
-    async saveDB() {
+    saveDB() {
         console.log(this.name + " saving...");
 
         // sort
@@ -76,7 +76,7 @@ class Database {
             JSON.stringify(this.data);
 
         try {
-            await fs.writeFileSync(this.fileName, json);
+            fs.writeFileSync(this.fileName, json);
             console.log(this.name + " saved!");
             return true;
         } catch (err) {
@@ -87,12 +87,12 @@ class Database {
     };
 
     // 讀取資料
-    async loadDB() {
+    loadDB() {
         console.log(this.name + " loading...");
 
         let obj = [];
         try {
-            let data = await fs.readFileSync(this.fileName);
+            let data = fs.readFileSync(this.fileName);
 
             try {
                 obj = JSON.parse(data);
@@ -141,7 +141,7 @@ class Database {
 
     // 上傳備份
     async uploadDB(backup) {
-        if (config.isLocalHost) return true;
+        if (config.isLocalHost) { console.log(this.name + " uploadDB(Dry)"); return true; }
         console.log(this.name + " uploading...");
 
         // object to json
@@ -174,7 +174,7 @@ class Database {
                 this.uploadTaskCount--;
             }
 
-            if (await this.saveDB()) {
+            if (this.saveDB()) {
                 if (await this.uploadDB(backup)) { return true; }
             }
             console.log(this.name + " Task upload error...");
