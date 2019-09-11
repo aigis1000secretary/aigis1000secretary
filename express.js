@@ -53,7 +53,7 @@ module.exports = {
         // hotfix
         dbox.fileDownloadToFile("hotfix.js").then((result) => {
             if (result) {
-                hotfix = require("./hotfix.js");
+                let hotfix = require("./hotfix.js");
                 app.get("/hotfix/:function", hotfix.hotfix);
             }
         }).catch((error) => console.log("hotfix error ", error))

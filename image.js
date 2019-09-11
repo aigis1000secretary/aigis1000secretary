@@ -193,10 +193,18 @@ const twitterImageSearch = async function () {
             let fn = img.fileName;
             if (_regex1.test(fn)) {
                 let tweetId = _regex2.exec(fn);
-                let data = await twitter.api.getTweet(tweetId);
-                console.log(tweetId);
-                console.log(img.md5);
-                console.log(anna.searchData(data.text));
+                // let data = await 
+                twitter.api.getTweet(tweetId).then((data) => {
+                    console.log(tweetId);
+                    console.log(img.md5);
+
+                    
+                    // let text = anna.searchData(data.text) + "";
+                    // console.log(text);
+                });
+                // console.log(tweetId);
+                // console.log(img.md5);
+                // console.log(anna.searchData(data.text));
 
             }
             break;

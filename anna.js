@@ -1124,7 +1124,9 @@ const annaCore = {
     // classDataCrawler: classDataCrawler,
 
     // image.js
-    searchData: searchData,
+    searchData: function (str) {
+        return searchData(str)
+    },
 
     // debug
     debugLog: debugLog,

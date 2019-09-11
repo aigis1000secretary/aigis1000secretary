@@ -1,8 +1,8 @@
 
 const request = require("request");
 const fs = require("fs");
-const md5f = function (str) { return require('crypto').createHash('md5').update(str).digest('hex'); }
 const config = require("./config.js");
+const md5f = function (str) { return require('crypto').createHash('md5').update(str).digest('hex'); }
 
 const IMGUR_CLIENT_ID = config.imgur.IMGUR_CLIENT_ID;
 const IMGUR_CLIENT_SECRET = config.imgur.IMGUR_CLIENT_SECRET;

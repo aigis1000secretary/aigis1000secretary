@@ -65,7 +65,7 @@ class Database {
     };
 
     // 儲存資料
-    async saveDB() {
+    saveDB() {
         console.log(this.name + " saving...");
 
         // sort
@@ -142,7 +142,7 @@ class Database {
 
     // 上傳備份
     async uploadDB() {
-        if (!await this.saveDB()) return false;
+        if (!this.saveDB()) return false;
 
         if (config.isLocalHost) { console.log(this.name + " uploadDB(Dry)"); return true; }
         console.log(this.name + " uploading...");

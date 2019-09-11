@@ -61,7 +61,7 @@ const config = {
         IMGUR_CLIENT_ID: process.env.IMGUR_CLIENT_ID,
         IMGUR_CLIENT_SECRET: process.env.IMGUR_CLIENT_SECRET,
         // vist site: https://api.imgur.com/oauth2/authorize?client_id=84f351fab201d5a&response_type=token
-        // check REFRESH_TOKEN var from url
+        // check REFRESH_TOKEN variable from url
         IMGUR_REFRESH_TOKEN: process.env.IMGUR_REFRESH_TOKEN
     },
 

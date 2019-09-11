@@ -1,6 +1,6 @@
 
 // 初始化
-let anna = require("./anna.js");
+const anna = require("./anna.js");
 const database = require("./database.js");
 
 const main = async function () {

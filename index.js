@@ -15,7 +15,7 @@ let groupDatabase = database.groupDatabase;
 const lineBotOn = function () {
 
     // wellcome msg
-    line.bot.on("memberJoined", async function (event) {
+    line.bot.on("memberJoined", function (event) {
         if (config.switchVar.logRequestToFile && event) {
             dbox.logToFile("webhook/", "memberJoined", event);
         }
@@ -34,7 +34,7 @@ const lineBotOn = function () {
     });// */
 
     // normal msg
-    line.bot.on("message", async function (event) {
+    line.bot.on("message", function (event) {
         if (config.switchVar.logRequestToFile && event) {
             dbox.logToFile("webhook/", "message", event);
         }
@@ -104,7 +104,7 @@ const lineBotOn = function () {
 // twitter bot 監聽
 const twitterBotOn = function () {
 
-    let callback = async function (tweet_data) {
+    let callback = function (tweet_data) {
 
         for (let i in groupDatabase.data) {
             if (!groupDatabase.data[i].alarm) continue;

@@ -1,7 +1,7 @@
 
 
 // ライブラリ読み込み
-let Twitter = require('twitter');
+const Twitter = require('twitter');
 const request = require("request");
 const crypto = require('crypto');
 const line = require("./line.js");
