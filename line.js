@@ -27,7 +27,7 @@ module.exports = {
     },
     pushMsg: function (userId, type, msg) {
         if (!config.isLocalHost) {
-            devbot.push(userId, msg).then((result => {
+            devbot.push(userId, msg).then(function (result) {
                 if (config.switchVar.logLineBotPush) {
                     let logObject = {
                         to: userId,
@@ -39,7 +39,7 @@ module.exports = {
                     // log to dropbox
                     dbox.logToFile("linePush/", (result.message == "You have reached your monthly limit." ? "linePushFail" : "linePush"), logObject);
                 }
-            }));
+            });
         } else {
             console.log(type + ">> " + JSON.stringify(msg, null, 2));
         }

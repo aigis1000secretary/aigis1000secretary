@@ -13,7 +13,5 @@ const main = async function () {
     let result = await anna.replyAI("anna UPDATE", sourceId, userId);
     replyFunc(result);
 
-    setTimeout(database.charaDatabase.saveDB(), 1.5 * 60 * 1000);//*/
-
 
 }; main();

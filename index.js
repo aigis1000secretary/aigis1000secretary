@@ -79,7 +79,7 @@ const lineBotOn = function () {
                 }
 
                 //
-                anna.replyAI(msg, sourceId, userId).then((result) => {
+                anna.replyAI(msg, sourceId, userId).then(function (result) {
                     if (result != false) {
                         replyFunc(result);
                         return;
@@ -174,7 +174,7 @@ const main = async function () {
     // 讀取資料
     await Promise.all([
         anna.init(),
-        imgur.init()
+        // imgur.init()
     ]);
 
     // 開始監聽

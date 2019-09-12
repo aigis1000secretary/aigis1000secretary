@@ -51,12 +51,12 @@ module.exports = {
         app.post("/twitterbot/", jsonParser, twitter.webhook.post);
 
         // hotfix
-        dbox.fileDownloadToFile("hotfix.js").then((result) => {
+        dbox.fileDownloadToFile("hotfix.js").then(function (result) {
             if (result) {
                 let hotfix = require("./hotfix.js");
                 app.get("/hotfix/:function", hotfix.hotfix);
             }
-        }).catch((error) => console.log("hotfix error ", error))
+        }).catch(function (error) { console.log("hotfix error ", error) })
     },
 };
 module.exports.init();
