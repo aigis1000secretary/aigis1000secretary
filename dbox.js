@@ -23,8 +23,8 @@ module.exports = {
             //console.log(response);
             return true;
         } catch (error) {
-            console.log(error);
-            return false;
+            console.log("makeDir error... " + path);
+            throw error;
         }
     },
     // LS
@@ -45,6 +45,7 @@ module.exports = {
 
             return result;
         } catch (error) {
+            console.log("listDir error... ");
             console.log(error);
             return [];
         }
@@ -65,9 +66,8 @@ module.exports = {
 
             return true;
         } catch (error) {
-            console.log(error);
-            // console.log(JSON.stringify(error, null, 4));
-            return false;
+            console.log("fileDownloadToFile error... " + base);
+            throw error;
         }
     },
     //fileDownloadToFile("刻詠の風水士リンネ/6230667.png");
@@ -78,8 +78,8 @@ module.exports = {
             return response.fileBinary;
 
         } catch (error) {
-            console.log(error);
-            return null;
+            console.log("fileDownload error... " + base);
+            throw error;
         }
     },
 
@@ -97,13 +97,13 @@ module.exports = {
             await dbox.filesUpload(filesCommitInfo);
             return true;
         } catch (error) {
-            console.log(error);
-            return false;
+            console.log("fileUpload error... " + dirPath);
+            throw error;
         }
     },
 
     // move
-    filesBackup: async function (dirPath) {
+    fileBackup: async function (dirPath) {
         let filesRelocationArg = {
             from_path: root + dirPath,
             to_path: root + "backup/" + dirPath,
@@ -120,13 +120,13 @@ module.exports = {
             // await dbox.filesDelete(filesDeleteArg);
             return true;
         } catch (error) {
-            console.log(error);
-            return false;
+            console.log("fileBackup error... " + dirPath);
+            throw error;
         }
     },
 
     // move
-    filesMove: async function (from, to) {
+    fileMove: async function (from, to) {
         let filesRelocationArg = {
             from_path: root + from,
             to_path: root + to,
@@ -143,20 +143,20 @@ module.exports = {
             await dbox.filesDelete(filesDeleteArg);
             return true;
         } catch (error) {
-            console.log(error);
-            return false;
+            console.log("filesMove error... " + from);
+            throw error;
         }
     },
 
     // delete
-    filesDelete: async function (path) {
+    fileDelete: async function (path) {
         console.log("filesDelete: " + path);
         try {
             await dbox.filesDelete({ path: root + path });
             return true;
         } catch (error) {
-            console.log(error.error);
-            return false;
+            console.log("filesDelete error... " + path);
+            throw error;
         }
     },
 
@@ -173,7 +173,11 @@ module.exports = {
             dateNow.getMilliseconds().toString().padStart(4, "0");
 
         let binary = Buffer.from(JSON.stringify(data, null, 4))
-        dbox.fileUpload(base + path + ".json", binary, "add").catch(console.log);
+        try {
+            module.exports.fileUpload(base + path + ".json", binary, "add").catch(console.log);
+        } catch (error) {
+            console.log("logToFile error... " + error);
+        }
     },
 
 };

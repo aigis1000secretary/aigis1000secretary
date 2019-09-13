@@ -345,8 +345,8 @@ const replyAI = module.exports.replyAI = function (rawMsg, sourceId, userId) {
             return "初始中...";
 
         } else if (_isAdmin && (command == "NEWIMG")) {
-            imgUploader.twitterImageSearch();
-            // imgUploader.upload();
+            // imgUploader.twitterImageSearch();
+            imgUploader.upload();
             return "上傳圖檔中...";
 
         } else if (_isAdmin && (command == "NEW")) {
@@ -380,8 +380,12 @@ const replyAI = module.exports.replyAI = function (rawMsg, sourceId, userId) {
                     if (charaArray.length == 1) {
                         target = charaArray[0].trim();
                         // move image file
-                        if (!dbox.filesMove("NewImages/NewImages/" + imgArray[0].fileName, "Character/" + target + "/" + imgArray[0].fileName)) {
-                            console.log("分類錯誤!");
+                        try {
+                            dbox.fileMove(
+                                "NewImages/NewImages/" + imgArray[0].fileName,
+                                "Character/" + target + "/" + imgArray[0].fileName);
+                        } catch (error) {
+                            console.log("分類錯誤! " + error);
                         }
 
                         // set taglist

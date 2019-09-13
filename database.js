@@ -144,7 +144,7 @@ class Database {
         console.log(this.name + " uploading...");
 
         try {
-            if (this.backup) { await dbox.filesBackup(this.fileName); }
+            if (this.backup) { await dbox.fileBackup(this.fileName); }
 
             let binary = Buffer.from(JSON.stringify(this.data));
             await dbox.fileUpload(this.fileName, binary)

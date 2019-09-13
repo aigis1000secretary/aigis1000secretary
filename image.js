@@ -9,7 +9,7 @@ const md5f = function (str) { return require('crypto').createHash('md5').update(
 
 const main = async function () {
     console.log("Image Upload Script");
-    // await imgur.init();
+    await imgur.init();
 
     // delete all image from imgur
     // // // for (let i in imgur.database.images) { await imgur.image.ImageDeletion(imgur.database.images[i].id); }
@@ -39,11 +39,12 @@ const main = async function () {
     // // download all image
     // for (let i in pathArray) {
     //     console.log(pathArray[i]);
-    //     let imageBinary = await dbox.fileDownload(pathArray[i]);
-    //     if (imageBinary) {
+    //     try {
+    //         let imageBinary = await dbox.fileDownload(pathArray[i]);
     //         fs.writeFileSync(localImagesPath + pathArray[i].replaceAll("/", "\\"), imageBinary, "Binary");
-    //     } else {
+    //     } catch (error) {
     //         console.log(error);
+    //         continue;
     //     }
     // }
 
@@ -66,11 +67,12 @@ const main = async function () {
         resultImage = imgur.database.findImageData({ fileName, tag: tagList.split(",")[1] });
         if (resultImage.length != 1) {
             // md5 check
-            imageBinary = await dbox.fileDownload(pathArray[i]);
-            if (imageBinary) {
+            try {
+                imageBinary = await dbox.fileDownload(pathArray[i]);
                 fileMd5 = md5f(imageBinary);  // get MD5 for check
                 resultImage = imgur.database.findImageData({ md5: fileMd5 });
-            } else {
+            } catch (error) {
+                console.log(error);
                 continue;
             }
         }
@@ -78,13 +80,16 @@ const main = async function () {
         if (resultImage.length == 0) {
             // upload
             console.log("file is not exist: " + pathArray[i]);
-            if (!imageBinary) imageBinary = await dbox.fileDownload(pathArray[i]);
-            if (imageBinary) {
+            try {
+                if (!imageBinary) imageBinary = await dbox.fileDownload(pathArray[i]);
                 let uploadResponse = await imgur.api.image.imageUpload({ imageBinary, fileName, albumHash, tagList });
                 if (uploadResponse == null) { break; }
                 console.log("upload file: " + uploadResponse.title + ", " + fileName + ", " + tagList);
                 console.log("");
-                await sleep(10000);
+                await sleep(25000);
+            } catch (error) {
+                console.log(error);
+                continue;
             }
         } else if (resultImage.length == 1) {
             // check data

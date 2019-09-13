@@ -174,7 +174,7 @@ const main = async function () {
     // 讀取資料
     await Promise.all([
         anna.init(),
-        // imgur.init()
+        imgur.init()
     ]);
 
     // 開始監聽
