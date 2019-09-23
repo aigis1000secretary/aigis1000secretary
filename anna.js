@@ -64,11 +64,17 @@ const replyAI = module.exports.replyAI = function (rawMsg, sourceId, userId) {
             return "debug = " + (config.switchVar.debug ? "on" : "off");
 
         } else if (command.length == 1) {		// 定型文
-            let result = replyStamp(command);
-            if (result != false) {
-                return result;
+            // 同步執行
+            let result = nickDatabase.indexOf(command);
+            if (result != -1) {
+                command = nickDatabase.data[result].target;
             } else {
-                return "王子太短了，找不到...";
+                result = replyStamp(command);
+                if (result != false) {
+                    return result;
+                } else {
+                    return "王子太短了，找不到...";
+                }
             }
 
         } else if (command == "巨根") {

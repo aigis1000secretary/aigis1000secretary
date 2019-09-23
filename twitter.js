@@ -266,9 +266,39 @@ const twitterCore = {
                     callback(tweet_data);
                 }
 
+                // image to dropbox
+                if (tweet_data.medias) {
+                    for (let i in tweet_data.medias) {
+                        let media = tweet_data.medias[i];
+
+                        if (media.type == "photo") {
+                            let callBack = function (error, response, body) {
+                                if (error || !body) { console.log(error); return null; }
+
+                                let tweetTime = new Date(parseInt(tweet_data.timestamp_ms));
+                                let filename = "Aigis1000-" + tweet_data.id_str + "-";
+                                filename += tweetTime.getFullYear().toString().padStart(4, "0") +
+                                    (tweetTime.getMonth() + 1).toString().padStart(2, "0") +
+                                    tweetTime.getDate().toString().padStart(2, "0") + "_" +
+                                    tweetTime.getHours().toString().padStart(2, "0") +
+                                    tweetTime.getMinutes().toString().padStart(2, "0") +
+                                    tweetTime.getSeconds().toString().padStart(2, "0");
+                                filename += "-img" + (parseInt(i) + 1) + ".jpg";
+
+                                dbox.fileUpload("NewImages/NewImages/" + filename, body);
+                            }
+                            request.get(media.link, { encoding: "binary" }, callBack);
+                        }
+                    }
+                }
+
                 // log
                 if (config.switchVar.logStreamToFile && tweet) {
-                    dbox.logToFile("stream/", "twitter", tweet);
+                    if (tweet_data.screen_name == target) {
+                        dbox.logToFile("stream/", "twitter", tweet);
+                    } else {
+                        dbox.logToFile("stream/", "twitterRT", tweet);
+                    }
                 }
             }
         },
@@ -284,6 +314,7 @@ const twitterCore = {
             raw.entities = Object.assign(raw.entities, raw.extended_entities);
 
             // get tweet data
+            tweet_data.id_str = raw.id_str;
             tweet_data.name = raw.user.name;
             tweet_data.screen_name = raw.user.screen_name;
             tweet_data.created_at = raw.created_at;
