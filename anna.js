@@ -1172,24 +1172,24 @@ module.exports.autoTest = async function () {
     let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
     // config.switchVar.debug = true;
 
-    // replyAI("anna 狀態", sourceId, userId).then(console.log);
-    // replyAI("anna 職業", sourceId, userId).then(console.log);
-    // replyAI("anna 職業 ナ", sourceId, userId).then(console.log);
+    // await replyAI("anna 狀態", sourceId, userId).then(console.log);
+    // await replyAI("anna 職業", sourceId, userId).then(console.log);
+    // await replyAI("anna 職業 ナ", sourceId, userId).then(console.log);
 
-    // replyAI("anna 學習 NNLK:白ナナリー", sourceId, userId).then(console.log);
+    // await replyAI("anna 學習 NNLK:白ナナリー", sourceId, userId).then(console.log);
 
-    // replyAI("anna NNLK", sourceId, userId).then(console.log);
-    // replyAI("anna 黑弓", sourceId, userId).then(console.log);
-    // replyAI("anna 忘記 NNLK", sourceId, userId).then(console.log);
-    // replyAI("anna NNLK", sourceId, userId).then(console.log);
+    // await replyAI("anna NNLK", sourceId, userId).then(console.log);
+    // await replyAI("anna 黑弓", sourceId, userId).then(console.log);
+    // await replyAI("anna 忘記 NNLK", sourceId, userId).then(console.log);
+    // await replyAI("anna NNLK", sourceId, userId).then(console.log);
 
-    // replyAI("anna 射", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
-    // replyAI("anna シャル", sourceId, userId).then(obj => console.log(obj));
-    // replyAI("anna 白き射手ナナリー", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
-    // replyAI("anna 王子通常", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
-    // replyAI("1528476371865.JPEG", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
-    // replyAI("0ab61ce0f94dc2f81b38a08f150a17fb", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
-    // replyAI("刻詠の風水士リンネ", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+    // await replyAI("anna 射", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+    // await replyAI("anna シャル", sourceId, userId).then(obj => console.log(obj));
+    // await replyAI("anna 白き射手ナナリー", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+    // await replyAI("anna 王子通常", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+    // await replyAI("1528476371865.JPEG", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+    // await replyAI("0ab61ce0f94dc2f81b38a08f150a17fb", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+    // await replyAI("刻詠の風水士リンネ", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
 
     // replyAI("anna update", sourceId, userId).then(console.log);
 

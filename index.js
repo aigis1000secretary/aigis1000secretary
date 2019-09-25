@@ -78,7 +78,7 @@ const lineBotOn = function () {
             }
 
             //
-            let result = anna.replyAI(msg, sourceId, userId)
+            let result = await anna.replyAI(msg, sourceId, userId)
             if (result != false) {
                 replyFunc(result);
                 return;
