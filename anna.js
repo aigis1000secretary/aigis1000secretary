@@ -10,6 +10,7 @@ const cheerio = require("cheerio");
 const imgur = require("./imgur.js");
 const dbox = require("./dbox.js");
 const line = require("./line.js");
+const twitter = require("./twitter.js");
 const imgUploader = require("./image.js");
 // 資料庫
 const database = require("./database.js");
@@ -32,7 +33,7 @@ const init = module.exports.init = async function () {
 
 // bot
 // reply
-const replyAI = module.exports.replyAI = function (rawMsg, sourceId, userId) {
+const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userId) {
     debugLog("rawMsg: <" + rawMsg + ">");
 
     // flag
@@ -111,7 +112,7 @@ const replyAI = module.exports.replyAI = function (rawMsg, sourceId, userId) {
 
         } else if (command == "狀態" || command == "STATU") {
             // status
-            imgur.init();
+            await imgur.init();
 
             let replyMsg = "";
             replyMsg += "目前版本 v" + config._version + "\n";
@@ -123,7 +124,7 @@ const replyAI = module.exports.replyAI = function (rawMsg, sourceId, userId) {
 
         } else if (command == "照片" || command == "圖片" || command == "相片" || command == "PICTURE") {
             // 圖片空間
-            return line.createTemplateMsg("圖片空間",
+            return line.createUriButtons("圖片空間",
                 ["上傳新照片", "角色圖庫", "貼圖圖庫"],
                 ["https://www.dropbox.com/request/FhIsMnWVRtv30ZL2Ty69",
                     "https://www.dropbox.com/sh/ij3wbm64ynfs7n7/AACmNemWzDhjUBycEMcmos6ha?dl=0",
@@ -141,7 +142,7 @@ const replyAI = module.exports.replyAI = function (rawMsg, sourceId, userId) {
             urlArray.push("http://aigistool.html.xdomain.jp/EXP.html");
             tagArray.push("體魅計算機");
             urlArray.push("http://aigistool.html.xdomain.jp/ChariSta.html");
-            templateMsgA = line.createTemplateMsg("實用工具 (1)", tagArray, urlArray);
+            templateMsgA = line.createUriButtons("實用工具 (1)", tagArray, urlArray);
 
             tagArray = [];
             urlArray = [];
@@ -153,7 +154,7 @@ const replyAI = module.exports.replyAI = function (rawMsg, sourceId, userId) {
             urlArray.push("https://www.youtube.com/channel/UC8RlGt22URJuM0yM0pUyWBA");
             // tagArray.push("千年戦争アイギス攻略ブログ");
             // urlArray.push("http://sennenaigis.blog.fc2.com/");
-            templateMsgB = line.createTemplateMsg("實用工具 (2)", tagArray, urlArray);
+            templateMsgB = line.createUriButtons("實用工具 (2)", tagArray, urlArray);
 
             let replyMsg = [templateMsgA, templateMsgB];
             return replyMsg;
@@ -347,11 +348,10 @@ const replyAI = module.exports.replyAI = function (rawMsg, sourceId, userId) {
 
             }
         } else if (_isAdmin && (command == "初始化" || command == "INIT")) {
-            init();
-            return "初始中...";
+            await annaCore.init();
+            return "初始化完成!";
 
         } else if (_isAdmin && (command == "NEWIMG")) {
-            // imgUploader.twitterImageSearch();
             imgUploader.upload();
             return "上傳圖檔中...";
 
@@ -362,14 +362,43 @@ const replyAI = module.exports.replyAI = function (rawMsg, sourceId, userId) {
                 let replyMsg = [];
                 if (imgArray.length > 0) {
                     let i = Math.floor(Math.random() * imgArray.length);
-                    replyMsg.push(line.createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
-                    replyMsg.push(line.createTextMsg("[" + i + "/" + imgArray.length + "]"));
-                    replyMsg.push(line.createTextMsg("new " + imgArray[i].md5 + " "));
-                    // console.log(imgArray[i].md5 + " [" + i + "/" + imgArray.length + "]");
+                    let img = imgArray[i];
+
+                    const _regex1 = /^Aigis1000-\d{18,19}-\d{8}_\d{6}/;
+                    if (_regex1.test(img.fileName)) {
+                        // image from Aigis1000 twitter
+                        const _regex2 = /\d{18,19}/;
+                        let tweetId = _regex2.exec(img.fileName);
+                        let data = await twitter.api.getTweet(tweetId);
+                        let array = searchCharacter(data.text);
+
+                        if (array.length > 0) {
+                            replyMsg.push(line.createImageMsg(img.imageLink, img.thumbnailLink));
+                            let labels = [], msgs = [];
+                            for (let j in array) {
+                                labels.push(array[j]);
+                                msgs.push("anna new " + img.md5 + " " + array[j]);
+                            }
+                            labels.push("anna new");
+                            msgs.push("anna new");
+
+                            replyMsg.push(line.createMsgButtons(img.md5, labels, msgs));
+                            // console.log(JSON.stringify(replyMsg));
+                            return replyMsg;
+                        }
+                        return false;
+
+                    } else {
+                        replyMsg.push(line.createImageMsg(img.imageLink, img.thumbnailLink));
+                        replyMsg.push(line.createTextMsg("[" + i + "/" + imgArray.length + "]"));
+                        replyMsg.push(line.createTextMsg("new " + img.md5 + " "));
+                        // console.log(img.md5 + " [" + i + "/" + imgArray.length + "]");
+                        return replyMsg;
+                    }
+
                 } else {
                     replyMsg = "沒有新照片";
                 }
-                return replyMsg;
 
             } else {
                 let imgArray = imgur.database.findImageData({ md5: arg1 });
@@ -410,7 +439,7 @@ const replyAI = module.exports.replyAI = function (rawMsg, sourceId, userId) {
                     }
                 }
             }
-            return "";
+            return false;
 
         }
 
@@ -439,7 +468,7 @@ const replyAI = module.exports.replyAI = function (rawMsg, sourceId, userId) {
 }
 
 // 搜尋&回復
-const searchData = module.exports.searchData = function (command) {
+const searchData = function (command) {
     let resultArray = []
     let count = 0
 
@@ -507,7 +536,7 @@ const generateCharaData = function (charaName) {
             replyMsg.push(line.createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
         }
 
-        replyMsg.push(line.createTemplateMsg("Wiki 連結", [obj.name], [obj.getWikiUrl()]));
+        replyMsg.push(line.createUriButtons("Wiki 連結", [obj.name], [obj.getWikiUrl()]));
 
         return replyMsg;
     }
@@ -993,9 +1022,21 @@ String.prototype.tableToArray = function () {
 // Character
 let charaDatabase = database.charaDatabase;
 // 模糊搜尋
-const searchCharacter = function (key, accurate) {
+const searchCharacter = module.exports.searchCharacter = function (key, accurate) {
     accurate = !!accurate;
     debugLog("searchCharacter(" + key + ", " + accurate + ")");
+
+    // search from twitter text
+    if (key.length > 20) {
+        let result = [];
+        for (let charaIndex in charaDatabase.data) {
+            let name = charaDatabase.data[charaIndex].name;
+            if (key.indexOf(name) != -1) {
+                result.push(name);
+            }
+        }
+        return result;
+    }
 
     let t;
     if ((t = charaDatabase.indexOf(key)) != -1) {
@@ -1017,25 +1058,25 @@ const searchCharacter = function (key, accurate) {
         const metricsC = 2;	// 連接
         let metrics = -5 * key.length;
 
-        let ketMetrics = new Array(key.length);
+        let keyMetrics = new Array(key.length);
         let sourceName = "@" + obj.name;
         // 逐字搜尋
         for (let i = 0; i < key.length; ++i) {
-            ketMetrics[i] = sourceName.indexOf(key[i]);
-            if (ketMetrics[i] != -1) {
-                sourceName = sourceName.replace(sourceName[ketMetrics[i]], "@");
+            keyMetrics[i] = sourceName.indexOf(key[i]);
+            if (keyMetrics[i] != -1) {
+                sourceName = sourceName.replace(sourceName[keyMetrics[i]], "@");
             }
         }
         // 計算權重
-        for (let i = 0; i < ketMetrics.length; ++i) {
-            if (ketMetrics[i] != -1) {
+        for (let i = 0; i < keyMetrics.length; ++i) {
+            if (keyMetrics[i] != -1) {
                 metrics += metricsA;	// 同字元
 
                 if (i > 0) {
-                    if (ketMetrics[i] > ketMetrics[i - 1]) {
+                    if (keyMetrics[i] > keyMetrics[i - 1]) {
                         metrics += metricsB;	// 字元同順
                     }
-                    if (ketMetrics[i] == (ketMetrics[i - 1] + 1)) {
+                    if (keyMetrics[i] == (keyMetrics[i - 1] + 1)) {
                         metrics += metricsC;	// 同sub字串
                     }
                 }

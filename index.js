@@ -79,22 +79,20 @@ const lineBotOn = function () {
                 }
 
                 //
-                anna.replyAI(msg, sourceId, userId).then(function (result) {
-                    if (result != false) {
-                        replyFunc(result);
-                        return;
-                    }
-
-                    // egg
-                    if (Math.floor(Math.random() * 10000) == 0) {
-                        replyFunc("ちくわ大明神");
-                        return;
-                    }
-
-                    // 無視...
-                    anna.debugLog("Not a command");
+                let result = anna.replyAI(msg, sourceId, userId)
+                if (result != false) {
+                    replyFunc(result);
                     return;
-                })
+                }
+
+                // egg
+                if (Math.floor(Math.random() * 10000) == 0) {
+                    replyFunc("ちくわ大明神");
+                    return;
+                }
+
+                // 無視...
+                // anna.debugLog("Not a command");
                 return;
             }
 

@@ -45,6 +45,8 @@ module.exports = {
         }
     },
 
+
+    
     // Line Message element
     // 文字訊息
     createTextMsg: function (_text) {
@@ -53,6 +55,7 @@ module.exports = {
             text: _text.trim()
         });
     },
+
     // 圖片訊息
     // url = https://aigis1000secretary.updog.co/刻詠の風水士リンネ/6230667.png encodeURI(img) (utf8 to %utf8 )
     createImageMsg: function (image, thumbnail) {
@@ -62,11 +65,12 @@ module.exports = {
             previewImageUrl: (thumbnail || image)
         });
     },
+
     // 超連結選項
     // altText = "Wiki 連結"
     // label = Name
     // url = "https://seesaawiki.jp/aigis/d/刻詠の風水士リンネ"	encodeURI_JP(url)
-    createTemplateMsg: function (altText, label, url) {
+    createUriButtons: function (altText, label, url) {
         if (label.length != url.length) return "";
         if (label.length <= 0 || 4 < label.length) return "";
         let replyMsg = {
@@ -85,6 +89,33 @@ module.exports = {
                 uri: url[i]
             };
             replyMsg.template.actions.push(buttons);
+        }
+        return new LineMessage(replyMsg);
+    },
+
+    // 代傳訊息選項
+    // altText = "Wiki 連結"
+    // label = Name
+    // url = "https://seesaawiki.jp/aigis/d/刻詠の風水士リンネ"	encodeURI_JP(url)
+    createMsgButtons: function (altText, label, msg) {
+        if (label.length != msg.length) return "";
+        if (label.length <= 0 || 4 < label.length) return "";
+        let replyMsg = {
+            type: "template",
+            altText: altText,
+            template: {
+                type: "buttons",
+                text: altText,
+                actions: []
+            }
+        };
+        for (let i = 0; i < label.length; ++i) {
+            let messages = {
+                type: "message",
+                label: label[i],
+                text: msg[i]
+            };
+            replyMsg.template.actions.push(messages);
         }
         return new LineMessage(replyMsg);
     }

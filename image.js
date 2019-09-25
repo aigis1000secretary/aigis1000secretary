@@ -186,37 +186,6 @@ const annaWebHook = function (command) {
 }
 */
 
-const twitterImageSearch = async function () {
-    let imgArray = imgur.database.findImageData({ tag: "NewImages" });
-    if (imgArray.length > 0) {
-
-        let _regex1 = /^Aigis1000-\d{18,19}-\d{8}_\d{6}/;
-        let _regex2 = /\d{18,19}/;
-        for (let i in imgArray) {
-            let img = imgArray[i];
-
-            let fn = img.fileName;
-            if (_regex1.test(fn)) {
-                let tweetId = _regex2.exec(fn);
-                // let data = await 
-                data = await twitter.api.getTweet(tweetId);
-
-                console.log(tweetId);
-                console.log(img.md5);
-                let text = anna.searchData(data.text) + "";
-                console.log(text);
-
-                // console.log(tweetId);
-                // console.log(img.md5);
-                // console.log(anna.searchData(data.text));
-
-            }
-            break;
-        }
-    }
-}
-
 module.exports = {
     upload: main,
-    twitterImageSearch: twitterImageSearch
 };
