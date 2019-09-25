@@ -34,7 +34,7 @@ const lineBotOn = function () {
     });// */
 
     // normal msg
-    line.bot.on("message", function (event) {
+    line.bot.on("message", async function (event) {
         if (config.switchVar.logRequestToFile && event) {
             dbox.logToFile("webhook/", "message", event);
         }
