@@ -61,8 +61,10 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
     if (callAnna) {
         if (command == "DEBUG") {		// debug switch
             config.switchVar.debug = !config.switchVar.debug;
-            config.switchVar.debugPush = config.switchVar.debug;
             return "debug = " + (config.switchVar.debug ? "on" : "off");
+        } else if (command == "DEBUGP") {		// debug switch
+            config.switchVar.debugPush = !config.switchVar.debugPush;
+            return "debug push = " + (config.switchVar.debugPush ? "on" : "off");
 
         } else if (command.length == 1) {		// 定型文
             // 同步執行
@@ -380,7 +382,7 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
                                 labels.push(array[j]);
                                 msgs.push("new " + img.md5 + " " + array[j]);
                             }
-                            labels.push("new");
+                            labels.push("next");
                             msgs.push("new");
 
                             replyMsg.push(line.createMsgButtons(img.md5, labels, msgs));
