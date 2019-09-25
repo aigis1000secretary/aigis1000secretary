@@ -389,15 +389,15 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
                             // console.log(JSON.stringify(replyMsg));
                             return replyMsg;
                         }
-                        return false;
-
-                    } else {
-                        replyMsg.push(line.createImageMsg(img.imageLink, img.thumbnailLink));
-                        replyMsg.push(line.createTextMsg("[" + i + "/" + imgArray.length + "]"));
-                        replyMsg.push(line.createTextMsg("new " + img.md5 + " "));
-                        // console.log(img.md5 + " [" + i + "/" + imgArray.length + "]");
-                        return replyMsg;
                     }
+
+                    replyMsg.push(line.createImageMsg(img.imageLink, img.thumbnailLink));
+                    replyMsg.push(line.createTextMsg("[" + i + "/" + imgArray.length + "]"));
+                    replyMsg.push(line.createTextMsg("new " + img.md5 + " "));
+                    // console.log(img.md5 + " [" + i + "/" + imgArray.length + "]");
+                    return replyMsg;
+
+                    return false;
 
                 } else {
                     replyMsg = "沒有新照片";
