@@ -6,32 +6,23 @@
 
 // commit
 /*
-    >> feature/0.7.3/searchClass
-    search class function added
-    >> feature/0.7.3/newImageTagger
-    new image online set tag function
-    rebuild image.js
-    add imgur api function
-
-    0.7.4.1
-    change online tagger Msg
-
-    0.7.4.2
-    CharaDataCrawler update
-    database sort method
-    deprecated new buffer()
-
-    0.7.4.3
-    anti update ddos
-
-    0.7.4.4
-    new image command bug fixed
-
-    0.7.4.5
-    update script fixed
-
-    0.7.4.6
-    image uploader hot update
+    >> feature/0.7.4/tryCatchRebuild
+    tryCatchRebuild start
+    var to let
+    fix bugs, new DB test done
+    new dbox test done
+    twitter image search method
+    new imgur test done
+    remtoe off
+    new dbox log to file
+    format code
+    kill async
+    require bug fixed
+    rebuild anna.js
+    new dbox test done?
+    fix single wrod search
+    twitter image search test done
+    
 */
 
 const config = {
