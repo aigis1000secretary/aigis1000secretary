@@ -401,7 +401,7 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
                 }
 
             } else {
-                let imgArray = imgur.database.findImageData({ md5: arg1 });
+                let imgArray = imgur.database.findImageData({ md5: arg1, tag: "NewImages" });
                 if (imgArray.length != 1) { return "md5錯誤! " + imgArray.length + " result!"; }
 
                 if (arg2 == "undefined") {
