@@ -6,35 +6,6 @@
 
 // commit
 /*
-    >> feature/0.7.3/searchClass
-    search class function added
-    >> feature/0.7.3/newImageTagger
-    new image online set tag function
-    rebuild image.js
-    add imgur api function
-
-    0.7.4.1
-    change online tagger Msg
-
-    0.7.4.2
-    CharaDataCrawler update
-    database sort method
-    deprecated new buffer()
-
-    0.7.4.3
-    anti update ddos
-
-    0.7.4.4
-    new image command bug fixed
-
-    0.7.4.5
-    update script fixed
-
-    0.7.4.6
-    image uploader hot update
-
-    0.7.4.7
-    npm update
 */
 
 const config = {
