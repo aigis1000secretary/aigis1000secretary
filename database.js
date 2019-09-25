@@ -1,4 +1,5 @@
 
+const fs = require('fs');
 const dbox = require("./dbox.js");
 const line = require("./line.js");
 const config = require("./config.js");
@@ -8,7 +9,7 @@ const iconv = require("iconv-lite");
 const urlEncode = function (str_utf8, codePage) {
     let buffer = iconv.encode(str_utf8, codePage);
     let str = "";
-    for (let i = 0; i < buffer.length; i++) {
+    for (let i = 0; i < buffer.length; ++i) {
         str += "%" + buffer[i].toString(16);
     }
     return str.toUpperCase();
@@ -17,13 +18,13 @@ const urlEncodeJP = function (str_utf8) { return urlEncode(str_utf8, "EUC-JP"); 
 const urlEncodeBIG5 = function (str_utf8) { return urlEncode(str_utf8, "BIG5"); }
 const urlEncodeUTF8 = function (str_utf8) { return urlEncode(str_utf8, "UTF-8"); }
 const encodeURI_JP = function (url) {
-    var result = "";
+    let result = "";
 
     let jpEncode = "";
     let big5Encode = "";
     let uriEncode = "";
 
-    for (let i = 0; i < url.length; i++) {
+    for (let i = 0; i < url.length; ++i) {
         jpEncode = urlEncodeJP(url[i]);
         big5Encode = urlEncodeBIG5(url[i]);
         uriEncode = encodeURI(url[i]);
@@ -38,21 +39,21 @@ const encodeURI_JP = function (url) {
 }
 
 class Database {
-    constructor(dbName) {
+    constructor(dbName, backup) {
         this.name = dbName;
         this.fileName = dbName + ".json";
         this.data = [];
         this.uploadTaskCount = -1;
+        this.backup = backup;
 
         this.uploadCount = (28 * 60);
+        this.sordMethod = function (A, B) { return A.name.localeCompare(B.name) };
     };
 
     newData() { };
     addData() { };
 
-    toString() {
-        return "Database: " + this.name + ", upload timer: " + this.uploadCount;
-    };
+    toString() { return "Database: " + this.name + ", upload timer: " + this.uploadCount; };
 
     indexOf(key) {
         for (let i in this.data) {
@@ -64,26 +65,24 @@ class Database {
     };
 
     // 儲存資料
-    async saveDB(sordMethod) {
+    async saveDB() {
         console.log(this.name + " saving...");
 
         // sort
-        if (!sordMethod) { sordMethod = function (A, B) { return A.name.localeCompare(B.name) }; }
-        this.data.sort(sordMethod);
+        this.data.sort(this.sordMethod);
 
         // object to json
-        var json = config.isLocalHost ?
+        let json = config.isLocalHost ?
             JSON.stringify(this.data, null, 4) :
             JSON.stringify(this.data);
 
         try {
-            await asyncWriteFile(this.fileName, json);
+            fs.writeFileSync(this.fileName, json);
             console.log(this.name + " saved!");
-        } catch (err) {
-            console.log(err);
-            botPushError(this.name + " saving error...");
-            botPushError(err);
-            // return Promise.reject(err);
+            return true;
+        } catch (error) {
+            console.log(this.name + " saving error...");
+            throw error;
         }
     };
 
@@ -93,7 +92,7 @@ class Database {
 
         let obj = [];
         try {
-            let data = await asyncReadFile(this.fileName);
+            let data = fs.readFileSync(this.fileName);
 
             try {
                 obj = JSON.parse(data);
@@ -103,7 +102,7 @@ class Database {
 
             for (let i in obj) {
                 // 建立樣板
-                var newData = this.newData();
+                let newData = this.newData();
 
                 // 讀取參數
                 for (let key in obj[i]) {
@@ -117,11 +116,10 @@ class Database {
             }
 
             console.log(this.name + " loaded!");
-        } catch (err) {
-            console.log(err);
-            botPushError(this.name + " loading error...");
-            botPushError(err);
-            // return Promise.reject(err);
+            return true;
+        } catch (error) {
+            console.log(this.name + " loading error...");
+            throw error;
         }
     };
 
@@ -131,78 +129,81 @@ class Database {
 
         // download json
         try {
-            await dbox.fileDownloadToFile(this.fileName, this.fileName);
+            await dbox.fileDownloadToFile(this.fileName)
             console.log(this.name + " downloaded!");
-        } catch (err) {
-            console.log(err);
-            botPushError(this.name + " downloading error...");
-            botPushError(err);
-            // return Promise.reject(err);
+            return true;
+        } catch (error) {
+            console.log(this.name + " downloading error...");
+            throw error;
         }
     };
 
     // 上傳備份
-    async uploadDB(backup) {
-        if (config.isLocalHost) return;
+    async uploadDB() {
+        if (config.isLocalHost) { console.log(this.name + " uploadDB(Dry)"); return true; }
         console.log(this.name + " uploading...");
 
-        // object to json
         try {
-            var binary = Buffer.from(JSON.stringify(this.data));
-            if (backup) {
-                await dbox.filesBackup(this.fileName);
-            }
-            await dbox.fileUpload(this.fileName, binary);
+            if (this.backup) { await dbox.fileBackup(this.fileName); }
+
+            let binary = Buffer.from(JSON.stringify(this.data));
+            await dbox.fileUpload(this.fileName, binary)
+
             console.log(this.name + " uploaded!");
-        } catch (err) {
-            console.log(err);
-            botPushError(this.name + " uploading error...");
-            botPushError(err);
-            // return Promise.reject(err);
+            return true;
+        } catch (error) {
+            console.log(this.name + " uploading error...");
+            throw error;
         }
     };
 
     // 延時上傳
-    async uploadTask(backup) {
+    async uploadTask() {
 
-        try {
+        if (this.uploadTaskCount > 0) {
+            // counting
+            this.uploadTaskCount = config.isLocalHost ? 5 : this.uploadCount;
+        } else {
+            // start count
+            this.uploadTaskCount = config.isLocalHost ? 5 : this.uploadCount;;
 
-            if (this.uploadTaskCount > 0) {
-                // counting
-                this.uploadTaskCount = config.isLocalHost ? 5 : this.uploadCount;
-            } else {
-                // start count
-                this.uploadTaskCount = config.isLocalHost ? 5 : this.uploadCount;;
-
-                // count down and upload
-                while (this.uploadTaskCount > 0) {
-                    await sleep(1000);
-                    this.uploadTaskCount--;
-                }
-
-                await this.saveDB();
-                this.uploadDB(backup);
+            // count down and upload
+            while (this.uploadTaskCount > 0) {
+                await sleep(1000);
+                this.uploadTaskCount--;
             }
 
-        } catch (err) {
-            console.log(err);
-            botPushError(this.name + " uploadTask error...");
-            botPushError(err);
-            // return Promise.reject(err);
+            try {
+                await this.saveDB()
+                await this.uploadDB();
+            } catch (error) {
+                console.log(this.name + " Task upload error...\n" + error);
+            }
         }
     };
 
     // init
     async init() {
-        await this.downloadDB();
-        await this.loadDB();
+        try {
+            await this.downloadDB();
+            await this.loadDB();
+            return true;
+        } catch (error) {
+            console.log(this.name + " init error...");
+            throw error;
+        }
     };
 }
 
 // Character Database
 class CharaDatabase extends Database {
+    constructor(dbName, backup) {
+        super(dbName, backup);
+        this.sordMethod = function (A, B) { return (A.rarity == B.rarity) ? A.name.localeCompare(B.name) : A.rarity.localeCompare(B.rarity) };
+    };
+
     newData() {
-        var data = {};
+        let data = {};
         data.name = "";
         data.ability = "";
         data.ability_aw = "";
@@ -214,7 +215,7 @@ class CharaDatabase extends Database {
         data.class = "";
 
         data.getMessage = function () {
-            var string = "";
+            let string = "";
 
             string += this.name + "　　" + this.rarity + "\n";
 
@@ -266,56 +267,30 @@ class CharaDatabase extends Database {
             let i = this.indexOf(newData.name);
             let changed = false;
 
-            if (this.data[i].ability == "") {
-                this.data[i].ability = newData.ability;
-                if (this.data[i].ability != "") { changed = true; }
-            }
-            if (this.data[i].ability_aw == "") {
-                this.data[i].ability_aw = newData.ability_aw;
-                if (this.data[i].ability_aw != "") { changed = true; }
-            }
-            if (this.data[i].skill == "") {
-                this.data[i].skill = newData.skill;
-                if (this.data[i].skill != "") { changed = true; }
-            }
-            if (this.data[i].skill_aw == "") {
-                this.data[i].skill_aw = newData.skill_aw;
-                if (this.data[i].skill_aw != "") { changed = true; }
-            }
-
-            if (this.data[i].rarity == "") {
-                this.data[i].rarity = newData.rarity;
-                if (this.data[i].rarity != "") { changed = true; }
-            }
-            if (this.data[i].class == "") {
-                this.data[i].class = newData.class;
-                if (this.data[i].class != "") { changed = true; }
-            }
-            if (this.data[i].urlName == "") {
-                this.data[i].urlName = newData.urlName;
-                if (this.data[i].urlName != "") { changed = true; }
+            let keys = ["ability", "ability_aw", "skill", "skill_aw", "rarity", "class", "urlName"];
+            for (let j in keys) {
+                let key = keys[j];
+                if (this.data[i][key] == "" && newData[key]) {
+                    if (newData[key] != "") { changed = true; }
+                    this.data[i][key] = newData[key];
+                }
             }
 
             if (changed) {
                 console.log("New character <" + newData.name + "> data update complete!");
                 return "anna " + newData.name + " New character data update complete!";
             } else {
-                console.log("Character <" + newData.name + "> data is existed!");
+                // console.log("Character <" + newData.name + "> data is existed!");
                 return "";
             }
         };
-    };
-
-    // 儲存資料
-    async saveDB() {
-        return super.saveDB((A, B) => { return (A.rarity == B.rarity) ? A.name.localeCompare(B.name) : A.rarity.localeCompare(B.rarity) });
     };
 }
 
 // Nickname Database
 class NickDatabase extends Database {
     newData() {
-        var data = {};
+        let data = {};
         data.name = "";
         data.target = "";
 
@@ -326,7 +301,7 @@ class NickDatabase extends Database {
         if (name == "" || nick == "") return "";
 
         if (this.indexOf(nick) == -1) {
-            var newData = this.newData();
+            let newData = this.newData();
             newData.name = nick;
             newData.target = name;
             this.data.push(newData);
@@ -337,7 +312,7 @@ class NickDatabase extends Database {
 // Class Database
 class ClassDatabase extends Database {
     newData() {
-        var data = {};
+        let data = {};
         data.name = "";
         data.index = [];
         data.type = "";
@@ -356,7 +331,7 @@ class ClassDatabase extends Database {
             return "New Class <" + newClass.name + "> add complete!";
 
         } else {
-            console.log("Class <" + newClass.name + "> is existed!");
+            // console.log("Class <" + newClass.name + "> is existed!");
             return "";
         }
     };
@@ -364,13 +339,13 @@ class ClassDatabase extends Database {
 
 // Group Database
 class GroupDatabase extends Database {
-    constructor(dbName) {
-        super(dbName);
+    constructor(dbName, backup) {
+        super(dbName, backup);
         this.uploadCount = (10 * 60);
     };
 
     newData() {
-        var data = {};
+        let data = {};
         data.name = "";
         data.text = "";
         data.alarm = "";
@@ -383,7 +358,7 @@ class GroupDatabase extends Database {
         if (groupId == "" || text == "" || timestamp == "") return "";
 
         if (this.indexOf(groupId) == -1) {
-            var newData = this.newData();
+            let newData = this.newData();
             newData.name = groupId;
             newData.text = text;
             newData.alarm = true;
@@ -400,22 +375,17 @@ class GroupDatabase extends Database {
             this.data[i].text = text;
             this.data[i].timestamp = timestamp;
         }
-        this.uploadTask(false);
+        this.uploadTask();
         return "";
     };
 }
 
-var groupDatabase = new GroupDatabase("GroupDatabase");
-var charaDatabase = new CharaDatabase("CharaDatabase");
-var nickDatabase = new NickDatabase("NickDatabase");
-var classDatabase = new ClassDatabase("ClassDatabase");
+let groupDatabase = new GroupDatabase("GroupDatabase", false);
+let charaDatabase = new CharaDatabase("CharaDatabase", true);
+let nickDatabase = new NickDatabase("NickDatabase", true);
+let classDatabase = new ClassDatabase("ClassDatabase", true);
 
 module.exports = {
-    /*init() {
-
-    },*/
-
-
     groupDatabase: groupDatabase,
     charaDatabase: charaDatabase,
     nickDatabase: nickDatabase,
@@ -423,18 +393,12 @@ module.exports = {
 };
 
 
-
 /*
 const debugFunc = async function () {
     let ClassDatabase = createNewDatabase("ClassDatabase");
-    await ClassDatabase.downloadDB();
-    await ClassDatabase.loadDB();
     let a = ClassDatabase.indexOf("アコライト");
     console.log(a);
-    await ClassDatabase.saveDB();
-    await ClassDatabase.uploadDB(true);
-
-
+    await ClassDatabase.uploadDB();
 }
 
 setTimeout(debugFunc, 1 * 100);// */

@@ -1,4 +1,4 @@
-﻿
+
 // todo
 /*
     wait check tweet stream log file
@@ -6,6 +6,23 @@
 
 // commit
 /*
+    >> feature/0.7.4/tryCatchRebuild
+    tryCatchRebuild start
+    var to let
+    fix bugs, new DB test done
+    new dbox test done
+    twitter image search method
+    new imgur test done
+    remtoe off
+    new dbox log to file
+    format code
+    kill async
+    require bug fixed
+    rebuild anna.js
+    new dbox test done?
+    fix single wrod search
+    twitter image search test done
+    
 */
 
 const config = {
@@ -35,7 +52,7 @@ const config = {
         IMGUR_CLIENT_ID: process.env.IMGUR_CLIENT_ID,
         IMGUR_CLIENT_SECRET: process.env.IMGUR_CLIENT_SECRET,
         // vist site: https://api.imgur.com/oauth2/authorize?client_id=84f351fab201d5a&response_type=token
-        // check REFRESH_TOKEN var from url
+        // check REFRESH_TOKEN variable from url
         IMGUR_REFRESH_TOKEN: process.env.IMGUR_REFRESH_TOKEN
     },
 
@@ -79,8 +96,8 @@ config.autoTest = function () {
 };
 module.exports = config;
 
-setTimeout(async function () {
-    await require("dns").lookup(require("os").hostname(), function (err, add, fam) {
+setTimeout(function () {
+    require("dns").lookup(require("os").hostname(), function (err, add, fam) {
         config.hostIP = add;
         config.isLocalHost = add.startsWith('192.');
         Object.freeze(config);
@@ -104,40 +121,3 @@ String.prototype.equali = function (s1) {
 global.sleep = function (ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
-
-const fs = require("fs");
-global.asyncReadFile = function (filePath) {
-    return new Promise(function (resolve, reject) {
-        fs.readFile(filePath, function (err, data) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(data);
-            }
-        });
-    });
-}
-global.asyncWriteFile = function (filePath, data, options = "utf8") {
-    return new Promise(function (resolve, reject) {
-        try {
-            let path = filePath.substring(0, filePath.lastIndexOf("\\"));
-
-            if (path.indexOf("\\") != -1 && !fs.existsSync(path)) {
-                fs.mkdirSync(path, { recursive: true });
-            }
-
-            // fs.writeFileSync(filePath, data, options);
-            // resolve();
-            fs.writeFile(filePath, data, options, function (err, bytesRead, buffer) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            });
-
-        } catch (err) {
-            reject(err);
-        }
-    });
-};
