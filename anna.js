@@ -374,13 +374,14 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
 
                         if (array.length > 0) {
                             replyMsg.push(line.createImageMsg(img.imageLink, img.thumbnailLink));
+                            replyMsg.push(line.createTextMsg("new " + img.md5 + " "));
                             let labels = [], msgs = [];
                             for (let j in array) {
                                 labels.push(array[j]);
-                                msgs.push("anna new " + img.md5 + " " + array[j]);
+                                msgs.push("new " + img.md5 + " " + array[j]);
                             }
-                            labels.push("anna new");
-                            msgs.push("anna new");
+                            labels.push("new");
+                            msgs.push("new");
 
                             replyMsg.push(line.createMsgButtons(img.md5, labels, msgs));
                             // console.log(JSON.stringify(replyMsg));
