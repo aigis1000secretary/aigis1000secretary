@@ -350,7 +350,7 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
 
             }
         } else if (_isAdmin && (command == "初始化" || command == "INIT")) {
-            await annaCore.init();
+            await init();
             return "初始化完成!";
 
         } else if (_isAdmin && (command == "NEWIMG")) {
@@ -386,7 +386,7 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
                             labels.push("next");
                             msgs.push("new");
 
-                            replyMsg.push(line.createMsgButtons(img.md5, labels, msgs));
+                            replyMsg.push(line.createMsgButtons("[" + i + "/" + imgArray.length + "]", labels, msgs));
                             // console.log(JSON.stringify(replyMsg));
                             if (replyMsg[2] != '') {
                                 return replyMsg;
