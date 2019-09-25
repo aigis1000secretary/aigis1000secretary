@@ -1,7 +1,7 @@
 
 
 // ライブラリ読み込み
-let Twitter = require('twitter');
+const Twitter = require('twitter');
 const request = require("request");
 const crypto = require('crypto');
 const line = require("./line.js");
@@ -182,18 +182,7 @@ const twitterCore = {
         },
         post: function (request, response) {
             if (config.switchVar.logRequestToFile && request.body) {
-                let dateNow = new Date(Date.now());
-                let path = "twitter_" +
-                    dateNow.getFullYear() + "-" +
-                    ((dateNow.getMonth() + 1) + "-").padStart(3, "0") +
-                    (dateNow.getDate() + "-").padStart(3, "0") +
-                    (dateNow.getHours() + "").padStart(2, "0") +
-                    (dateNow.getMinutes() + "").padStart(2, "0") +
-                    (dateNow.getSeconds() + "").padStart(2, "0") +
-                    (dateNow.getMilliseconds() + "").padStart(4, "0");
-                let data = Buffer.from(JSON.stringify(request.body, null, 4));
-
-                dbox.fileUpload("webhook/" + ((dateNow.getMonth() + 1) + "/").padStart(3, "0") + path + ".json", data, "add").catch(function (error) { });
+                dbox.logToFile("webhook/", "twitter", request.body);
             }
             response.send("200 OK");
         }
@@ -277,20 +266,39 @@ const twitterCore = {
                     callback(tweet_data);
                 }
 
+                // image to dropbox
+                if (tweet_data.medias) {
+                    for (let i in tweet_data.medias) {
+                        let media = tweet_data.medias[i];
+
+                        if (media.type == "photo") {
+                            let callBack = function (error, response, body) {
+                                if (error || !body) { console.log(error); return null; }
+
+                                let tweetTime = new Date(parseInt(tweet_data.timestamp_ms));
+                                let filename = "Aigis1000-" + tweet_data.id_str + "-";
+                                filename += tweetTime.getFullYear().toString().padStart(4, "0") +
+                                    (tweetTime.getMonth() + 1).toString().padStart(2, "0") +
+                                    tweetTime.getDate().toString().padStart(2, "0") + "_" +
+                                    tweetTime.getHours().toString().padStart(2, "0") +
+                                    tweetTime.getMinutes().toString().padStart(2, "0") +
+                                    tweetTime.getSeconds().toString().padStart(2, "0");
+                                filename += "-img" + (parseInt(i) + 1) + ".jpg";
+
+                                dbox.fileUpload("NewImages/NewImages/" + filename, body);
+                            }
+                            request.get(media.link, { encoding: "binary" }, callBack);
+                        }
+                    }
+                }
+
                 // log
                 if (config.switchVar.logStreamToFile && tweet) {
-                    let dateNow = new Date(Date.now());
-                    let dateString = "twitter_" +
-                        dateNow.getFullYear() + "-" +
-                        ((dateNow.getMonth() + 1) + "-").padStart(3, "0") +
-                        (dateNow.getDate() + "-").padStart(3, "0") +
-                        (dateNow.getHours() + "").padStart(2, "0") +
-                        (dateNow.getMinutes() + "").padStart(2, "0") +
-                        (dateNow.getSeconds() + "").padStart(2, "0") +
-                        (dateNow.getMilliseconds() + "").padStart(4, "0");
-                    let data = Buffer.from(JSON.stringify(tweet, null, 4));
-
-                    dbox.fileUpload("stream/" + ((dateNow.getMonth() + 1) + "/").padStart(3, "0") + dateString + ".json", data, "add").catch(function (error) { });
+                    if (tweet_data.screen_name == target) {
+                        dbox.logToFile("stream/", "twitter", tweet);
+                    } else {
+                        dbox.logToFile("stream/", "twitterRT", tweet);
+                    }
                 }
             }
         },
@@ -306,13 +314,14 @@ const twitterCore = {
             raw.entities = Object.assign(raw.entities, raw.extended_entities);
 
             // get tweet data
+            tweet_data.id_str = raw.id_str;
             tweet_data.name = raw.user.name;
             tweet_data.screen_name = raw.user.screen_name;
             tweet_data.created_at = raw.created_at;
             tweet_data.timestamp_ms = raw.timestamp_ms;
 
             // tweet text
-            tweet_data.text = raw.full_text ? raw.full_text : raw.text;
+            tweet_data.text = raw.full_text || raw.text;
 
             // tweet media
             if (raw.entities.media && Array.isArray(raw.entities.media)) {
@@ -333,29 +342,41 @@ const twitterCore = {
         },
     },
 
-    // autoTest: async function () {
-    // }
-}
-//twitterCore.stream.litsen("Aigis1000", function () { });
-module.exports = twitterCore;
+    api: {
+        getTweet: function (id) {
+            return new Promise(function (resolve, reject) {
+                bot.get('statuses/show/' + id, { include_entities: true, include_ext_alt_text: true }, (error, tweet, response) => {
+                    // error ? console.log("error", JSON.stringify(error, null, 4)) : {};
+                    // tweet ? console.log("tweet", JSON.stringify(tweet, null, 4)) : {};
+                    // response ? console.log("response", JSON.stringify(response, null, 4)) : {};
+                    // twitterCore.stream.getStreamData(tweet[0], "Aigis1000", (obj) => console.log(JSON.stringify(obj, null, 4)));
+                    resolve(twitterCore.stream.getTweetData(tweet));
+                });
+            });
+        }
+    },
 
-// twitterCore.stream.litsen("z1022001", "", function (tweet_data) {
-//     console.log(JSON.stringify(tweet_data, null, 4));
-// });
+    /*autoTest: async function () {
+        twitterCore.stream.litsen("Aigis1000", "", console.log);
+    }//*/
+}; module.exports = twitterCore;
+
 
 
 /*
-searchTweet('『冥闇の剣士アンブレ』が登場！');
+let count = 0;
+searchTweet('(from:Aigis1000)');
 function searchTweet(queryArg, nextResultsMaxIdArg = null) {
-    bot.get('search/tweets', { q: queryArg, count: 100, max_id: nextResultsMaxIdArg }, (error, searchData, response) => {
+    bot.get('search/tweets', { q: queryArg, count: 10000, max_id: nextResultsMaxIdArg }, (error, searchData, response) => {
         for (item in searchData.statuses) {
             let tweet = searchData.statuses[item];
             // console.log('@' + tweet.user.screen_name + ' : ' + tweet.text); //実際に使う場合はここでファイルへ書き出しなどといった処理を行うことになると思います
 
             // if (!tweet.retweeted_status) {
             if (tweet.user.screen_name == "Aigis1000") {
-                console.log('@' + tweet.user.screen_name + '\n >>' + tweet.text); //実際に使う場合はここでファイルへ書き出しなどといった処理を行うことになると思います
-                console.log(JSON.stringify(tweet, null, 4));
+                // console.log('@' + tweet.user.screen_name + '\n >>' + tweet.text); //実際に使う場合はここでファイルへ書き出しなどといった処理を行うことになると思います
+                console.log('@' + tweet.user.screen_name + ' >> ' + tweet.created_at + ' >> ' + tweet.id + ' >> ' + (++count)); //実際に使う場合はここでファイルへ書き出しなどといった処理を行うことになると思います
+                // console.log(JSON.stringify(tweet, null, 4));
             }
         }
 
@@ -380,6 +401,16 @@ function searchTweet(queryArg, nextResultsMaxIdArg = null) {
     });
 }//*/
 
+/* showTweet("651955440129978368");
+function showTweet(id) {
+    bot.get('statuses/lookup', { id, include_entities: true, include_ext_alt_text: true }, (error, tweet, response) => {
+        // bot.get('statuses/show/' + id, { include_entities: true, include_ext_alt_text: true }, (error, tweet, response) => {
+        // error ? console.log("error", JSON.stringify(error, null, 4)) : {};
+        tweet ? console.log("tweet", JSON.stringify(tweet, null, 4)) : {};
+        // response ? console.log("response", JSON.stringify(response, null, 4)) : {};
+        twitterCore.stream.getStreamData(tweet[0], "Aigis1000", (obj) => console.log(JSON.stringify(obj, null, 4)));
+    });
+}//*/
 
 /*
 const httpTwitterAPI = function () {

@@ -2,148 +2,66 @@
 const config = require("./config.js");
 const anna = require("./anna.js");
 const imgur = require("./imgur.js");
+const dbox = require("./dbox.js");
 const express = require("./express.js");
 const line = require("./line.js");
 const twitter = require("./twitter.js");
 
-// remote system
-let botMode = "anna";
-let remoteTarget = "";
-let remoter = "";
 // groupDatabase
 const database = require("./database.js");
-var groupDatabase = database.groupDatabase;
-
-
+let groupDatabase = database.groupDatabase;
 
 // line bot 監聽
 const lineBotOn = function () {
 
     // wellcome msg
-    line.bot.on("memberJoined", async function (event) {
+    line.bot.on("memberJoined", function (event) {
         if (config.switchVar.logRequestToFile && event) {
-            let dateNow = new Date(Date.now());
-            let path = "line_bot_on_memberJoined/" +
-                dateNow.getFullYear() + "-" +
-                ((dateNow.getMonth() + 1) + "-").padStart(3, "0") +
-                (dateNow.getDate() + "-").padStart(3, "0") +
-                (dateNow.getHours() + "").padStart(2, "0") +
-                (dateNow.getMinutes() + "").padStart(2, "0") +
-                (dateNow.getSeconds() + "").padStart(2, "0") +
-                (dateNow.getMilliseconds() + "").padStart(4, "0");
-            let data = Buffer.from(JSON.stringify(event, null, 4));
-
-            dbox.fileUpload("webhook/" + ((dateNow.getMonth() + 1) + "/").padStart(3, "0") + path + ".json", data, "add").catch(function (error) { });
+            dbox.logToFile("webhook/", "memberJoined", event);
         }
-
         // anna.debugLog(event);
-        let userId = !event.source.userId ? config.adminstrator : event.source.userId;	// Line API bug?
-        let sourceId =
-            event.source.type == "group" ? event.source.groupId :
-                event.source.type == "room" ? event.source.roomId : userId;
+
+        let userId = event.source.userId || config.adminstrator;	// Line API bug?
+        let sourceId = event.source.groupId || event.source.roomId || userId;
 
         // 呼叫定型文
-        var result = anna.replyStamp("新人");
+        let result = anna.replyStamp("新人");
         if (result == false) {
             result = "歡迎使用政務官小安娜 v" + config._version + ", 輸入(安娜 HELP)以取得更多訊息";
         }
-        anna.debugLog(result);
         line.push(sourceId, result);
         return true;
     });// */
 
     // normal msg
-    line.bot.on("message", async function (event) {
+    line.bot.on("message", function (event) {
         if (config.switchVar.logRequestToFile && event) {
-            let dateNow = new Date(Date.now());
-            let path = "line_bot_on_message/" +
-                dateNow.getFullYear() + "-" +
-                ((dateNow.getMonth() + 1) + "-").padStart(3, "0") +
-                (dateNow.getDate() + "-").padStart(3, "0") +
-                (dateNow.getHours() + "").padStart(2, "0") +
-                (dateNow.getMinutes() + "").padStart(2, "0") +
-                (dateNow.getSeconds() + "").padStart(2, "0") +
-                (dateNow.getMilliseconds() + "").padStart(4, "0");
-            let data = Buffer.from(JSON.stringify(event, null, 4));
-
-            dbox.fileUpload("webhook/" + ((dateNow.getMonth() + 1) + "/").padStart(3, "0") + path + ".json", data, "add").catch(function (error) { });
+            dbox.logToFile("webhook/", "message", event);
         }
-        // anna.debugLog(event);
 
         // 文字事件
         if (event.message.type == "text") {
+            anna.debugLog(event + "\n");
+
             // 取出文字內容
-            var msg = event.message.text.trim()
-            anna.debugLog(event);
+            let msg = event.message.text.trim()
+
             // get source id
-            let userId = !event.source.userId ? config.adminstrator : event.source.userId;	// Line API bug?
-            let sourceId =
-                event.source.type == "group" ? event.source.groupId :
-                    event.source.type == "room" ? event.source.roomId : userId;
+            let userId = event.source.userId || config.adminstrator;	// Line API bug?
+            let sourceId = event.source.groupId || event.source.roomId || userId;
             if (sourceId[0] != "U") {
                 groupDatabase.addData(sourceId, msg.split("\n")[0].trim(), event.timestamp);
             }
 
             // define reply function
-            var replyFunc = function (rMsg) {
+            let replyFunc = function (rMsg) {
                 anna.debugLog(rMsg);
-                event.reply(rMsg)
-                    .then(function (data) {
-                        anna.debugLog(data);
-                    })
-                    .catch(function (error) {
-                        anna.debugLog(error);
-                    });
+                event.reply(rMsg).then(anna.debugLog).catch(anna.debugLog);
                 return true;
             };
 
-            // remote func
-            if (anna.isAdmin(sourceId)) {
-                if (msg == "remote") {
-                    // list group
-                    for (let i in groupDatabase.data) {
-                        let groupId = groupDatabase.data[i].name;
-                        let text = groupDatabase.data[i].text;
-
-                        let str = groupId + " :\n\t" + text;
-                        console.log(str);
-                        await botPush(userId, str);
-                    }
-                    return;
-
-                } else if (msg == "remote off") {
-                    botMode = "anna";
-                    remoteTarget = "";
-                    remoter = "";
-                    replyFunc("remote off");
-                    return;
-
-                } else if (msg.indexOf("remote ") == 0) {
-                    let target = msg.split(" ")[1];
-                    let i = groupDatabase.indexOf(target);
-                    if (i != -1) {
-                        botMode = "remote";
-                        remoteTarget = groupDatabase.data[i].name;
-                        remoter = userId;
-                        replyFunc("remote on " + groupDatabase.data[i].text);
-                    }
-                    return;
-                }
-            }
-            // remote mode
-            if (botMode == "remote") {
-                if (sourceId == remoteTarget) {
-                    botPush(remoter, msg);
-                    return;
-                } else if (sourceId == remoter) {
-                    botPush(remoteTarget, msg);
-                    return;
-                }
-            }
-
             // bot mode
-            // if (botMode == "anna") {
-            if (sourceId != remoter && sourceId != remoteTarget) {
+            if (botMode == "anna") {
                 // normal response
                 if (msg == "安娜") {
                     replyFunc("是的！王子？");
@@ -161,7 +79,7 @@ const lineBotOn = function () {
                 }
 
                 //
-                var result = await anna.replyAI(msg, sourceId, userId);
+                let result = anna.replyAI(msg, sourceId, userId)
                 if (result != false) {
                     replyFunc(result);
                     return;
@@ -174,7 +92,7 @@ const lineBotOn = function () {
                 }
 
                 // 無視...
-                anna.debugLog("Not a command");
+                // anna.debugLog("Not a command");
                 return;
             }
 
@@ -184,19 +102,21 @@ const lineBotOn = function () {
 // twitter bot 監聽
 const twitterBotOn = function () {
 
-    var callback = async function (tweet_data) {
+    let callback = function (tweet_data) {
 
         for (let i in groupDatabase.data) {
             if (!groupDatabase.data[i].alarm) continue;
             // 14 days no ant msg idle group	3 * 24 * 60 * 60 * 1000
             if (Date.now() - groupDatabase.data[i].timestamp > 259200000) {
                 groupDatabase.data[i].alarm = false;
-                groupDatabase.uploadTask(false);
+                groupDatabase.uploadTask();
                 continue;
             }
 
+            let pushList = [];
+
             // push text
-            await botPush(groupDatabase.data[i].name, tweet_data.text);
+            pushList.push(groupDatabase.data[i].name, tweet_data.text);
 
             // push image
             if (tweet_data.medias.length <= 0) continue;
@@ -204,8 +124,12 @@ const twitterBotOn = function () {
                 let media = tweet_data.medias[j];
                 if (media.type == "photo") {
                     let imageMsg = line.createImageMsg(media.link, media.link);
-                    await botPush(groupDatabase.data[i].name, imageMsg);
+                    pushList.push(groupDatabase.data[i].name, imageMsg);
                 }
+            }
+
+            while (pushList.length > 0) {
+                line.pushMsg(groupDatabase.data[i].name, pushList.splice(0, 3));
             }
         }
     }
@@ -217,7 +141,7 @@ const twitterBotOn = function () {
 
 const timerBotOn = function () {
 
-    var timer = async function () {
+    let timer = async function () {
         let nd = new Date(Date.now());
         if (nd.getMinutes() < 5) {
 
@@ -268,9 +192,8 @@ const main = async function () {
 const debugFunc = async function () {
 	let sourceId = "U9eefeba8c0e5f8ee369730c4f983346b";
 	let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
-	var replyFunc = function (str) { console.log(">>" + str + "<<"); return str != "" && str && str != "undefined" };
+	let replyFunc = function (str) { console.log(">>" + str + "<<"); return str != "" && str && str != "undefined" };
 	config.switchVar.debug = true;
-
 }
 
 

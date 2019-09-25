@@ -6,7 +6,7 @@ const twitter = require("./twitter.js");
 const bodyParser = require('body-parser');
 const anna = require("./anna.js");
 const config = require("./config.js");
-var jsonParser = bodyParser.json()
+let jsonParser = bodyParser.json()
 
 const app = express();
 const server = app.listen(process.env.PORT || 8080, function () {
@@ -16,7 +16,7 @@ const server = app.listen(process.env.PORT || 8080, function () {
 });
 
 module.exports = {
-    init: async function () {
+    init: function () {
 
         // http host
         app.get("/", function (request, response) {
@@ -25,10 +25,10 @@ module.exports = {
         app.get("/anna/:command", async function (request, response) {
             let sourceId = config.adminstrator;
             let userId = config.adminstrator;
-            var command = request.params.command;
-            var responseBody = "reply false!";
+            let command = request.params.command;
+            let responseBody = "reply false!";
 
-            var result = await anna.replyAI("anna " + command, sourceId, userId);
+            let result = anna.replyAI("anna " + command, sourceId, userId);
             if (typeof (result) == "string") {
                 responseBody = result.replaceAll("\n", "<br>");
             } else {
@@ -51,13 +51,12 @@ module.exports = {
         app.post("/twitterbot/", jsonParser, twitter.webhook.post);
 
         // hotfix
-        try {
-            await dbox.fileDownloadToFile("hotfix.js", "./hotfix.js");
-            hotfix = require("./hotfix.js");
-            app.get("/hotfix/:function", hotfix.hotfix);
-        } catch (err) {
-            console.log("hotfix error ", err);
-        }
+        dbox.fileDownloadToFile("hotfix.js").then(function (result) {
+            if (result) {
+                let hotfix = require("./hotfix.js");
+                app.get("/hotfix/:function", hotfix.hotfix);
+            }
+        }).catch(function (error) { console.log("hotfix error ", error) })
     },
 };
 module.exports.init();

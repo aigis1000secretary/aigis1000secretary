@@ -1,6 +1,7 @@
 
 // 初始化
 const config = require("./config.js");
+module.exports = {};    // 循環依賴對策
 // 爬蟲
 const request = require("request");
 const iconv = require("iconv-lite");
@@ -9,28 +10,43 @@ const cheerio = require("cheerio");
 const imgur = require("./imgur.js");
 const dbox = require("./dbox.js");
 const line = require("./line.js");
+const twitter = require("./twitter.js");
 const imgUploader = require("./image.js");
 // 資料庫
 const database = require("./database.js");
 
 
+// Init
+const init = module.exports.init = async function () {
+
+    charaDatabase.data = [];
+    nickDatabase.data = [];
+    classDatabase.data = [];
+
+    await charaDatabase.init().catch(console.log);
+    await nickDatabase.init().catch(console.log);
+    await classDatabase.init().catch(console.log);
+
+    return;
+};
+
+
 // bot
-// 搜尋資料
-const replyAI = async function (rawMsg, sourceId, userId) {
+// reply
+const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userId) {
     debugLog("rawMsg: <" + rawMsg + ">");
 
     // flag
-    let _isAdmin = isAdmin(sourceId);
+    let _isAdmin = isAdmin(userId);
     let callAnna = (rawMsg.toUpperCase().indexOf("ANNA ") == 0 || rawMsg.indexOf("安娜 ") == 0);
-    if (!callAnna) {
-        rawMsg = "ANNA " + rawMsg;
-    }
+    if (!callAnna) { rawMsg = "ANNA " + rawMsg; }
 
     // 分析命令
-    let msg1 = ("" + rawMsg.split("\n")[0]).trim();
-    let msg2 = rawMsg.indexOf("\n") != -1 ? rawMsg.substring(rawMsg.indexOf("\n") + 1).trim() : "";
+    rawMsg.replaceAll("\n\n", "\n");
+    let msg1 = rawMsg.indexOf("\n") == -1 ? rawMsg.trim() : rawMsg.split("\n")[0].trim();
+    let msg2 = rawMsg.indexOf("\n") == -1 ? "" : rawMsg.substring(rawMsg.indexOf("\n") + 1).trim();
     let msgs = msg1.split(" ");
-    msgs = msgs.filter(function (n) { return (n && (n != "")) });
+    msgs = msgs.filter(function (n) { return (n && (n != "")) });   // delete null data
     // >> ANNA <command>	<arg1>			<arg2>
     // >> ANNA 學習			NNL:黑弓
     // >> ANNA 資料庫		CharaDatabase	NNL.ability_aw
@@ -38,9 +54,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
     let arg1 = ("" + msgs[2]).trim();
     let arg2 = ("" + msgs[3]).trim();
     // <command>
-    if (command == "undefined") {
-        return false;
-    }
+    if (command == "undefined") { return false; }
     debugLog("Args: <" + command + "> <" + arg1 + "> <" + arg2 + ">");
 
     // reply
@@ -51,19 +65,24 @@ const replyAI = async function (rawMsg, sourceId, userId) {
             return "debug = " + (config.switchVar.debug ? "on" : "off");
 
         } else if (command.length == 1) {		// 定型文
-            var result = replyStamp(command);
-            if (result != false) {
-                return result;
+            // 同步執行
+            let result = nickDatabase.indexOf(command);
+            if (result != -1) {
+                command = nickDatabase.data[result].target;
             } else {
-                return "王子太短了，找不到...";
+                result = replyStamp(command);
+                if (result != false) {
+                    return result;
+                } else {
+                    return "王子太短了，找不到...";
+                }
             }
 
         } else if (command == "巨根") {
             return "王子太小了，找不到...";
 
         } else if (command == "醒醒" || command == "WAKE") {
-            // wake
-            return "呣喵~?";
+            return "呣喵~?";    // wake
 
         } else if (command == "指令" || command == "HELP") {
             // help
@@ -82,9 +101,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
             replyMsg += "直接輸入稀有度+職業可以搜索角色\n(>>安娜 黑弓) *推薦使用\n\n";
             replyMsg += "輸入關鍵字可進行暱稱搜索&模糊搜索\n(>>安娜 NNL)\n(>>安娜 射手ナナリー)\n\n";
 
-            if (!_isAdmin) {
-                return replyMsg;
-            }
+            if (!isAdmin(sourceId)) { return replyMsg; }
 
             replyMsg += "忘記: 刪除特定暱稱。\n(>>安娜 忘記 NNL)\n\n";
             replyMsg += "資料庫: 直接修改資料庫內容。\n(>>資料庫 CharaDatabase NNL.ability_aw)\n\n";
@@ -97,8 +114,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
             // status
             await imgur.init();
 
-            var replyMsg = "";
-
+            let replyMsg = "";
             replyMsg += "目前版本 v" + config._version + "\n";
             replyMsg += "資料庫內有 " + charaDatabase.data.length + " 筆角色資料\n";
             replyMsg += "　　　　　 " + classDatabase.data.length + " 筆職業資料\n";
@@ -108,54 +124,50 @@ const replyAI = async function (rawMsg, sourceId, userId) {
 
         } else if (command == "照片" || command == "圖片" || command == "相片" || command == "PICTURE") {
             // 圖片空間
-            return line.createTemplateMsg("圖片空間",
-                ["上傳新照片", "線上圖庫"],
+            return line.createUriButtons("圖片空間",
+                ["上傳新照片", "角色圖庫", "貼圖圖庫"],
                 ["https://www.dropbox.com/request/FhIsMnWVRtv30ZL2Ty69",
-                    "https://www.dropbox.com/sh/ij3wbm64ynfs7n7/AACmNemWzDhjUBycEMcmos6ha?dl=0"]);
+                    "https://www.dropbox.com/sh/ij3wbm64ynfs7n7/AACmNemWzDhjUBycEMcmos6ha?dl=0",
+                    "https://www.dropbox.com/sh/w9pxyrmldc676hp/AAAT7bYRtrYLlPrpFWwMb7Zsa?dl=0"]);
 
         } else if (command == "工具" || command == "TOOL") {
             // tool
-            var templateMsgA, templateMsgB;
+            let templateMsgA, templateMsgB;
 
-            var tagArray = [];
-            var urlArray = [];
+            let tagArray = [];
+            let urlArray = [];
             tagArray.push("特殊合成表");
             urlArray.push("https://seesaawiki.jp/aigis/d/%C6%C3%BC%EC%B9%E7%C0%AE%C9%BD");
             tagArray.push("經驗值計算機");
             urlArray.push("http://aigistool.html.xdomain.jp/EXP.html");
             tagArray.push("體魅計算機");
             urlArray.push("http://aigistool.html.xdomain.jp/ChariSta.html");
-            templateMsgA = line.createTemplateMsg("實用工具 (1)", tagArray, urlArray);
+            templateMsgA = line.createUriButtons("實用工具 (1)", tagArray, urlArray);
 
             tagArray = [];
             urlArray = [];
-            tagArray.push("DPS一覽表 (日)");
+            tagArray.push("DPS 一覽表 (日)");
             urlArray.push("http://www116.sakura.ne.jp/~kuromoji/aigis_dps.htm");
-            tagArray.push("千年戦争アイギス バフ試算表");
+            tagArray.push("Buff 試算表");
             urlArray.push("https://aki-m.github.io/aigistools/buff.html");
-            tagArray.push("攻略頻道: Sennen");
+            tagArray.push("Youtube 攻略頻道");
             urlArray.push("https://www.youtube.com/channel/UC8RlGt22URJuM0yM0pUyWBA");
             // tagArray.push("千年戦争アイギス攻略ブログ");
             // urlArray.push("http://sennenaigis.blog.fc2.com/");
-            templateMsgB = line.createTemplateMsg("實用工具 (2)", tagArray, urlArray);
+            templateMsgB = line.createUriButtons("實用工具 (2)", tagArray, urlArray);
 
-            var replyMsg = [templateMsgA, templateMsgB];
-
+            let replyMsg = [templateMsgA, templateMsgB];
             return replyMsg;
 
         } else if (command == "職業") {
             let classDB = (arg1 == "undefined" ? classDatabase.data :
                 classDatabase.data.filter(function (classData) {
-                    if (arg1 == "近" && classData.type == "近接型")
-                        return true;
-                    if (arg1 == "遠" && classData.type == "遠距離型")
-                        return true;
+                    if (arg1 == "近" && classData.type == "近接型") return true;
+                    if (arg1 == "遠" && classData.type == "遠距離型") return true;
                     return (classData.name.indexOf(arg1) != -1);
                 }));
 
-            classDB.sort(function (A, B) {
-                return A.type.localeCompare(B.type)
-            })
+            classDB.sort(function (A, B) { return A.type.localeCompare(B.type) })
 
             let replyMsg = "";
             for (let i in classDB) {
@@ -168,13 +180,17 @@ const replyAI = async function (rawMsg, sourceId, userId) {
 
             let i = database.groupDatabase.indexOf(sourceId)
             if (i != -1) {
-                var alarm = !database.groupDatabase.data[i].alarm;
+                let alarm = !database.groupDatabase.data[i].alarm;
                 database.groupDatabase.data[i].alarm = alarm;
 
-                let func = async function () {
-                    await database.groupDatabase.saveDB();
-                    database.groupDatabase.uploadDB(false);
-                }; func();	// 異步儲存
+                let asyncFunc = async function () {
+                    try {
+                        await database.groupDatabase.saveDB();
+                        await database.groupDatabase.uploadDB();
+                    } catch (error) {
+                        console.log("上傳異常!" + error);
+                    }
+                }; asyncFunc();
 
                 return "切換廣播開關，目前為: " + (alarm ? "開" : "關");
             }
@@ -184,7 +200,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
             // 關鍵字學習
             // <arg1>
             if (arg1 == "undefined") {
-                return "[學習] 要學甚麼?";
+                return "[學習] 要學甚麼?\n(>>安娜 學習 NNL:射手ナナリー)";
             }
             let learn = arg1.replace("：", ":");
             debugLog("learn: <" + learn + ">");
@@ -207,15 +223,15 @@ const replyAI = async function (rawMsg, sourceId, userId) {
 
             } else if (countB == 0) {
                 let replyMsgs = ["不認識的人呢...", "那是誰？"];
-                var replyMsg = "[學習] " + replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
+                let replyMsg = "[學習] " + replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
                 return replyMsg;
 
             } else if (countB > 1) {
                 return "[學習] 太多人了，不知道是誰";
 
             } else {
-                var key = arrayB[0];
-                var nick = keys[0];
+                let key = arrayB[0];
+                let nick = keys[0];
 
                 // 異步執行
                 nickDatabase.addData(key, nick);
@@ -227,22 +243,22 @@ const replyAI = async function (rawMsg, sourceId, userId) {
         } else if (command == "上傳" || command == "UPLOAD") {
 
             // 異步執行
-            let func = async function () {
+            let asyncFunc = async function () {
                 try {
-                    await charaDatabase.saveDB();
-                    await charaDatabase.uploadDB(true);
+                    await charaDatabase.saveDB()
+                    await charaDatabase.uploadDB()
 
-                    await nickDatabase.saveDB();
-                    await nickDatabase.uploadDB(true);
+                    await nickDatabase.saveDB()
+                    await nickDatabase.uploadDB()
 
-                    await classDatabase.saveDB();
-                    await classDatabase.uploadDB(true);
+                    await classDatabase.saveDB()
+                    await classDatabase.uploadDB()
 
                     botPushLog("上傳完成!");
                 } catch (error) {
-                    botPushError("上傳異常! " + error.toString());
+                    botPushError("上傳異常!\n" + error);
                 }
-            }; func();
+            }; asyncFunc();
 
             return "上傳中...";
 
@@ -304,7 +320,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
                 return "不明的目標!";
             }
             if (msg2 == "DEL") {
-                var name = targetDB.data[index].name;
+                let name = targetDB.data[index].name;
                 targetDB.data.splice(index, 1);
                 return targetDB.name + "." + name + " 刪除成功!";
             }
@@ -320,7 +336,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
                 return reply.trim();
             }
             if (msg2 == "undefined" || msg2 == "") {
-                var replyMsg = [];
+                let replyMsg = [];
                 replyMsg.push(line.createTextMsg("請換行輸入項目內容."));
                 replyMsg.push(line.createTextMsg(targetDB.data[index][propertyStr]));
                 return replyMsg;
@@ -336,7 +352,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
             return "初始化完成!";
 
         } else if (_isAdmin && (command == "NEWIMG")) {
-            await imgUploader.upload();
+            imgUploader.upload();
             return "上傳圖檔中...";
 
         } else if (_isAdmin && (command == "NEW")) {
@@ -346,14 +362,43 @@ const replyAI = async function (rawMsg, sourceId, userId) {
                 let replyMsg = [];
                 if (imgArray.length > 0) {
                     let i = Math.floor(Math.random() * imgArray.length);
-                    replyMsg.push(line.createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
-                    replyMsg.push(line.createTextMsg("[" + i + "/" + imgArray.length + "]"));
-                    replyMsg.push(line.createTextMsg("new " + imgArray[i].md5 + " "));
-                    // console.log(imgArray[i].md5 + " [" + i + "/" + imgArray.length + "]");
+                    let img = imgArray[i];
+
+                    const _regex1 = /^Aigis1000-\d{18,19}-\d{8}_\d{6}/;
+                    if (_regex1.test(img.fileName)) {
+                        // image from Aigis1000 twitter
+                        const _regex2 = /\d{18,19}/;
+                        let tweetId = _regex2.exec(img.fileName);
+                        let data = await twitter.api.getTweet(tweetId);
+                        let array = searchCharacter(data.text);
+
+                        if (array.length > 0) {
+                            replyMsg.push(line.createImageMsg(img.imageLink, img.thumbnailLink));
+                            let labels = [], msgs = [];
+                            for (let j in array) {
+                                labels.push(array[j]);
+                                msgs.push("anna new " + img.md5 + " " + array[j]);
+                            }
+                            labels.push("anna new");
+                            msgs.push("anna new");
+
+                            replyMsg.push(line.createMsgButtons(img.md5, labels, msgs));
+                            // console.log(JSON.stringify(replyMsg));
+                            return replyMsg;
+                        }
+                        return false;
+
+                    } else {
+                        replyMsg.push(line.createImageMsg(img.imageLink, img.thumbnailLink));
+                        replyMsg.push(line.createTextMsg("[" + i + "/" + imgArray.length + "]"));
+                        replyMsg.push(line.createTextMsg("new " + img.md5 + " "));
+                        // console.log(img.md5 + " [" + i + "/" + imgArray.length + "]");
+                        return replyMsg;
+                    }
+
                 } else {
                     replyMsg = "沒有新照片";
                 }
-                return replyMsg;
 
             } else {
                 let imgArray = imgur.database.findImageData({ md5: arg1 });
@@ -370,8 +415,13 @@ const replyAI = async function (rawMsg, sourceId, userId) {
                     if (charaArray.length == 1) {
                         target = charaArray[0].trim();
                         // move image file
-                        dbox.filesMove("NewImages/NewImages/" + imgArray[0].fileName, "Character/" + target + "/" + imgArray[0].fileName)
-                            .catch((e) => console.log("分類錯誤! "));
+                        try {
+                            dbox.fileMove(
+                                "NewImages/NewImages/" + imgArray[0].fileName,
+                                "Character/" + target + "/" + imgArray[0].fileName);
+                        } catch (error) {
+                            console.log("分類錯誤! " + error);
+                        }
 
                         // set taglist
                         imgur.api.image.updateImage({ imageHash: imgArray[0].id, tagList: "Character," + target });
@@ -389,12 +439,12 @@ const replyAI = async function (rawMsg, sourceId, userId) {
                     }
                 }
             }
-            return "";
+            return false;
 
         }
 
         // 搜尋資料
-        var result = false;
+        let result = false;
         result = searchData(command);
         if (result != false) {
             return result;
@@ -402,7 +452,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
     }
 
     // 呼叫定型文圖片
-    var result = false;
+    let result = false;
     result = replyStamp(command);
     if (result != false) {
         return result;
@@ -411,7 +461,7 @@ const replyAI = async function (rawMsg, sourceId, userId) {
     if (callAnna) {
         // 404
         let replyMsgs = ["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"];
-        var replyMsg = replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
+        let replyMsg = replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
         return replyMsg;
     }
     return false;
@@ -459,7 +509,7 @@ const searchByClass = function (command) {
     let _class = command.indexOf("白金") == 0 ? searchClass(command.substring(2).trim()) : searchClass(command.substring(1).trim());
     debugLog("_rarity + _class: <" + _rarity + " + " + _class + ">");
 
-    var result = [];
+    let result = [];
     // 遍歷角色資料庫
     for (let i in charaDatabase.data) {
         let obj = charaDatabase.data[i];
@@ -477,7 +527,7 @@ const generateCharaData = function (charaName) {
     let obj = charaDatabase.data[i];
 
     if (i != -1) {
-        var replyMsg = [];
+        let replyMsg = [];
         replyMsg.push(line.createTextMsg(obj.getMessage()));
 
         let imgArray = imgur.database.findImageData({ tag: charaName });
@@ -486,7 +536,7 @@ const generateCharaData = function (charaName) {
             replyMsg.push(line.createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
         }
 
-        replyMsg.push(line.createTemplateMsg("Wiki 連結", [obj.name], [obj.getWikiUrl()]));
+        replyMsg.push(line.createUriButtons("Wiki 連結", [obj.name], [obj.getWikiUrl()]));
 
         return replyMsg;
     }
@@ -495,10 +545,10 @@ const generateCharaData = function (charaName) {
     return false;
 }
 // 定型文貼圖
-const replyStamp = function (msg) {
+const replyStamp = module.exports.replyStamp = function (msg) {
     debugLog("replyStamp(" + msg + ")");
 
-    var replyMsg = [];
+    let replyMsg = [];
 
     let imgArray = imgur.database.findImageData({ tag: msg });
     if (imgArray.length > 0) {
@@ -531,10 +581,10 @@ const charaDataCrawler = function (urlPath, sourceId) {
                 return null;
             }
 
-            var html = iconv.decode(Buffer.from(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
+            let html = iconv.decode(Buffer.from(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
             let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
 
-            var newData = charaDatabase.newData();
+            let newData = charaDatabase.newData();
             let rarity = ["アイアン", "ブロンズ", "シルバー", "ゴールド", "サファイア", "プラチナ", "ブラック", "シルバ｜", "ゴ｜ルド"];
 
             // 搜尋所有表格
@@ -625,14 +675,14 @@ const charaDataCrawler = function (urlPath, sourceId) {
                             }
                         }
                         // remove empty
-                        for (let i = 0; i < skilList.length; i++) {
+                        for (let i = 0; i < skilList.length; ++i) {
                             if (skilList[i].length == 0) {
                                 skilList.splice(i, 1);
                                 i--;
                             }
                         }
                         // remove same skill (lv1~lv4)
-                        for (let i = 0; i < skilList.length; i++) {
+                        for (let i = 0; i < skilList.length; ++i) {
                             if (i < skilList.length - 1 && skilList[i][0] == skilList[i + 1][0]) {
                                 skilList.splice(i, 1);
                                 i--;
@@ -688,14 +738,14 @@ const charaDataCrawler = function (urlPath, sourceId) {
                             }
                         }
                         // remove empty
-                        for (let i = 0; i < skilList.length; i++) {
+                        for (let i = 0; i < skilList.length; ++i) {
                             if (skilList[i].length == 0) {
                                 skilList.splice(i, 1);
                                 i--;
                             }
                         }
                         // remove same skill (lv1~lv4)
-                        for (let i = 0; i < skilList.length; i++) {
+                        for (let i = 0; i < skilList.length; ++i) {
                             if (i < skilList.length - 1 && skilList[i][1] == skilList[i + 1][1]) {
                                 skilList.splice(i, 1);
                                 i--;
@@ -781,7 +831,7 @@ const allCharaDataCrawler = function (sourceId) {
             return null;
         }
 
-        var html = iconv.decode(Buffer.from(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
+        let html = iconv.decode(Buffer.from(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
         let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
 
         // 搜尋所有超連結
@@ -813,7 +863,7 @@ const allCharaDataCrawler = function (sourceId) {
         let promiseArray = [];
         while (allCharaUrl.length > 0) {
             // 50 thread
-            for (let i = 0; i < 50; i++) {
+            for (let i = 0; i < 50; ++i) {
                 if (allCharaUrl.length > 0) {
                     promiseArray.push(charaDataCrawler(allCharaUrl.pop(), sourceId));
                 }
@@ -837,7 +887,7 @@ const classDataCrawler = function () {
             return null;
         }
 
-        var html = iconv.decode(Buffer.from(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
+        let html = iconv.decode(Buffer.from(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
         let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
 
         $("div").each(function (i, elem) {
@@ -852,17 +902,17 @@ const classDataCrawler = function () {
                     // 遍歷表格內容
                     $(this).children().children().children().children().children().each(function (i, elem) {
 
-                        var str = $(this).text().trim();
-                        var i = str.indexOf("\/");
-                        if (i != -1) {
-                            str = str.substring(0, i);
+                        let str = $(this).text().trim();
+                        let str_i = str.indexOf("\/");
+                        if (str_i != -1) {
+                            str = str.substring(0, str_i);
                         }
 
                         if (str.trim() == "" || str.indexOf("編集") != -1) {
                             return;
                         }
 
-                        var newData = classDatabase.newData();
+                        let newData = classDatabase.newData();
                         newData.name = str;
                         newData.index.push(str);
                         if ($("title").text().indexOf("近接型") != -1) {
@@ -891,7 +941,7 @@ const classDataCrawler = function () {
 };
 // HTML table to array
 String.prototype.tableToArray = function () {
-    var result = [];
+    let result = [];
     let html = this.replaceAll("<br>", "\n");
     let i, j, k;
 
@@ -970,11 +1020,23 @@ String.prototype.tableToArray = function () {
 
 // 資料庫
 // Character
-var charaDatabase = database.charaDatabase;
+let charaDatabase = database.charaDatabase;
 // 模糊搜尋
-const searchCharacter = function (key, accurate) {
+const searchCharacter = module.exports.searchCharacter = function (key, accurate) {
     accurate = !!accurate;
     debugLog("searchCharacter(" + key + ", " + accurate + ")");
+
+    // search from twitter text
+    if (key.length > 20) {
+        let result = [];
+        for (let charaIndex in charaDatabase.data) {
+            let name = charaDatabase.data[charaIndex].name;
+            if (key.indexOf(name) != -1) {
+                result.push(name);
+            }
+        }
+        return result;
+    }
 
     let t;
     if ((t = charaDatabase.indexOf(key)) != -1) {
@@ -996,31 +1058,31 @@ const searchCharacter = function (key, accurate) {
         const metricsC = 2;	// 連接
         let metrics = -5 * key.length;
 
-        let ketMetrics = new Array(key.length);
+        let keyMetrics = new Array(key.length);
         let sourceName = "@" + obj.name;
         // 逐字搜尋
-        for (let i = 0; i < key.length; i++) {
-            ketMetrics[i] = sourceName.indexOf(key[i]);
-            if (ketMetrics[i] != -1) {
-                sourceName = sourceName.replace(sourceName[ketMetrics[i]], "@");
+        for (let i = 0; i < key.length; ++i) {
+            keyMetrics[i] = sourceName.indexOf(key[i]);
+            if (keyMetrics[i] != -1) {
+                sourceName = sourceName.replace(sourceName[keyMetrics[i]], "@");
             }
         }
         // 計算權重
-        for (let i = 0; i < ketMetrics.length; i++) {
-            if (ketMetrics[i] != -1) {
+        for (let i = 0; i < keyMetrics.length; ++i) {
+            if (keyMetrics[i] != -1) {
                 metrics += metricsA;	// 同字元
 
                 if (i > 0) {
-                    if (ketMetrics[i] > ketMetrics[i - 1]) {
+                    if (keyMetrics[i] > keyMetrics[i - 1]) {
                         metrics += metricsB;	// 字元同順
                     }
-                    if (ketMetrics[i] == (ketMetrics[i - 1] + 1)) {
+                    if (keyMetrics[i] == (keyMetrics[i - 1] + 1)) {
                         metrics += metricsC;	// 同sub字串
                     }
                 }
             }
         }
-        // array_metrics[ 權重值 ] = [ 角色index, 角色index ]
+        // array_metrics[ 權重值 ] = [ 角色index, 角色index, ... ]
         if (metrics > 0) {
             if (!array_metrics[metrics]) { array_metrics[metrics] = []; }
             array_metrics[metrics].push(charaIndex);
@@ -1053,14 +1115,14 @@ const searchCharacter = function (key, accurate) {
 }
 
 // Nickname
-var nickDatabase = database.nickDatabase;
+let nickDatabase = database.nickDatabase;
 
 // Class
-var classDatabase = database.classDatabase;
+let classDatabase = database.classDatabase;
 // 搜尋職業
 const searchClass = function (str) {
     debugLog("searchClass(" + str + ")");
-    // for (let i = 0; i < classDatabase.length; i++) {
+    // for (let i = 0; i < classDatabase.length; ++i) {
     for (let i in classDatabase.data) {
 
         for (let j in classDatabase.data[i].index) {
@@ -1086,7 +1148,7 @@ const getRarityString = function (str) {
 
 
 // 管理用參數
-const debugLog = function (msg) {
+const debugLog = module.exports.debugLog = function (msg) {
     if (!config.switchVar.debug) {
         return;
     }
@@ -1102,80 +1164,39 @@ const isAdmin = function (userId) {
     return (userId == config.adminstrator || config.admins.indexOf(userId) != -1)
 }
 
+module.exports.autoTest = async function () {
+    // await init();
+    // await imgur.init();
 
+    let sourceId = "U9eefeba8c0e5f8ee369730c4f983346b";
+    let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
+    // config.switchVar.debug = true;
 
-// 外部呼叫
-const annaCore = {
-    init: async function () {
+    // replyAI("anna 狀態", sourceId, userId).then(console.log);
+    // replyAI("anna 職業", sourceId, userId).then(console.log);
+    // replyAI("anna 職業 ナ", sourceId, userId).then(console.log);
 
-        charaDatabase.data = [];
-        nickDatabase.data = [];
-        classDatabase.data = [];
+    // replyAI("anna 學習 NNLK:白ナナリー", sourceId, userId).then(console.log);
 
-        try {
-            await charaDatabase.init();
-            await nickDatabase.init();
-            await classDatabase.init();
+    // replyAI("anna NNLK", sourceId, userId).then(console.log);
+    // replyAI("anna 黑弓", sourceId, userId).then(console.log);
+    // replyAI("anna 忘記 NNLK", sourceId, userId).then(console.log);
+    // replyAI("anna NNLK", sourceId, userId).then(console.log);
 
-        } catch (err) {
-            debugLog(err);
-        }
+    // replyAI("anna 射", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+    // replyAI("anna シャル", sourceId, userId).then(obj => console.log(obj));
+    // replyAI("anna 白き射手ナナリー", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+    // replyAI("anna 王子通常", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+    // replyAI("1528476371865.JPEG", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+    // replyAI("0ab61ce0f94dc2f81b38a08f150a17fb", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+    // replyAI("刻詠の風水士リンネ", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
 
-        return;
-    },
+    // replyAI("anna update", sourceId, userId).then(console.log);
 
-    // index,js
-    replyAI: replyAI,
-    replyStamp: replyStamp,
-
-    // update.js
-    // charaDataCrawler: charaDataCrawler,
-    // allCharaDataCrawler: allCharaDataCrawler,
-    // classDataCrawler: classDataCrawler,
-
-    // debug
-    debugLog: debugLog,
-
-    isAdmin: isAdmin,
-
-    autoTest: async function () {
-
-        await this.init();
-        // await imgur.init();
-
-        // await charaDatabase.loadDB();
-        // await charaDatabase.saveDB();
-
-        let sourceId = "U9eefeba8c0e5f8ee369730c4f983346b";
-        let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
-        // config.switchVar.debug = true;
-
-        // await annaCore.replyAI("anna 狀態", sourceId, userId).then(console.log);
-        // await annaCore.replyAI("anna 職業", sourceId, userId).then(console.log);
-
-        // await annaCore.replyAI("anna 學習 NNLK:白ナナリー", sourceId, userId).then(console.log);
-
-        // await annaCore.replyAI("anna NNLK", sourceId, userId).then(console.log);
-        // await annaCore.replyAI("anna 黑弓", sourceId, userId).then(console.log);
-        // await annaCore.replyAI("anna 忘記 NNLK", sourceId, userId).then(console.log);
-        // await annaCore.replyAI("anna NNLK", sourceId, userId).then(console.log);
-
-        // await annaCore.replyAI("anna 射", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
-        // await annaCore.replyAI("anna シャル", sourceId, userId).then(obj => console.log(obj));
-        // await annaCore.replyAI("anna 白き射手ナナリー", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
-        // await annaCore.replyAI("anna 王子通常", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
-        // await annaCore.replyAI("1528476371865.JPEG", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
-        // await annaCore.replyAI("0ab61ce0f94dc2f81b38a08f150a17fb", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
-        // await annaCore.replyAI("刻詠の風水士リンネ", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
-
-        // await annaCore.replyAI("anna update", sourceId, userId).then(console.log);
-
-        // await annaCore.replyAI("anna new ", sourceId, userId).then(console.log);
-        // await annaCore.replyAI("anna new 0f96ddbcf983dc854b3bb803c4159d5b ", sourceId, userId).then(console.log);
-        // await annaCore.replyAI("anna new 0f96ddbcf983dc854b3bb803c4159d5b NNL", sourceId, userId).then(console.log);
-    }
-
-}; module.exports = annaCore;
+    // replyAI("anna new ", sourceId, userId).then(console.log);
+    // replyAI("anna new 0f96ddbcf983dc854b3bb803c4159d5b ", sourceId, userId).then(console.log);
+    // replyAI("anna new 0f96ddbcf983dc854b3bb803c4159d5b NNL", sourceId, userId).then(console.log);
+}
 
 
 
