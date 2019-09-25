@@ -377,6 +377,7 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
                         if (array.length > 0) {
                             replyMsg.push(line.createImageMsg(img.imageLink, img.thumbnailLink));
                             replyMsg.push(line.createTextMsg("new " + img.md5 + " "));
+
                             let labels = [], msgs = [];
                             for (let j in array) {
                                 labels.push(array[j]);
@@ -387,10 +388,13 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
 
                             replyMsg.push(line.createMsgButtons(img.md5, labels, msgs));
                             // console.log(JSON.stringify(replyMsg));
-                            return replyMsg;
+                            if (replyMsg[2] != '') {
+                                return replyMsg;
+                            }
                         }
                     }
 
+                    replyMsg = [];
                     replyMsg.push(line.createImageMsg(img.imageLink, img.thumbnailLink));
                     replyMsg.push(line.createTextMsg("[" + i + "/" + imgArray.length + "]"));
                     replyMsg.push(line.createTextMsg("new " + img.md5 + " "));
