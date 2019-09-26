@@ -163,7 +163,7 @@ module.exports = {
     // 
     logToFile: function (base, name, data) {
         let dateNow = new Date(Date.now());
-        let path = (dateNow.getMonth() + 1).toString().padStart(2, "0") + "/" + name + +"_" +
+        let path = (dateNow.getMonth() + 1).toString().padStart(2, "0") + "/" + name + "_" +
             dateNow.getFullYear().toString().padStart(4, "0") + "-" +
             (dateNow.getMonth() + 1).toString().padStart(2, "0") + "-" +
             dateNow.getDate().toString().padStart(2, "0") + "-" +
