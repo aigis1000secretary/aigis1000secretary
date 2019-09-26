@@ -30,10 +30,13 @@
     newimg method fix
     debugPush switch
     annaCore fixed
+
+    0.8.0.2
+    twitter img upload sync fixed
 */
 
 const config = {
-    _version: "0.8.0.1",
+    _version: "0.8.0.2",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
