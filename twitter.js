@@ -267,27 +267,30 @@ const twitterCore = {
                 }
 
                 // image to dropbox
-                if (tweet_data.medias) {
+                if (tweet_data.medias && tweet_data.screen_name == target) {
                     for (let i in tweet_data.medias) {
                         let media = tweet_data.medias[i];
 
                         if (media.type == "photo") {
-                            let callBack = function (error, response, body) {
-                                if (error || !body) { console.log(error); return null; }
 
-                                let tweetTime = new Date(parseInt(tweet_data.timestamp_ms));
-                                let filename = "Aigis1000-" + tweet_data.id_str + "-";
-                                filename += tweetTime.getFullYear().toString().padStart(4, "0") +
-                                    (tweetTime.getMonth() + 1).toString().padStart(2, "0") +
-                                    tweetTime.getDate().toString().padStart(2, "0") + "_" +
-                                    tweetTime.getHours().toString().padStart(2, "0") +
-                                    tweetTime.getMinutes().toString().padStart(2, "0") +
-                                    tweetTime.getSeconds().toString().padStart(2, "0");
-                                filename += "-img" + (parseInt(i) + 1) + ".jpg";
+                            let tweetTime = new Date(parseInt(tweet_data.timestamp_ms));
+                            let filename = "Aigis1000-" + tweet_data.id_str + "-";
+                            filename += tweetTime.getFullYear().toString().padStart(4, "0") +
+                                (tweetTime.getMonth() + 1).toString().padStart(2, "0") +
+                                tweetTime.getDate().toString().padStart(2, "0") + "_" +
+                                tweetTime.getHours().toString().padStart(2, "0") +
+                                tweetTime.getMinutes().toString().padStart(2, "0") +
+                                tweetTime.getSeconds().toString().padStart(2, "0");
+                            filename += "-img" + (parseInt(i) + 1) + ".jpg";
 
-                                dbox.fileUpload("NewImages/NewImages/" + filename, body);
-                            }
-                            request.get(media.link, { encoding: "binary" }, callBack);
+                            request.get(imglink)
+                                .pipe(fs.createWriteStream("./" + filename))
+                                .on("error", (e) => { console.log("pipe error", e) })
+                                .on("close", () => {
+                                    let body = fs.readFileSync("./" + filename);
+                                    dbox.fileUpload("NewImages/NewImages/" + filename, body);
+                                })
+
                         }
                     }
                 }
@@ -297,7 +300,7 @@ const twitterCore = {
                     if (tweet_data.screen_name == target) {
                         dbox.logToFile("stream/", "twitter", tweet);
                     } else {
-                        dbox.logToFile("stream/", "twitterRT", tweet);
+                        // dbox.logToFile("stream/", "twitterRT", tweet);
                     }
                 }
             }
