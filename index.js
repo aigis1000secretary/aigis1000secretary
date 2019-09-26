@@ -34,7 +34,7 @@ const lineBotOn = function () {
     });// */
 
     // normal msg
-    line.bot.on("message", function (event) {
+    line.bot.on("message", async function (event) {
         if (config.switchVar.logRequestToFile && event) {
             dbox.logToFile("webhook/", "message", event);
         }
@@ -61,41 +61,38 @@ const lineBotOn = function () {
             };
 
             // bot mode
-            if (botMode == "anna") {
-                // normal response
-                if (msg == "安娜") {
-                    replyFunc("是的！王子？");
-                    return;
+            // normal response
+            if (msg == "安娜") {
+                replyFunc("是的！王子？");
+                return;
+            }
+            // 身分驗證
+            if (userId == "U9eefeba8c0e5f8ee369730c4f983346b") {
+                if (msg == "我婆") {
+                    msg = "刻詠の風水士リンネ";
                 }
-                // 身分驗證
-                if (userId == "U9eefeba8c0e5f8ee369730c4f983346b") {
-                    if (msg == "我婆") {
-                        msg = "刻詠の風水士リンネ";
-                    }
-                }
-                // in user chat
-                if (event.source.type == "user" && msg.toUpperCase().indexOf("ANNA ") == -1 && msg.indexOf("安娜 ") == -1) {
-                    msg = "ANNA " + msg;
-                }
+            }
+            // in user chat
+            if (event.source.type == "user" && msg.toUpperCase().indexOf("ANNA ") == -1 && msg.indexOf("安娜 ") == -1) {
+                msg = "ANNA " + msg;
+            }
 
-                //
-                let result = anna.replyAI(msg, sourceId, userId)
-                if (result != false) {
-                    replyFunc(result);
-                    return;
-                }
-
-                // egg
-                if (Math.floor(Math.random() * 10000) == 0) {
-                    replyFunc("ちくわ大明神");
-                    return;
-                }
-
-                // 無視...
-                // anna.debugLog("Not a command");
+            //
+            let result = await anna.replyAI(msg, sourceId, userId)
+            if (result != false) {
+                replyFunc(result);
                 return;
             }
 
+            // egg
+            if (Math.floor(Math.random() * 10000) == 0) {
+                replyFunc("ちくわ大明神");
+                return;
+            }
+
+            // 無視...
+            // anna.debugLog("Not a command");
+            return;
         }
     });
 }

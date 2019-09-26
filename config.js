@@ -23,10 +23,17 @@
     fix single wrod search
     twitter image search test done
     
+    0.8.0.1
+    await anna.replyAI
+    async bot index
+    logToFile bug fixed
+    newimg method fix
+    debugPush switch
+    annaCore fixed
 */
 
 const config = {
-    _version: "0.8.0.0",
+    _version: "0.8.0.1",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正

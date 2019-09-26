@@ -61,8 +61,10 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
     if (callAnna) {
         if (command == "DEBUG") {		// debug switch
             config.switchVar.debug = !config.switchVar.debug;
-            config.switchVar.debugPush = config.switchVar.debug;
             return "debug = " + (config.switchVar.debug ? "on" : "off");
+        } else if (command == "DEBUGP") {		// debug switch
+            config.switchVar.debugPush = !config.switchVar.debugPush;
+            return "debug push = " + (config.switchVar.debugPush ? "on" : "off");
 
         } else if (command.length == 1) {		// 定型文
             // 同步執行
@@ -348,7 +350,7 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
 
             }
         } else if (_isAdmin && (command == "初始化" || command == "INIT")) {
-            await annaCore.init();
+            await init();
             return "初始化完成!";
 
         } else if (_isAdmin && (command == "NEWIMG")) {
@@ -374,34 +376,39 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
 
                         if (array.length > 0) {
                             replyMsg.push(line.createImageMsg(img.imageLink, img.thumbnailLink));
+                            replyMsg.push(line.createTextMsg("new " + img.md5 + " "));
+
                             let labels = [], msgs = [];
                             for (let j in array) {
                                 labels.push(array[j]);
-                                msgs.push("anna new " + img.md5 + " " + array[j]);
+                                msgs.push("new " + img.md5 + " " + array[j]);
                             }
-                            labels.push("anna new");
-                            msgs.push("anna new");
+                            labels.push("next");
+                            msgs.push("new");
 
-                            replyMsg.push(line.createMsgButtons(img.md5, labels, msgs));
+                            replyMsg.push(line.createMsgButtons("[" + i + "/" + imgArray.length + "]", labels, msgs));
                             // console.log(JSON.stringify(replyMsg));
-                            return replyMsg;
+                            if (replyMsg[2] != '') {
+                                return replyMsg;
+                            }
                         }
-                        return false;
-
-                    } else {
-                        replyMsg.push(line.createImageMsg(img.imageLink, img.thumbnailLink));
-                        replyMsg.push(line.createTextMsg("[" + i + "/" + imgArray.length + "]"));
-                        replyMsg.push(line.createTextMsg("new " + img.md5 + " "));
-                        // console.log(img.md5 + " [" + i + "/" + imgArray.length + "]");
-                        return replyMsg;
                     }
+
+                    replyMsg = [];
+                    replyMsg.push(line.createImageMsg(img.imageLink, img.thumbnailLink));
+                    replyMsg.push(line.createTextMsg("[" + i + "/" + imgArray.length + "]"));
+                    replyMsg.push(line.createTextMsg("new " + img.md5 + " "));
+                    // console.log(img.md5 + " [" + i + "/" + imgArray.length + "]");
+                    return replyMsg;
+
+                    return false;
 
                 } else {
                     replyMsg = "沒有新照片";
                 }
 
             } else {
-                let imgArray = imgur.database.findImageData({ md5: arg1 });
+                let imgArray = imgur.database.findImageData({ md5: arg1, tag: "NewImages" });
                 if (imgArray.length != 1) { return "md5錯誤! " + imgArray.length + " result!"; }
 
                 if (arg2 == "undefined") {
@@ -1172,24 +1179,24 @@ module.exports.autoTest = async function () {
     let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
     // config.switchVar.debug = true;
 
-    // replyAI("anna 狀態", sourceId, userId).then(console.log);
-    // replyAI("anna 職業", sourceId, userId).then(console.log);
-    // replyAI("anna 職業 ナ", sourceId, userId).then(console.log);
+    // await replyAI("anna 狀態", sourceId, userId).then(console.log);
+    // await replyAI("anna 職業", sourceId, userId).then(console.log);
+    // await replyAI("anna 職業 ナ", sourceId, userId).then(console.log);
 
-    // replyAI("anna 學習 NNLK:白ナナリー", sourceId, userId).then(console.log);
+    // await replyAI("anna 學習 NNLK:白ナナリー", sourceId, userId).then(console.log);
 
-    // replyAI("anna NNLK", sourceId, userId).then(console.log);
-    // replyAI("anna 黑弓", sourceId, userId).then(console.log);
-    // replyAI("anna 忘記 NNLK", sourceId, userId).then(console.log);
-    // replyAI("anna NNLK", sourceId, userId).then(console.log);
+    // await replyAI("anna NNLK", sourceId, userId).then(console.log);
+    // await replyAI("anna 黑弓", sourceId, userId).then(console.log);
+    // await replyAI("anna 忘記 NNLK", sourceId, userId).then(console.log);
+    // await replyAI("anna NNLK", sourceId, userId).then(console.log);
 
-    // replyAI("anna 射", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
-    // replyAI("anna シャル", sourceId, userId).then(obj => console.log(obj));
-    // replyAI("anna 白き射手ナナリー", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
-    // replyAI("anna 王子通常", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
-    // replyAI("1528476371865.JPEG", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
-    // replyAI("0ab61ce0f94dc2f81b38a08f150a17fb", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
-    // replyAI("刻詠の風水士リンネ", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+    // await replyAI("anna 射", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+    // await replyAI("anna シャル", sourceId, userId).then(obj => console.log(obj));
+    // await replyAI("anna 白き射手ナナリー", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+    // await replyAI("anna 王子通常", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+    // await replyAI("1528476371865.JPEG", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+    // await replyAI("0ab61ce0f94dc2f81b38a08f150a17fb", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+    // await replyAI("刻詠の風水士リンネ", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
 
     // replyAI("anna update", sourceId, userId).then(console.log);
 
