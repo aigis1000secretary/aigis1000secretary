@@ -126,7 +126,7 @@ module.exports = {
     },
 
     // move
-    fileMove: async function (from, to) {
+    fileMove: async function (from, to, overwrite = false) {
         let filesRelocationArg = {
             from_path: root + from,
             to_path: root + to,
@@ -134,13 +134,11 @@ module.exports = {
             autorename: false,
             allow_ownership_transfer: false
         };
-        let filesDeleteArg = {
-            path: root + from
-        };
 
         try {
+            if (overwrite) await dbox.filesDelete({ path: root + to });
             await dbox.filesCopy(filesRelocationArg);
-            await dbox.filesDelete(filesDeleteArg);
+            await dbox.filesDelete({ path: root + from });
             return true;
         } catch (error) {
             console.log("filesMove error... " + from);

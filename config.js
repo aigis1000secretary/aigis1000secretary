@@ -33,10 +33,16 @@
 
     0.8.0.2
     twitter img upload sync fixed
+
+    0.8.0.3
+    dbox.fileMove catch error fixed
+    isLocalHost update
+    fileMove update
+    image.js update
 */
 
 const config = {
-    _version: "0.8.0.2",
+    _version: "0.8.0.3",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
@@ -106,12 +112,14 @@ config.autoTest = function () {
 };
 module.exports = config;
 
+const fs = require("fs");
 setTimeout(function () {
-    require("dns").lookup(require("os").hostname(), function (err, add, fam) {
-        config.hostIP = add;
-        config.isLocalHost = add.startsWith('192.');
+    require("dns").lookup(require("os").hostname(), function (err, address, fam) {
+        config.hostIP = address;
+        config.isLocalHost = fs.existsSync("./debug.js")
         Object.freeze(config);
     });
+
 }, 1);
 
 String.prototype.replaceAll = function (s1, s2) {
