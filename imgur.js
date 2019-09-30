@@ -23,7 +23,12 @@ let imgurCore = {
                     try {
                         body = JSON.parse(body);
                     } catch (e) {
-                        body = eval("(" + body + ")");
+                        try {
+                            body = eval("(" + body + ")");
+                        } catch (e) {
+                            console.log(body);
+                            reject(e);
+                        }
                     }
                 }
                 if (!error && response.statusCode == 200) {
@@ -447,7 +452,7 @@ let imgurCore = {
             // POST Add Images to an Album
             async addAlbumImages({ albumHash, ids }) {
                 try {
-                    console.log("POST Add " + ids + " to an Album " + albumHash);
+                    console.log("POST Add " + ids + " to Album " + albumHash);
                     // Configure the request
                     let options = {
                         url: IMGUR_API_URL + "album/" + albumHash + "/add",

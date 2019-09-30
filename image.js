@@ -95,13 +95,14 @@ const main = async function () {
             // check data
             // console.log("file already existed(file): " + pathArray[i]);
             let onlineImage = resultImage[0];
+            let logFlag = false;
 
             // check album
             if (albumHash && onlineAlbum.findImage({ id: onlineImage.id }).length == 0) {
                 console.log("Alarm!! Image is not in album!");
                 // put in
                 imgur.api.album.addAlbumImages({ albumHash: albumHash, ids: [onlineImage.id] });
-                console.log("");
+                logFlag = true;
             }
 
             // check tag list
@@ -111,7 +112,7 @@ const main = async function () {
                 console.log(tagList, fileMd5);
                 // update image data
                 await imgur.api.image.updateImage({ imageHash: onlineImage.id, tagList, md5: fileMd5 });
-                console.log("");
+                logFlag = true;
             }
 
             // check filename
@@ -120,6 +121,7 @@ const main = async function () {
                 // delete & upload again Manual
                 console.log("Plz delete & upload again Manual!");
             }
+            if (logFlag) console.log("");
         } else if (resultImage.length > 1) {
             // double upload
             console.log("many file have same data: " + pathArray[i]);
@@ -128,6 +130,7 @@ const main = async function () {
                 if (i != 0) imgur.api.image.imageDeletion({ imageHash: resultImage[i].id });
                 console.log("Now delete file...");
             }
+            console.log("");
         }
         continue;
 
@@ -143,28 +146,28 @@ const getFileList = async function (mainFolder) {
     let pathArray = [];
     // get AutoResponse key word
     let dirArray = await dbox.listDir(mainFolder, "folder").catch(console.log);
-    let promiseArray = [];
 
-    for (let i in dirArray) {
-        // set AR image path
-        dirArray[i] = mainFolder + "/" + dirArray[i];
+    let promiseArray = [];;
+    while (dirArray.length > 0) {
+        // 10 thread
+        for (let i = 0; i < 10; ++i) {
+            if (dirArray.length > 0) {
+                let dir = mainFolder + '/' + dirArray.pop();
+                let donemsg = "pathArray[" + dirArray.length + "]: " + dir;
 
-        // get AR image name
-        promiseArray.push(
-            dbox.listDir(dirArray[i])
-                .then(function (fileArray) {
-                    for (let j in fileArray) {
-                        // set AR image full path
-                        pathArray.push(dirArray[i] + "/" + fileArray[j]);
-                        // console.log("pathArray: " + pathArray[pathArray.length - 1]);
-                    }
-                }
-                ).catch(console.log)
-        );
+                promiseArray.push(
+                    dbox.listDir(dir).then(function (fileArray) {
+                        console.log(donemsg);
+                        for (let j in fileArray) {
+                            // set AR image full path
+                            pathArray.push(dir + "/" + fileArray[j]);
+                        }
+                    }).catch(console.log)
+                );
+            }
+        }
+        await Promise.all(promiseArray);
     }
-
-    await Promise.all(promiseArray);
-
     return pathArray;
 }
 /*

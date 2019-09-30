@@ -423,11 +423,13 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
                         target = charaArray[0].trim();
                         // move image file
                         try {
-                            dbox.fileMove(
+                            await dbox.fileMove(
                                 "NewImages/NewImages/" + imgArray[0].fileName,
-                                "Character/" + target + "/" + imgArray[0].fileName);
+                                "Character/" + target + "/" + imgArray[0].fileName,
+                                true);
                         } catch (error) {
-                            console.log("分類錯誤! " + error);
+                            console.log("分類錯誤! ");
+                            console.log(error);
                         }
 
                         // set taglist
