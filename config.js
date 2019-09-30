@@ -6,39 +6,8 @@
 
 // commit
 /*
-    >> feature/0.7.4/tryCatchRebuild
-    tryCatchRebuild start
-    var to let
-    fix bugs, new DB test done
-    new dbox test done
-    twitter image search method
-    new imgur test done
-    remtoe off
-    new dbox log to file
-    format code
-    kill async
-    require bug fixed
-    rebuild anna.js
-    new dbox test done?
-    fix single wrod search
-    twitter image search test done
-    
-    0.8.0.1
-    await anna.replyAI
-    async bot index
-    logToFile bug fixed
-    newimg method fix
-    debugPush switch
-    annaCore fixed
+    >> feature/0.8.0/DiscordApi
 
-    0.8.0.2
-    twitter img upload sync fixed
-
-    0.8.0.3
-    dbox.fileMove catch error fixed
-    isLocalHost update
-    fileMove update
-    image.js update
 */
 
 const config = {
@@ -78,6 +47,11 @@ const config = {
         channelId: process.env.LINE_CHANNEL_ID,
         channelSecret: process.env.LINE_CHANNEL_SECRET,
         channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN
+    },
+
+    // discord
+    discordbot: {
+        token: process.env.DISCORD_BOT_TOKEN
     },
 
     // twitter
