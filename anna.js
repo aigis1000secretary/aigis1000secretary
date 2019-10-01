@@ -65,13 +65,8 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
         if (result != -1) {
             command = nickDatabase.data[result].target;
         } else {
-            result = replyStamp(command);
-            if (result != false) {
-                return result;
-            } else {
-                // return "王子太短了，找不到...";
-                return false;
-            }
+            // return "王子太短了，找不到...";
+            return false;
         }
 
     } else if (command == "巨根") {
@@ -97,12 +92,12 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
         replyMsg += "直接輸入稀有度+職業可以搜索角色\n(>>安娜 黑弓) *推薦使用\n\n";
         replyMsg += "輸入關鍵字可進行暱稱搜索&模糊搜索\n(>>安娜 NNL)\n(>>安娜 射手ナナリー)\n\n";
 
-        if (!isAdmin(sourceId)) { return replyMsg; }
-
-        replyMsg += "忘記: 刪除特定暱稱。\n(>>安娜 忘記 NNL)\n\n";
-        replyMsg += "資料庫: 直接修改資料庫內容。\n(>>資料庫 CharaDatabase NNL.ability_aw)\n\n";
-        replyMsg += "NEW: 線上圖庫手動新增TAG。\n\n";
-        replyMsg += "NEWIMG: dropbox 圖庫同步至 imgur。\n\n";
+        if (!isAdmin(sourceId)) {
+            replyMsg += "忘記: 刪除特定暱稱。\n(>>安娜 忘記 NNL)\n\n";
+            replyMsg += "資料庫: 直接修改資料庫內容。\n(>>資料庫 CharaDatabase NNL.ability_aw)\n\n";
+            replyMsg += "NEW: 線上圖庫手動新增TAG。\n\n";
+            replyMsg += "NEWIMG: dropbox 圖庫同步至 imgur。\n\n";
+        }
 
         return replyMsg.trim();
 

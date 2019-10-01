@@ -234,6 +234,7 @@ const discordBotOn = function () {
             } catch (e) { console.log(e); }
             return;
         };
+        
         let msg = dMsg.content;
 
         // in user chat
@@ -247,9 +248,8 @@ const discordBotOn = function () {
         }
 
         // ask ai
-        let rMsg;
         if (callAnna) {
-            rMsg = await anna.replyAI(msg, sourceId, userId)
+            let rMsg = await anna.replyAI(msg)
 
             // ai done something
             if (rMsg != false) {
@@ -269,13 +269,13 @@ const discordBotOn = function () {
             }
         }
 
-        if (msg.indexOf("安娜") == 0 || msg.toLocaleLowerCase().indexOf("anna") == 0) {
-            let result = await anna.replyAI(msg)
-            if (result != false) {
-                replyFunc(result);
-                return;
-            }
-        }
+        // if (msg.indexOf("安娜") == 0 || msg.toLocaleLowerCase().indexOf("anna") == 0) {
+        //     let result = await anna.replyAI(msg)
+        //     if (result != false) {
+        //         replyFunc(result);
+        //         return;
+        //     }
+        // }
     });
 }
 

@@ -21,10 +21,14 @@
 
     0.8.1.2
     anna.replyAI rebuild for discord api
+    
+    0.8.1.3
+    discord bot bug fix
+
 */
 
 const config = {
-    _version: "0.8.1.2",
+    _version: "0.8.1.3",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
@@ -63,9 +67,9 @@ const config = {
     },
 
     alphatBot: {
-        authToken: "EJDUiKXqgWrMjjEj3Lbe.8aC5znu7iVt0bkJ7J3QEpG.DKCbDjLz4SuWAtSNkH8OKVyHCABYD8zknaeNAXShtbI=",
-        certificate: "f024ea37d3254f86e6f5e6c817faa9031f9c7a1247055eb7a3a84ed7cf2f0fcd",
-        ID: "uf0073964d53b22f4f404a8fb8f7a9e3e",
+        authToken: process.env.LINE_ALPHAT_AUTHTOKEN,
+        certificate: process.env.LINE_ALPHAT_CERTIFICATE,
+        ID: process.env.LINE_ALPHAT_ID,
         email: "",
         password: ""
     },
