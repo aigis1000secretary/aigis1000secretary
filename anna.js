@@ -83,7 +83,6 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
         replyMsg += "照片: 上傳角色附圖的網路空間(DropBox)。\n(>>安娜 照片)\n\n";
         replyMsg += "工具: 千年戰爭Aigis實用工具。\n(>>安娜 工具)\n\n";
         replyMsg += "職業: 列出/搜尋資料庫現有職業。\n(>>安娜 職業 恋)\n\n";
-        replyMsg += "廣播: 開關廣播功能，廣播內容有官方推特即時轉播以及週四定期維護前提醒。\n\n";
         replyMsg += "學習: 用來教會安娜角色的暱稱。\n(>>安娜 學習 NNL:射手ナナリー)\n\n";
         replyMsg += "上傳: 手動上傳資料庫。\n\n";
         replyMsg += "更新: 讀取 wiki 進行資料庫更新。\n\n";
@@ -92,7 +91,7 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
         replyMsg += "直接輸入稀有度+職業可以搜索角色\n(>>安娜 黑弓) *推薦使用\n\n";
         replyMsg += "輸入關鍵字可進行暱稱搜索&模糊搜索\n(>>安娜 NNL)\n(>>安娜 射手ナナリー)\n\n";
 
-        if (!isAdmin(sourceId)) {
+        if (isAdmin(sourceId)) {
             replyMsg += "忘記: 刪除特定暱稱。\n(>>安娜 忘記 NNL)\n\n";
             replyMsg += "資料庫: 直接修改資料庫內容。\n(>>資料庫 CharaDatabase NNL.ability_aw)\n\n";
             replyMsg += "NEW: 線上圖庫手動新增TAG。\n\n";
