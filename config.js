@@ -6,43 +6,17 @@
 
 // commit
 /*
-    >> feature/0.7.4/tryCatchRebuild
-    tryCatchRebuild start
-    var to let
-    fix bugs, new DB test done
-    new dbox test done
-    twitter image search method
-    new imgur test done
-    remtoe off
-    new dbox log to file
-    format code
-    kill async
-    require bug fixed
-    rebuild anna.js
-    new dbox test done?
-    fix single wrod search
-    twitter image search test done
-    
-    0.8.0.1
-    await anna.replyAI
-    async bot index
-    logToFile bug fixed
-    newimg method fix
-    debugPush switch
-    annaCore fixed
-
-    0.8.0.2
-    twitter img upload sync fixed
-
-    0.8.0.3
-    dbox.fileMove catch error fixed
-    isLocalHost update
-    fileMove update
-    image.js update
+    >> feature/0.8.0/lineAlphatJS
+    lineAlphatJS online
+    twitter webhook offline
+    alphat bot push tweet image
+    bugs fixed
+    >> feature/0.8.0/DiscordApi
+    discord bot api test online
 */
 
 const config = {
-    _version: "0.8.0.3",
+    _version: "0.8.1.0",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
@@ -78,6 +52,19 @@ const config = {
         channelId: process.env.LINE_CHANNEL_ID,
         channelSecret: process.env.LINE_CHANNEL_SECRET,
         channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN
+    },
+
+    alphatBot: {
+        authToken: "EJDUiKXqgWrMjjEj3Lbe.8aC5znu7iVt0bkJ7J3QEpG.DKCbDjLz4SuWAtSNkH8OKVyHCABYD8zknaeNAXShtbI=",
+        certificate: "f024ea37d3254f86e6f5e6c817faa9031f9c7a1247055eb7a3a84ed7cf2f0fcd",
+        ID: "uf0073964d53b22f4f404a8fb8f7a9e3e",
+        email: "",
+        password: ""
+    },
+
+    // discord
+    discordbot: {
+        token: process.env.DISCORD_BOT_TOKEN
     },
 
     // twitter

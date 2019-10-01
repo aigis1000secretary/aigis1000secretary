@@ -136,7 +136,7 @@ const main = async function () {
 
     } // */
 
-    // annaWebHook("statu");
+    // annaWebHook("status");
     console.log("done!")
     return;
 };

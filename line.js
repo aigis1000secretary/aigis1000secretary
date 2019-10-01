@@ -4,7 +4,9 @@ const dbox = require("./dbox.js");
 const linebot = require("linebot");
 const config = require("./config.js");
 const devbot = linebot(Object.assign({}, config.devbot));
-const debugLogger = config.debugLogger;
+
+const linebotAlphat = require("./LineAlphatJS/src/bot.js");
+const alphatbot = linebotAlphat(Object.assign({}, config.alphatBot));
 
 class LineMessage {
     constructor(rawData) {
@@ -16,14 +18,16 @@ class LineMessage {
 
 module.exports = {
     bot: devbot,
+    alphatbot: alphatbot,
+
     botPush: function (userId, msg) {
         module.exports.pushMsg(userId, "", msg);
     },
     botPushLog: function (msg) {
-        module.exports.pushMsg(debugLogger, "log", msg);
+        module.exports.pushMsg(config.debugLogger, "log", msg);
     },
     botPushError: function (msg) {
-        module.exports.pushMsg(debugLogger, "logError", msg);
+        module.exports.pushMsg(config.debugLogger, "logError", msg);
     },
     pushMsg: function (userId, type, msg) {
         if (!config.isLocalHost) {
@@ -46,7 +50,7 @@ module.exports = {
     },
 
 
-    
+
     // Line Message element
     // 文字訊息
     createTextMsg: function (_text) {

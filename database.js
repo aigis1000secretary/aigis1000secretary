@@ -43,7 +43,7 @@ class Database {
         this.name = dbName;
         this.fileName = dbName + ".json";
         this.data = [];
-        this.uploadTaskCount = -1;
+        this.uploadTaskCount = -1;  // sec
         this.backup = backup;
 
         this.uploadCount = (28 * 60);
@@ -92,6 +92,7 @@ class Database {
 
         let obj = [];
         try {
+            this.data = [];
             let data = fs.readFileSync(this.fileName);
 
             try {
@@ -177,7 +178,8 @@ class Database {
                 await this.saveDB()
                 await this.uploadDB();
             } catch (error) {
-                console.log(this.name + " Task upload error...\n" + error);
+                console.log(this.name + " Task upload error...\n");
+                console.log(error);
             }
         }
     };

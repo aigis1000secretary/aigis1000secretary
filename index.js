@@ -6,6 +6,8 @@ const dbox = require("./dbox.js");
 const express = require("./express.js");
 const line = require("./line.js");
 const twitter = require("./twitter.js");
+let tweetMediaCache = [];
+const discord = require("./discord.js");
 
 // groupDatabase
 const database = require("./database.js");
@@ -41,7 +43,7 @@ const lineBotOn = function () {
 
         // 文字事件
         if (event.message.type == "text") {
-            anna.debugLog(event + "\n");
+            anna.debugLog(event);
 
             // 取出文字內容
             let msg = event.message.text.trim()
@@ -59,6 +61,26 @@ const lineBotOn = function () {
                 event.reply(rMsg).then(anna.debugLog).catch(anna.debugLog);
                 return true;
             };
+            // reply tweet image
+            for (let key in tweetMediaCache) {
+                if (msg.indexOf(key) != -1) {
+                    let medias = [];
+                    for (let i in tweetMediaCache[key]) {
+                        let link = tweetMediaCache[key][i];
+                        medias.push(line.createImageMsg(link, link));
+                    }
+
+                    // reply media
+                    if (medias.length <= 3) {
+                        replyFunc(medias);
+                    } else if (msg != key) {
+                        replyFunc(medias.slice(0, 3));
+                    } else {
+                        replyFunc(medias.slice(3));
+                    }
+                    return;
+                }
+            }
 
             // bot mode
             // normal response
@@ -99,41 +121,107 @@ const lineBotOn = function () {
 // twitter bot 監聽
 const twitterBotOn = function () {
 
-    let callback = function (tweet_data) {
+    if (!config.isLocalHost) {
+        let callback = async function (tweet_data) {
+            let aIDs = (await line.alphatbot.getContacts()).split("\n");
+            for (let i in aIDs) {
+                let aid = aIDs[i];
 
-        for (let i in groupDatabase.data) {
-            if (!groupDatabase.data[i].alarm) continue;
-            // 14 days no ant msg idle group	3 * 24 * 60 * 60 * 1000
-            if (Date.now() - groupDatabase.data[i].timestamp > 259200000) {
-                groupDatabase.data[i].alarm = false;
-                groupDatabase.uploadTask();
-                continue;
-            }
+                // if (!groupDatabase.data[i].alarm) continue;
+                // // 14 days no ant msg idle group	3 * 24 * 60 * 60 * 1000
+                // if (Date.now() - groupDatabase.data[i].timestamp > 259200000) {
+                //     groupDatabase.data[i].alarm = false;
+                //     groupDatabase.uploadTask();
+                //     continue;
+                // }
 
-            let pushList = [];
+                let text = tweet_data.text;
+                let mediaUrl = "";
 
-            // push text
-            pushList.push(groupDatabase.data[i].name, tweet_data.text);
+                // push image data
+                if (tweet_data.medias.length > 0) {
+                    // check keyword in text
+                    mediaUrl = tweet_data.medias[0].url;
+                    if (mediaUrl && text.indexOf(mediaUrl) == -1) {
+                        text += "\n" + mediaUrl;
+                    }
 
-            // push image
-            if (tweet_data.medias.length <= 0) continue;
-            for (let j in tweet_data.medias) {
-                let media = tweet_data.medias[j];
-                if (media.type == "photo") {
-                    let imageMsg = line.createImageMsg(media.link, media.link);
-                    pushList.push(groupDatabase.data[i].name, imageMsg);
+                    // map keyword => media.link
+                    tweetMediaCache[mediaUrl] = [];
+                    for (let j in tweet_data.medias) {
+                        let media = tweet_data.medias[j];
+                        if (media.type == "photo") {
+                            tweetMediaCache[mediaUrl].push(media.link);
+                        }
+                    }
+                }
+
+                line.alphatbot.push(aid, text);
+                if (tweetMediaCache[mediaUrl].length > 3) {
+                    line.alphatbot.push(aid, mediaUrl);
                 }
             }
-
-            while (pushList.length > 0) {
-                line.pushMsg(groupDatabase.data[i].name, pushList.splice(0, 3));
-            }
         }
-    }
-
-    if (!config.isLocalHost) {
         twitter.stream.litsen("Aigis1000", "", callback);
     }
+}
+// discord bot 監聽
+const discordBotOn = function () {
+    discord.bot.on('message', async function (dMsg) {
+        if (dMsg.author.id == 628127387657175040) {
+            return;
+        }
+
+        // define reply function
+        let replyFunc = async function (rMsg) {
+            try {
+                await dMsg.reply(rMsg);
+            } catch (e) { console.log(e); }
+            return;
+        };
+        let msg = dMsg.content;
+
+        if (msg == "安娜") {
+            replyFunc("是的！王子？");
+            return;
+        }
+
+        //
+        if (msg.indexOf("安娜") == 0 || msg.toLocaleLowerCase().indexOf("anna") == 0) {
+            let result = await anna.replyAI(msg)
+            if (result != false) {
+                let linemsgToString = function (linemsg) {
+                    if (linemsg.type == "text") {
+                        return linemsg.text;
+                    } else if (linemsg.type == "image") {
+                        return linemsg.originalContentUrl;
+                    } else if (linemsg.type == "template") {
+                        let str = "";
+                        for (let i in linemsg.template.actions) {
+                            let msg = linemsg.template.actions[i];
+                            str += msg.label + ": " + msg.uri + "\n";
+                        }
+                        return str;
+                    }
+                }
+
+                if (Array.isArray(result)) {
+                    for (let i in result) {
+                        let res = result[i];
+                        if (res.constructor.name == "LineMessage") {
+                            result[i] = linemsgToString(result[i]);
+                        };
+                    }
+                } else {
+                    if (result.constructor.name == "LineMessage") {
+                        result = linemsgToString(result);
+                    };
+                }
+                replyFunc(result);
+                return;
+            }
+        }
+    });
 }
 
 const timerBotOn = function () {
@@ -167,15 +255,17 @@ const main = async function () {
     express.init();
 
     // 讀取資料
+    await anna.init();
+    await imgur.init();
+
     await Promise.all([
-        anna.init(),
-        imgur.init()
-    ]);
+        groupDatabase.init()
+    ]).catch((error) => { console.log("database init error:\n"); console.log(error); });
 
     // 開始監聽
-    await groupDatabase.init();
     lineBotOn();
     twitterBotOn();
+    discordBotOn();
     timerBotOn();
 
     console.log("=====*****Anna secretary online*****=====");
