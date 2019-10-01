@@ -45,10 +45,10 @@ module.exports = {
         // line webhook
         app.post("/linebot/", line.bot.parser());
 
-        // twitter webhook
-        app.get("/twitterbot/:function", twitter.webhook.crcFunctions);
-        app.get("/twitterbot/", twitter.webhook.get);
-        app.post("/twitterbot/", jsonParser, twitter.webhook.post);
+        // // twitter webhook
+        // app.get("/twitterbot/:function", twitter.webhook.crcFunctions);
+        // app.get("/twitterbot/", twitter.webhook.get);
+        // app.post("/twitterbot/", jsonParser, twitter.webhook.post);
 
         // hotfix
         dbox.fileDownloadToFile("hotfix.js").then(function (result) {

@@ -19,10 +19,6 @@ const database = require("./database.js");
 // Init
 const init = module.exports.init = async function () {
 
-    charaDatabase.data = [];
-    nickDatabase.data = [];
-    classDatabase.data = [];
-
     await charaDatabase.init().catch(console.log);
     await nickDatabase.init().catch(console.log);
     await classDatabase.init().catch(console.log);
@@ -112,7 +108,7 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
 
             return replyMsg.trim();
 
-        } else if (command == "狀態" || command == "STATU") {
+        } else if (command == "狀態" || command == "STATUS") {
             // status
             await imgur.init();
 
@@ -401,8 +397,6 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
                     // console.log(img.md5 + " [" + i + "/" + imgArray.length + "]");
                     return replyMsg;
 
-                    return false;
-
                 } else {
                     replyMsg = "沒有新照片";
                 }
@@ -444,13 +438,18 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
                         // update imgur database
                         imgur.database.deleteImageData({ id: imgArray[0].id });
 
-                        return "分類完成";
+                        // return "分類完成";
+                        return line.createMsgButtons("分類完成", ["next"], ["new"]);
                     }
                 }
             }
             return false;
 
+        } else if (command.indexOf("://LINE.ME/R/") != -1) {
+            line.alphatbot.joinQr(msgs[1].trim());
+            return "";
         }
+
 
         // 搜尋資料
         let result = false;
