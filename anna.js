@@ -422,8 +422,9 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
                                 "Character/" + target + "/" + imgArray[0].fileName,
                                 true);
                         } catch (error) {
-                            console.log("分類錯誤! ");
+                            console.log("分類錯誤!");
                             console.log(error);
+                            return "分類錯誤!";
                         }
 
                         // set taglist
