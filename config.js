@@ -11,6 +11,8 @@
     twitter webhook offline
     alphat bot push tweet image
     bugs fixed
+    >> feature/0.8.0/DiscordApi
+    discord bot api test online
 */
 
 const config = {
@@ -58,6 +60,11 @@ const config = {
         ID: "uf0073964d53b22f4f404a8fb8f7a9e3e",
         email: "",
         password: ""
+    },
+
+    // discord
+    discordbot: {
+        token: process.env.DISCORD_BOT_TOKEN
     },
 
     // twitter

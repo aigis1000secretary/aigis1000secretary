@@ -7,6 +7,7 @@ const express = require("./express.js");
 const line = require("./line.js");
 const twitter = require("./twitter.js");
 let tweetMediaCache = [];
+const discord = require("./discord.js");
 
 // groupDatabase
 const database = require("./database.js");
@@ -164,6 +165,64 @@ const twitterBotOn = function () {
         twitter.stream.litsen("Aigis1000", "", callback);
     }
 }
+// discord bot 監聽
+const discordBotOn = function () {
+    discord.bot.on('message', async function (dMsg) {
+        if (dMsg.author.id == 628127387657175040) {
+            return;
+        }
+
+        // define reply function
+        let replyFunc = async function (rMsg) {
+            try {
+                await dMsg.reply(rMsg);
+            } catch (e) { console.log(e); }
+            return;
+        };
+        let msg = dMsg.content;
+
+        if (msg == "安娜") {
+            replyFunc("是的！王子？");
+            return;
+        }
+
+        //
+        if (msg.indexOf("安娜") == 0 || msg.toLocaleLowerCase().indexOf("anna") == 0) {
+            let result = await anna.replyAI(msg)
+            if (result != false) {
+                let linemsgToString = function (linemsg) {
+                    if (linemsg.type == "text") {
+                        return linemsg.text;
+                    } else if (linemsg.type == "image") {
+                        return linemsg.originalContentUrl;
+                    } else if (linemsg.type == "template") {
+                        let str = "";
+                        for (let i in linemsg.template.actions) {
+                            let msg = linemsg.template.actions[i];
+                            str += msg.label + ": " + msg.uri + "\n";
+                        }
+                        return str;
+                    }
+                }
+
+                if (Array.isArray(result)) {
+                    for (let i in result) {
+                        let res = result[i];
+                        if (res.constructor.name == "LineMessage") {
+                            result[i] = linemsgToString(result[i]);
+                        };
+                    }
+                } else {
+                    if (result.constructor.name == "LineMessage") {
+                        result = linemsgToString(result);
+                    };
+                }
+                replyFunc(result);
+                return;
+            }
+        }
+    });
+}
 
 const timerBotOn = function () {
 
@@ -206,6 +265,7 @@ const main = async function () {
     // 開始監聽
     lineBotOn();
     twitterBotOn();
+    discordBotOn();
     timerBotOn();
 
     console.log("=====*****Anna secretary online*****=====");
