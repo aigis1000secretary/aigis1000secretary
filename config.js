@@ -3,6 +3,7 @@
 /*
     database api input
     replyAI - stamp
+    imgur init GET Album => GET Album Ids
 */
 
 // commit
@@ -17,10 +18,13 @@
 
     0.8.1.1
     imgur bug fixed
+
+    0.8.1.2
+    anna.replyAI rebuild for discord api
 */
 
 const config = {
-    _version: "0.8.1.1",
+    _version: "0.8.1.2",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
