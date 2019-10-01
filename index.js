@@ -83,11 +83,6 @@ const lineBotOn = function () {
             }
 
             // bot mode
-            // normal response
-            if (msg == "安娜") {
-                replyFunc("是的！王子？");
-                return;
-            }
             // 身分驗證
             if (userId == "U9eefeba8c0e5f8ee369730c4f983346b") {
                 if (msg == "我婆") {
@@ -95,15 +90,46 @@ const lineBotOn = function () {
                 }
             }
             // in user chat
-            if (event.source.type == "user" && msg.toUpperCase().indexOf("ANNA ") == -1 && msg.indexOf("安娜 ") == -1) {
-                msg = "ANNA " + msg;
+            let inChat = (event.source.type == "user");
+            let callAnna = false;
+            if (msg.toUpperCase().indexOf("ANNA ") == 0) {
+                callAnna = true;
+                msg = msg.slice(4).trim();
+            } else if (msg.indexOf("安娜 ") == 0) {
+                callAnna = true;
+                msg = msg.slice(2).trim();
             }
 
-            //
-            let result = await anna.replyAI(msg, sourceId, userId)
+            // ask ai
+            let result = false;
+            if (inChat || callAnna) {
+                result = await anna.replyAI(msg, sourceId, userId)
+            }
+            // ai done something
             if (result != false) {
                 replyFunc(result);
                 return;
+            }
+            // search stamp img
+            result = anna.replyStamp(msg);
+            if (result != false) {
+                replyFunc(result);
+                return;
+            }
+            // normal response
+            if (inChat || callAnna) {
+                if (msg.length == 0) {
+                    replyFunc("是的！王子？");
+                    return;
+                } else if (msg.length == 1) {
+                    replyFunc("王子太短了，找不到...");
+                    return;
+                } else {
+                    let replyMsgs = ["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"];
+                    let replyMsg = replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
+                    replyFunc(replyMsg);
+                    return;
+                }
             }
 
             // egg
@@ -174,6 +200,35 @@ const discordBotOn = function () {
 
         // define reply function
         let replyFunc = async function (rMsg) {
+
+            let linemsgToString = function (linemsg) {
+                if (linemsg.type == "text") {
+                    return linemsg.text;
+                } else if (linemsg.type == "image") {
+                    return linemsg.originalContentUrl;
+                } else if (linemsg.type == "template") {
+                    let str = "";
+                    for (let i in linemsg.template.actions) {
+                        let msg = linemsg.template.actions[i];
+                        str += msg.label + ": " + msg.uri + "\n";
+                    }
+                    return str;
+                }
+            }
+
+            if (Array.isArray(rMsg)) {
+                for (let i in rMsg) {
+                    let res = rMsg[i];
+                    if (res.constructor.name == "LineMessage") {
+                        rMsg[i] = linemsgToString(rMsg[i]);
+                    };
+                }
+            } else {
+                if (rMsg.constructor.name == "LineMessage") {
+                    rMsg = linemsgToString(rMsg);
+                };
+            }
+
             try {
                 await dMsg.reply(rMsg);
             } catch (e) { console.log(e); }
@@ -181,42 +236,42 @@ const discordBotOn = function () {
         };
         let msg = dMsg.content;
 
-        if (msg == "安娜") {
-            replyFunc("是的！王子？");
-            return;
+        // in user chat
+        let callAnna = false;
+        if (msg.toUpperCase().indexOf("ANNA ") == 0) {
+            callAnna = true;
+            msg = msg.slice(4).trim();
+        } else if (msg.indexOf("安娜 ") == 0) {
+            callAnna = true;
+            msg = msg.slice(2).trim();
         }
 
-        //
+        // ask ai
+        let rMsg;
+        if (callAnna) {
+            rMsg = await anna.replyAI(msg, sourceId, userId)
+
+            // ai done something
+            if (rMsg != false) {
+                replyFunc(rMsg);
+                return;
+            } else if (msg.length == 0) { // normal response
+                replyFunc("是的！王子？");
+                return;
+            } else if (msg.length == 1) {
+                replyFunc("王子太短了，找不到...");
+                return;
+            } else {
+                let replyMsgs = ["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"];
+                let replyMsg = replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
+                replyFunc(replyMsg);
+                return;
+            }
+        }
+
         if (msg.indexOf("安娜") == 0 || msg.toLocaleLowerCase().indexOf("anna") == 0) {
             let result = await anna.replyAI(msg)
             if (result != false) {
-                let linemsgToString = function (linemsg) {
-                    if (linemsg.type == "text") {
-                        return linemsg.text;
-                    } else if (linemsg.type == "image") {
-                        return linemsg.originalContentUrl;
-                    } else if (linemsg.type == "template") {
-                        let str = "";
-                        for (let i in linemsg.template.actions) {
-                            let msg = linemsg.template.actions[i];
-                            str += msg.label + ": " + msg.uri + "\n";
-                        }
-                        return str;
-                    }
-                }
-
-                if (Array.isArray(result)) {
-                    for (let i in result) {
-                        let res = result[i];
-                        if (res.constructor.name == "LineMessage") {
-                            result[i] = linemsgToString(result[i]);
-                        };
-                    }
-                } else {
-                    if (result.constructor.name == "LineMessage") {
-                        result = linemsgToString(result);
-                    };
-                }
                 replyFunc(result);
                 return;
             }
