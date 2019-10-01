@@ -135,10 +135,11 @@ module.exports = {
             allow_ownership_transfer: false
         };
 
+        if (overwrite) {
+            await (dbox.filesDelete({ path: root + to }).catch((error) => { }));
+        }
         try {
-            if (overwrite) await dbox.filesDelete({ path: root + to });
-            await dbox.filesCopy(filesRelocationArg);
-            await dbox.filesDelete({ path: root + from });
+            await dbox.filesMoveV2(filesRelocationArg);
             return true;
         } catch (error) {
             console.log("filesMove error... " + from);

@@ -628,10 +628,9 @@ let imgurCore = {
         imgurCore.database.images = [];
         imgurCore.database.albums = [];
 
-        await Promise.all([
-            imgurCore.api.account.getAllImages().catch(function (error) { console.log("Imgur images load error!\n" + error) }),
-            imgurCore.api.account.getAllAlbums().catch(function (error) { console.log("Imgur images load error!\n" + error) })
-        ]);
+        await imgurCore.api.account.getAllAlbums().catch(function (error) { console.log("Imgur images load error!\n" + error) });
+        await imgurCore.api.account.getAllImages().catch(function (error) { console.log("Imgur images load error!\n" + error) });
+
         if (config.isLocalHost) imgurCore.database.saveDatabase();
         return;
     },

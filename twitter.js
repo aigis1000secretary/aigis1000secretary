@@ -114,7 +114,7 @@ const twitterCore = {
                                 tweetTime.getSeconds().toString().padStart(2, "0");
                             filename += "-img" + (parseInt(i) + 1) + ".jpg";
 
-                            request.get(imglink)
+                            request.get(media.link)
                                 .pipe(fs.createWriteStream("./" + filename))
                                 .on("error", (e) => { console.log("pipe error", e) })
                                 .on("close", () => {

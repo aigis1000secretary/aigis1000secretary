@@ -1,7 +1,8 @@
 
 // todo
 /*
-    wait check tweet stream log file
+    database api input
+    replyAI - stamp
 */
 
 // commit
@@ -13,10 +14,13 @@
     bugs fixed
     >> feature/0.8.0/DiscordApi
     discord bot api test online
+
+    0.8.1.1
+    imgur bug fixed
 */
 
 const config = {
-    _version: "0.8.1.0",
+    _version: "0.8.1.1",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
