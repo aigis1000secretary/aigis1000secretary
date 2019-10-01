@@ -171,11 +171,10 @@ module.exports = {
             dateNow.getMilliseconds().toString().padStart(4, "0");
 
         let binary = Buffer.from(JSON.stringify(data, null, 4))
-        try {
-            module.exports.fileUpload(base + path + ".json", binary, "add").catch(console.log);
-        } catch (error) {
-            console.log("logToFile error... " + error);
-        }
+        module.exports.fileUpload(base + path + ".json", binary, "add").catch((error) => {
+            console.log("logToFile error... ");
+            console.log(error);
+        });
     },
 
 };
