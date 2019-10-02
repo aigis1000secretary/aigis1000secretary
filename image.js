@@ -147,27 +147,26 @@ const getFileList = async function (mainFolder) {
     // get AutoResponse key word
     let dirArray = await dbox.listDir(mainFolder, "folder").catch(console.log);
 
-    let promiseArray = [];;
-    while (dirArray.length > 0) {
+    let dirList = Object.assign([], dirArray);
+    while (dirList.length > 0) {
+        let pArray = [];
         // 10 thread
-        for (let i = 0; i < 10; ++i) {
-            if (dirArray.length > 0) {
-                let dir = mainFolder + '/' + dirArray.pop();
-                let donemsg = "pathArray[" + dirArray.length + "]: " + dir;
+        for (let i = 0, pop; i < 10 && (pop = dirList.pop()); ++i) {
 
-                promiseArray.push(
-                    dbox.listDir(dir).then(function (fileArray) {
-                        console.log(donemsg);
-                        for (let j in fileArray) {
-                            // set AR image full path
-                            pathArray.push(dir + "/" + fileArray[j]);
-                        }
-                    }).catch(console.log)
-                );
-            }
+            let dir = mainFolder + '/' + pop;
+            let donemsg = "pathArray[" + dirArray.length + "]: " + dir;
+            pArray.push(
+                dbox.listDir(dir).then(function (fileArray) {
+                    console.log(donemsg);
+                    for (let j in fileArray) {
+                        // set AR image full path
+                        pathArray.push(dir + "/" + fileArray[j]);
+                    }
+                }).catch(console.log));
         }
-        await Promise.all(promiseArray);
+        await Promise.all(pArray);
     }
+
     return pathArray;
 }
 /*

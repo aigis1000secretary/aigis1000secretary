@@ -2,8 +2,8 @@
 // todo
 /*
     database api input
-    replyAI - stamp
-    imgur init GET Album => GET Album Ids
+    LineAPI.setTHttpClient();
+    push method
 */
 
 // commit
@@ -30,10 +30,15 @@
 
     0.8.1.5
     change push method
+
+    0.8.1.6
+    twitter image push fix
+    twitter text push fix
+    multithreading rebuild test done
 */
 
 const config = {
-    _version: "0.8.1.5",
+    _version: "0.8.1.6",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正

@@ -1,6 +1,7 @@
 
 
 // ライブラリ読み込み
+const fs = require('fs');
 const Twitter = require('twitter');
 const request = require("request");
 const crypto = require('crypto');
@@ -72,7 +73,7 @@ const twitterCore = {
 
                     setTimeout(function () {
                         twitterCore.stream.litsen(target, user_id, callback);
-                    }, 30 * 1000);
+                    }, 60 * 1000);
                 });
 
                 // // 接続開始時にはフォロワー情報が流れます
@@ -91,47 +92,42 @@ const twitterCore = {
 
                 // 送信する情報を定義
                 let tweet_data = twitterCore.stream.getTweetData(tweet);
+                if (tweet_data.screen_name == target) {
+                    // log
+                    if (config.switchVar.logStreamToFile && tweet) {
+                        dbox.logToFile("stream/", "twitter", tweet);
+                    }
 
-                // 送信
-                if (tweet_data.text && tweet_data.screen_name == target) {
-                    callback(tweet_data);
-                }
+                    // image to dropbox
+                    if (tweet_data.medias) {
+                        for (let i in tweet_data.medias) {
+                            let media = tweet_data.medias[i];
 
-                // image to dropbox
-                if (tweet_data.medias && tweet_data.screen_name == target) {
-                    for (let i in tweet_data.medias) {
-                        let media = tweet_data.medias[i];
+                            if (media.type == "photo") {
+                                let tweetTime = new Date(parseInt(tweet_data.timestamp_ms));
+                                let filename = target + "-" + tweet_data.id_str + "-" +
+                                    tweetTime.getFullYear().toString().padStart(4, "0") +
+                                    (tweetTime.getMonth() + 1).toString().padStart(2, "0") +
+                                    tweetTime.getDate().toString().padStart(2, "0") + "_" +
+                                    tweetTime.getHours().toString().padStart(2, "0") +
+                                    tweetTime.getMinutes().toString().padStart(2, "0") +
+                                    tweetTime.getSeconds().toString().padStart(2, "0") +
+                                    "-img" + (parseInt(i) + 1) + ".jpg";
 
-                        if (media.type == "photo") {
-
-                            let tweetTime = new Date(parseInt(tweet_data.timestamp_ms));
-                            let filename = "Aigis1000-" + tweet_data.id_str + "-";
-                            filename += tweetTime.getFullYear().toString().padStart(4, "0") +
-                                (tweetTime.getMonth() + 1).toString().padStart(2, "0") +
-                                tweetTime.getDate().toString().padStart(2, "0") + "_" +
-                                tweetTime.getHours().toString().padStart(2, "0") +
-                                tweetTime.getMinutes().toString().padStart(2, "0") +
-                                tweetTime.getSeconds().toString().padStart(2, "0");
-                            filename += "-img" + (parseInt(i) + 1) + ".jpg";
-
-                            request.get(media.link)
-                                .pipe(fs.createWriteStream("./" + filename))
-                                .on("error", (e) => { console.log("pipe error", e) })
-                                .on("close", () => {
-                                    let body = fs.readFileSync("./" + filename);
-                                    dbox.fileUpload("NewImages/NewImages/" + filename, body);
-                                })
-
+                                request.get(media.link)
+                                    .pipe(fs.createWriteStream("./" + filename))
+                                    .on("error", (e) => { console.log("pipe error", e) })
+                                    .on("close", () => {
+                                        let body = fs.readFileSync("./" + filename);
+                                        dbox.fileUpload("NewImages/NewImages/" + filename, body);
+                                    });
+                            }
                         }
                     }
-                }
 
-                // log
-                if (config.switchVar.logStreamToFile && tweet) {
-                    if (tweet_data.screen_name == target) {
-                        dbox.logToFile("stream/", "twitter", tweet);
-                    } else {
-                        // dbox.logToFile("stream/", "twitterRT", tweet);
+                    // 送信
+                    if (tweet_data.text) {
+                        callback(tweet_data);
                     }
                 }
             }
@@ -179,7 +175,7 @@ const twitterCore = {
     api: {
         getTweet: function (id) {
             return new Promise(function (resolve, reject) {
-                bot.get('statuses/show/' + id, { include_entities: true, include_ext_alt_text: true }, (error, tweet, response) => {
+                bot.get('statuses/show/', { id, include_entities: true, include_ext_alt_text: true }, (error, tweet, response) => {
                     // error ? console.log("error", JSON.stringify(error, null, 4)) : {};
                     // tweet ? console.log("tweet", JSON.stringify(tweet, null, 4)) : {};
                     // response ? console.log("response", JSON.stringify(response, null, 4)) : {};
