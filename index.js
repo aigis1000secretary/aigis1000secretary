@@ -23,15 +23,19 @@ const lineBotOn = function () {
         }
         // anna.debugLog(event);
 
-        let userId = event.source.userId || config.adminstrator;	// Line API bug?
-        let sourceId = event.source.groupId || event.source.roomId || userId;
+        // define reply function
+        let replyFunc = function (rMsg) {
+            anna.debugLog(rMsg);
+            event.reply(rMsg).then(anna.debugLog).catch(anna.debugLog);
+            return true;
+        };
 
         // 呼叫定型文
         let result = anna.replyStamp("新人");
         if (result == false) {
             result = "歡迎使用政務官小安娜 v" + config._version + ", 輸入(安娜 HELP)以取得更多訊息";
         }
-        // line.botPush(sourceId, result);
+        replyFunc(result);
         return true;
     });// */
 
@@ -49,7 +53,7 @@ const lineBotOn = function () {
             let msg = event.message.text.trim()
 
             // get source id
-            let userId = event.source.userId || config.adminstrator;	// Line API bug?
+            let userId = event.source.userId || "U";	// Line API bug?
             let sourceId = event.source.groupId || event.source.roomId || userId;
             if (sourceId[0] != "U") {
                 groupDatabase.addData(sourceId, msg.split("\n")[0].trim(), event.timestamp);
@@ -71,13 +75,14 @@ const lineBotOn = function () {
                     }
 
                     // reply media
-                    if (medias.length <= 3) {
-                        replyFunc(medias);
-                    } else if (msg != key) {
-                        replyFunc(medias.slice(0, 3));
-                    } else {
-                        replyFunc(medias.slice(3));
-                    }
+                    replyFunc(medias);
+                    // if (medias.length <= 3) {
+                    //     replyFunc(medias);
+                    // } else if (msg != key) {
+                    //     replyFunc(medias.slice(0, 3));
+                    // } else {
+                    //     replyFunc(medias.slice(3));
+                    // }
                     return;
                 }
             }
@@ -149,7 +154,7 @@ const twitterBotOn = function () {
 
     if (!config.isLocalHost) {
         let callback = async function (tweet_data) {
-            let aIDs = (await line.alphatbot.getContacts()).split("\n");
+            let aIDs = (await line.alphatbot.getGroups()).split("\n");
             for (let i in aIDs) {
                 let aid = aIDs[i];
 
@@ -167,7 +172,8 @@ const twitterBotOn = function () {
                 // push image data
                 if (tweet_data.medias.length > 0) {
                     // check keyword in text
-                    mediaUrl = tweet_data.medias[0].url;
+                    mediaUrl = tweet_data.medias[0].url.split('/t.co/').splice(-1);
+
                     if (mediaUrl && text.indexOf(mediaUrl) == -1) {
                         text += "\n" + mediaUrl;
                     }
@@ -183,9 +189,9 @@ const twitterBotOn = function () {
                 }
 
                 line.alphatbot.push(aid, text);
-                if (tweetMediaCache[mediaUrl].length > 3) {
-                    line.alphatbot.push(aid, mediaUrl);
-                }
+                // if (tweetMediaCache[mediaUrl] && tweetMediaCache[mediaUrl].length > 3) {
+                //     line.alphatbot.push(aid, mediaUrl);
+                // }
             }
         }
         twitter.stream.litsen("Aigis1000", "", callback);
@@ -193,90 +199,93 @@ const twitterBotOn = function () {
 }
 // discord bot 監聽
 const discordBotOn = function () {
-    discord.bot.on('message', async function (dMsg) {
-        if (dMsg.author.id == 628127387657175040) {
-            return;
-        }
 
-        // define reply function
-        let replyFunc = async function (rMsg) {
-
-            let linemsgToString = function (linemsg) {
-                if (linemsg.type == "text") {
-                    return linemsg.text;
-                } else if (linemsg.type == "image") {
-                    return linemsg.originalContentUrl;
-                } else if (linemsg.type == "template") {
-                    let str = "";
-                    for (let i in linemsg.template.actions) {
-                        let msg = linemsg.template.actions[i];
-                        str += msg.label + ": " + msg.uri + "\n";
-                    }
-                    return str;
-                }
+    if (!config.isLocalHost) {
+        discord.bot.on('message', async function (dMsg) {
+            if (dMsg.author.id == 628127387657175040) {
+                return;
             }
 
-            if (Array.isArray(rMsg)) {
-                for (let i in rMsg) {
-                    let res = rMsg[i];
-                    if (res.constructor.name == "LineMessage") {
-                        rMsg[i] = linemsgToString(rMsg[i]);
+            // define reply function
+            let replyFunc = async function (rMsg) {
+
+                let linemsgToString = function (linemsg) {
+                    if (linemsg.type == "text") {
+                        return linemsg.text;
+                    } else if (linemsg.type == "image") {
+                        return linemsg.originalContentUrl;
+                    } else if (linemsg.type == "template") {
+                        let str = "";
+                        for (let i in linemsg.template.actions) {
+                            let msg = linemsg.template.actions[i];
+                            str += msg.label + ": " + msg.uri + "\n";
+                        }
+                        return str;
+                    }
+                }
+
+                if (Array.isArray(rMsg)) {
+                    for (let i in rMsg) {
+                        let res = rMsg[i];
+                        if (res.constructor.name == "LineMessage") {
+                            rMsg[i] = linemsgToString(rMsg[i]);
+                        };
+                    }
+                } else {
+                    if (rMsg.constructor.name == "LineMessage") {
+                        rMsg = linemsgToString(rMsg);
                     };
                 }
-            } else {
-                if (rMsg.constructor.name == "LineMessage") {
-                    rMsg = linemsgToString(rMsg);
-                };
+
+                try {
+                    await dMsg.reply(rMsg);
+                } catch (e) { console.log(e); }
+                return;
+            };
+
+            let msg = dMsg.content;
+
+            // in user chat
+            let callAnna = false;
+            if (msg.toUpperCase().indexOf("ANNA ") == 0) {
+                callAnna = true;
+                msg = msg.slice(4).trim();
+            } else if (msg.indexOf("安娜 ") == 0) {
+                callAnna = true;
+                msg = msg.slice(2).trim();
             }
 
-            try {
-                await dMsg.reply(rMsg);
-            } catch (e) { console.log(e); }
-            return;
-        };
-        
-        let msg = dMsg.content;
+            // ask ai
+            if (callAnna) {
+                let rMsg = await anna.replyAI(msg)
 
-        // in user chat
-        let callAnna = false;
-        if (msg.toUpperCase().indexOf("ANNA ") == 0) {
-            callAnna = true;
-            msg = msg.slice(4).trim();
-        } else if (msg.indexOf("安娜 ") == 0) {
-            callAnna = true;
-            msg = msg.slice(2).trim();
-        }
-
-        // ask ai
-        if (callAnna) {
-            let rMsg = await anna.replyAI(msg)
-
-            // ai done something
-            if (rMsg != false) {
-                replyFunc(rMsg);
-                return;
-            } else if (msg.length == 0) { // normal response
-                replyFunc("是的！王子？");
-                return;
-            } else if (msg.length == 1) {
-                replyFunc("王子太短了，找不到...");
-                return;
-            } else {
-                let replyMsgs = ["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"];
-                let replyMsg = replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
-                replyFunc(replyMsg);
-                return;
+                // ai done something
+                if (rMsg != false) {
+                    replyFunc(rMsg);
+                    return;
+                } else if (msg.length == 0) { // normal response
+                    replyFunc("是的！王子？");
+                    return;
+                } else if (msg.length == 1) {
+                    replyFunc("王子太短了，找不到...");
+                    return;
+                } else {
+                    let replyMsgs = ["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"];
+                    let replyMsg = replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
+                    replyFunc(replyMsg);
+                    return;
+                }
             }
-        }
 
-        // if (msg.indexOf("安娜") == 0 || msg.toLocaleLowerCase().indexOf("anna") == 0) {
-        //     let result = await anna.replyAI(msg)
-        //     if (result != false) {
-        //         replyFunc(result);
-        //         return;
-        //     }
-        // }
-    });
+            // if (msg.indexOf("安娜") == 0 || msg.toLocaleLowerCase().indexOf("anna") == 0) {
+            //     let result = await anna.replyAI(msg)
+            //     if (result != false) {
+            //         replyFunc(result);
+            //         return;
+            //     }
+            // }
+        });
+    }
 }
 
 const timerBotOn = function () {

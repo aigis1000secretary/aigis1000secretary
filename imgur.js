@@ -158,11 +158,11 @@ let imgurCore = {
             async getAllImages() {
                 console.log("GET All Images");
                 let pages = parseInt(await this.imagesCount() / 50);
-                let promiseArray = [];
+                let pArray = [];
                 for (let page = 0; page <= pages; page++) {
-                    promiseArray.push(this.images({ page }));
+                    pArray.push(this.images({ page }));
                 }
-                await Promise.all(promiseArray);
+                await Promise.all(pArray);
                 console.log("Imgur account images load complete (" + imgurCore.database.images.length + " images)!");
             },
 
@@ -196,8 +196,15 @@ let imgurCore = {
                         method: "GET"
                     };
                     let data = (await imgurCore._apiRequest(options)).data
-                    for (let i in data) {
-                        await imgurCore.api.album.album({ albumHash: data[i] });
+
+                    let hashList = Object.assign([], data);
+                    while (hashList.length > 0) {
+                        let pArray = [];
+                        // 3 thread
+                        for (let i = 0, pop; i < 3 && (pop = hashList.pop()); ++i) {
+                            pArray.push(imgurCore.api.album.album({ albumHash: pop }));
+                        }
+                        await Promise.all(pArray);
                     }
                     return data;
 
@@ -226,11 +233,9 @@ let imgurCore = {
             async getAllAlbums() {
                 console.log("GET All Albums");
                 let pages = parseInt(await this.albumsCount() / 50);
-                let promiseArray = [];
                 for (let page = 0; page <= pages; page++) {
-                    promiseArray.push(this.albumsIds({ page }));
+                    await this.albumsIds({ page });
                 }
-                await Promise.all(promiseArray);
                 console.log("Imgur account albums load complete (" + imgurCore.database.albums.length + " albums)!");
             }
         },
@@ -628,12 +633,13 @@ let imgurCore = {
         imgurCore.database.images = [];
         imgurCore.database.albums = [];
 
-        await imgurCore.api.account.getAllAlbums().catch(function (error) { console.log("Imgur images load error!\n" + error) });
+        await imgurCore.api.account.getAllAlbums().catch(function (error) { console.log("Imgur albums load error!\n" + error) });
         await imgurCore.api.account.getAllImages().catch(function (error) { console.log("Imgur images load error!\n" + error) });
 
         if (config.isLocalHost) imgurCore.database.saveDatabase();
         return;
     },
+
 
     /* async autoTest() {
         // await this.init();
