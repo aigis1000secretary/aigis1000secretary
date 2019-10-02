@@ -27,10 +27,13 @@
 
     0.8.1.4
     anna help msg fix
+
+    0.8.1.5
+    change push method
 */
 
 const config = {
-    _version: "0.8.1.4",
+    _version: "0.8.1.5",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
