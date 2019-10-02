@@ -32,7 +32,8 @@ const twitterCore = {
                             resolve(user_id);
                         } else {
                             // console.log(error);
-                            line.botPushError(error);
+                            // line.botPushError(error);
+                            line.alphatbot.push('u33a9a527c6ac1b24e0e4e35dde60c79d', text);
                             //reject(error);
                         }
                     });
@@ -45,7 +46,6 @@ const twitterCore = {
             }
 
             console.log(target + 'のツイートを取得します。');
-            // botPushLog(target + 'のツイートを取得します。');
 
             // ストリーミングでユーザのタイムラインを監視
             bot.stream('statuses/filter', { follow: user_id }, function (stream) {
@@ -58,7 +58,8 @@ const twitterCore = {
 
                 // エラー時は再接続を試みた方がいいかもしれません(未検証)
                 stream.on('error', function (rawData) {
-                    line.botPushError("stream.on = error\ngetTweetData: \n" + JSON.stringify(rawData, null, 4));
+                    // line.botPushError("stream.on = error\ngetTweetData: \n" + JSON.stringify(rawData, null, 4));
+                    line.alphatbot.push('u33a9a527c6ac1b24e0e4e35dde60c79d', "stream.on = error\ngetTweetData: \n" + JSON.stringify(rawData, null, 4));
 
                     let tweet = rawData.source;
                     twitterCore.stream.getStreamData(tweet, target, callback);
@@ -68,7 +69,6 @@ const twitterCore = {
                 stream.on('end', function (tweet) {
                     stream.destroy();
                     console.log(target + 'のツイートを取得終了。');
-                    // botPushLog(target + 'のツイートを取得終了。');
 
                     setTimeout(function () {
                         twitterCore.stream.litsen(target, user_id, callback);

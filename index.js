@@ -31,7 +31,7 @@ const lineBotOn = function () {
         if (result == false) {
             result = "歡迎使用政務官小安娜 v" + config._version + ", 輸入(安娜 HELP)以取得更多訊息";
         }
-        line.push(sourceId, result);
+        // line.botPush(sourceId, result);
         return true;
     });// */
 
