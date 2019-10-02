@@ -6,7 +6,7 @@ const config = require("./config.js");
 const devbot = linebot(Object.assign({}, config.devbot));
 
 const linebotAlphat = require("./LineAlphatJS/src/bot.js");
-const alphatbot = linebotAlphat(Object.assign({}, config.alphatBot));
+const alphatbot = linebotAlphat(Object.assign({ authToken: '', certificate: '', ID: '', email: '', password: '' }, config.alphatBot));
 
 class LineMessage {
     constructor(rawData) {
