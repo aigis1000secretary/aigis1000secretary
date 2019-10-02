@@ -850,16 +850,16 @@ const allCharaDataCrawler = function (sourceId) {
     request.get("https://seesaawiki.jp/aigis/d/%c2%b0%c0%ad%ca%cc%b0%ec%cd%f7", { encoding: "binary" }, requestCallBack);
 
     setTimeout(async function () {
-        let promiseArray = [];
-        while (allCharaUrl.length > 0) {
+        let urlList = Object.assign([], allCharaUrl);
+        while (urlList.length > 0) {
+            let pArray = [];
             // 50 thread
-            for (let i = 0; i < 50; ++i) {
-                if (allCharaUrl.length > 0) {
-                    promiseArray.push(charaDataCrawler(allCharaUrl.pop(), sourceId));
-                }
+            for (let i = 0, pop; i < 50 && (pop = allCharaUrl.pop()); ++i) {
+                pArray.push(charaDataCrawler(pop, sourceId));
             }
-            await Promise.all(promiseArray);
+            await Promise.all(pArray);
         }
+
         botPush(sourceId, "角色更新完成!");
         // save Database
         charaDatabase.uploadTask();
