@@ -111,13 +111,13 @@ const lineBotOn = function () {
                 result = await anna.replyAI(msg, sourceId, userId)
             }
             // ai done something
-            if (result != false) {
+            if (result !== false) {
                 replyFunc(result);
                 return;
             }
             // search stamp img
             result = anna.replyStamp(msg);
-            if (result != false) {
+            if (result !== false) {
                 replyFunc(result);
                 return;
             }
@@ -260,7 +260,7 @@ const discordBotOn = function () {
                 let rMsg = await anna.replyAI(msg)
 
                 // ai done something
-                if (rMsg != false) {
+                if (rMsg !== false) {
                     replyFunc(rMsg);
                     return;
                 } else if (msg.length == 0) { // normal response
@@ -316,15 +316,12 @@ const timerBotOn = function () {
 
 
 const main = async function () {
-    express.init();
-
     // 讀取資料
-    await anna.init();
     await imgur.init();
+    await anna.init();
+    await groupDatabase.init().catch((error) => { console.log("database init error:\n"); console.log(error); });
 
-    await Promise.all([
-        groupDatabase.init()
-    ]).catch((error) => { console.log("database init error:\n"); console.log(error); });
+    express.init();
 
     // 開始監聽
     lineBotOn();

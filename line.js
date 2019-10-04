@@ -1,24 +1,32 @@
 
 const dbox = require("./dbox.js");
+const express = require("./express.js");
 // line bot
-const linebot = require("linebot");
 const config = require("./config.js");
-const devbot = linebot(Object.assign({}, config.devbot));
+
+const linebot = require("linebot");
+let devbot = linebot(Object.assign({ channelId: '', channelSecret: '', channelAccessToken: '' }, config.devbot));
 
 const linebotAlphat = require("./LineAlphatJS/src/bot.js");
-const alphatbot = linebotAlphat(Object.assign({ authToken: '', certificate: '', ID: '', email: '', password: '' }, config.alphatBot));
+let alphatbot = linebotAlphat(Object.assign({ authToken: '', certificate: '', ID: '', email: '', password: '' }, config.alphatBot));
 
 class LineMessage {
     constructor(rawData) {
-        for (let key in rawData) {
-            this[key] = rawData[key];
-        }
+        Object.assign(this, rawData);
     };
 }
 
 module.exports = {
+    devbotInit: function () {
+        devbot = linebot(Object.assign({ channelId: '', channelSecret: '', channelAccessToken: '' }, config.devbot));
+        express.app.post("/linebot/", devbot.parser());
+    },
+    alphatbotInit: function () {
+        alphatbot = linebotAlphat(Object.assign({ authToken: '', certificate: '', ID: '', email: '', password: '' }, config.alphatBot));
+    },
+
     bot: devbot,
-    alphatbot: alphatbot,
+    abot: alphatbot,
 
     botPush: function (userId, msg) {
         module.exports.pushMsg(userId, "", msg);

@@ -16,6 +16,7 @@ const server = app.listen(process.env.PORT || 8080, function () {
 });
 
 module.exports = {
+    app: app,
     init: function () {
 
         // http host
@@ -42,8 +43,8 @@ module.exports = {
             response.send("Hello uptimerobot!");
         });
 
-        // line webhook
-        app.post("/linebot/", line.bot.parser());
+        // // line webhook
+        // app.post("/linebot/", line.bot.parser());
 
         // // twitter webhook
         // app.get("/twitterbot/:function", twitter.webhook.crcFunctions);
