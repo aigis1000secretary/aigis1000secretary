@@ -32,24 +32,19 @@ module.exports = {
         module.exports.pushMsg(userId, "", msg);
     },
     botPushLog: function (msg) {
-        module.exports.pushMsg(config.debugLogger, "log", msg);
+        module.exports.pushMsg(config.botLogger, "log", msg);
     },
     botPushError: function (msg) {
-        module.exports.pushMsg(config.debugLogger, "logError", msg);
+        module.exports.pushMsg(config.botLogger, "logError", msg);
     },
     pushMsg: function (userId, type, msg) {
         if (!config.isLocalHost) {
             devbot.push(userId, msg).then(function (result) {
                 if (config.switchVar.logLineBotPush) {
-                    let logObject = {
-                        to: userId,
-                        type: type,
-                        messages: msg,
-                        result: result
-                    };
-
+                    let logObject = { to: userId, type: type, messages: msg, result: result };
+                    let name = (result.message == "You have reached your monthly limit." ? "linePushFail" : "linePush");
                     // log to dropbox
-                    dbox.logToFile("linePush/", (result.message == "You have reached your monthly limit." ? "linePushFail" : "linePush"), logObject);
+                    dbox.logToFile("linePush/", name, logObject);
                 }
             });
         } else {
@@ -57,6 +52,12 @@ module.exports = {
         }
     },
 
+    abotPush(userId, msg) {
+        alphatbot.push(userId, msg);
+    },
+    abotPushLog(msg) {
+        alphatbot.push(config.abotLogger, msg);
+    },
 
 
     // Line Message element

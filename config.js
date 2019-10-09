@@ -49,7 +49,8 @@ const config = {
 
     adminstrator: "U9eefeba8c0e5f8ee369730c4f983346b",
     admins: [],
-    debugLogger: "U9eefeba8c0e5f8ee369730c4f983346b",
+    botLogger: "U9eefeba8c0e5f8ee369730c4f983346b",
+    abotLogger: "u33a9a527c6ac1b24e0e4e35dde60c79d",
 
     // dropbox
     dropbox: {

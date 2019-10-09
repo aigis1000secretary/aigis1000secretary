@@ -21,11 +21,11 @@ const lineBotOn = function () {
         if (config.switchVar.logRequestToFile && event) {
             dbox.logToFile("webhook/", "memberJoined", event);
         }
-        // anna.debugLog(event);
+        // anna.debugLog()(event);
 
         // define reply function
         let replyFunc = function (rMsg) {
-            anna.debugLog(rMsg);
+            anna.debugLog()(rMsg);
             event.reply(rMsg).then(anna.debugLog).catch(anna.debugLog);
             return true;
         };
@@ -47,7 +47,7 @@ const lineBotOn = function () {
 
         // 文字事件
         if (event.message.type == "text") {
-            anna.debugLog(event);
+            anna.debugLog()(event);
 
             // 取出文字內容
             let msg = event.message.text.trim()
@@ -61,7 +61,7 @@ const lineBotOn = function () {
 
             // define reply function
             let replyFunc = function (rMsg) {
-                anna.debugLog(rMsg);
+                anna.debugLog()(rMsg);
                 event.reply(rMsg).then(anna.debugLog).catch(anna.debugLog);
                 return true;
             };
@@ -144,7 +144,7 @@ const lineBotOn = function () {
             }
 
             // 無視...
-            // anna.debugLog("Not a command");
+            // anna.debugLog()("Not a command");
             return;
         }
     });
@@ -154,7 +154,7 @@ const twitterBotOn = function () {
 
     if (!config.isLocalHost) {
         let callback = async function (tweet_data) {
-            let aIDs = (await line.alphatbot.getGroups()).split("\n");
+            let aIDs = (await line.abot.getGroups()).split("\n");
             for (let i in aIDs) {
                 let aid = aIDs[i];
 
@@ -188,9 +188,9 @@ const twitterBotOn = function () {
                     }
                 }
 
-                line.alphatbot.push(aid, text);
+                line.abot.push(aid, text);
                 // if (tweetMediaCache[mediaUrl] && tweetMediaCache[mediaUrl].length > 3) {
-                //     line.alphatbot.push(aid, mediaUrl);
+                //     line.abot.push(aid, mediaUrl);
                 // }
             }
         }
@@ -305,7 +305,7 @@ const timerBotOn = function () {
             str += nd.getMinutes() + ":";
             str += nd.getSeconds();
 
-            // botPushLog(str);
+            // line.abotPushLog(str);
             await sleep(2 * 60 * 1000);
         }
         setTimeout(timer, 3 * 60 * 1000);
@@ -330,7 +330,7 @@ const main = async function () {
     timerBotOn();
 
     console.log("=====*****Anna secretary online*****=====");
-    // botPushLog("Anna secretary online");
+    // line.abotPushLog("Anna secretary online");
 
 }; main();
 
