@@ -28,7 +28,7 @@ module.exports = {
             let command = request.params.command;
             let responseBody = "reply false!";
 
-            let result = await anna.replyAI("anna " + command, sourceId, userId);
+            let result = await anna.replyAI(command, sourceId, userId);
             if (typeof (result) == "string") {
                 responseBody = result.replaceAll("\n", "<br>");
             } else {
