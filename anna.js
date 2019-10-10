@@ -854,7 +854,7 @@ const allCharaDataCrawler = function (sourceId) {
         while (urlList.length > 0) {
             let pArray = [];
             // 50 thread
-            for (let i = 0, pop; i < 50 && (pop = allCharaUrl.pop()); ++i) {
+            for (let i = 0, pop; i < 50 && (pop = urlList.pop()); ++i) {
                 pArray.push(charaDataCrawler(pop, sourceId));
             }
             await Promise.all(pArray);
