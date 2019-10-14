@@ -321,7 +321,7 @@ class LineAPI {
     async _sendFileByUrl(message, uri) {
         let media = 1;
         if (!fs.existsSync(__dirname + '/tmp')) {
-            await fs.mkdirSync(__dirname + '/tmp');
+            fs.mkdirSync(__dirname + '/tmp');
         }
         let head = await unirest.head(uri, async (res) => {
             let formatFile = res.headers['content-type'].split('/')[1].toLowerCase();

@@ -2,46 +2,15 @@
 // todo
 /*
     database api input
-    LineAPI.setTHttpClient();
-    push method
+    character search method rebuild
 */
 
 // commit
 /*
-    >> feature/0.8.0/lineAlphatJS
-    lineAlphatJS online
-    twitter webhook offline
-    alphat bot push tweet image
-    bugs fixed
-    >> feature/0.8.0/DiscordApi
-    discord bot api test online
-
-    0.8.1.1
-    imgur bug fixed
-
-    0.8.1.2
-    anna.replyAI rebuild for discord api
-    
-    0.8.1.3
-    discord bot bug fix
-
-    0.8.1.4
-    anna help msg fix
-
-    0.8.1.5
-    change push method
-
-    0.8.1.6
-    twitter image push fix
-    twitter text push fix
-    multithreading rebuild test done
-
-    0.8.1.7
-    pop bug fixed
-    sonm bug fixed
-
-    0.8.1.8
-    auto-retweet bug fixed?
+    >> feature/0.8.1/debugLog
+    debug logger rebuild
+    line bot/abot push rebuild
+    some bugs fixed
 */
 
 const config = {
@@ -56,7 +25,8 @@ const config = {
 
     adminstrator: "U9eefeba8c0e5f8ee369730c4f983346b",
     admins: [],
-    debugLogger: "U9eefeba8c0e5f8ee369730c4f983346b",
+    botLogger: "U9eefeba8c0e5f8ee369730c4f983346b",
+    abotLogger: "u33a9a527c6ac1b24e0e4e35dde60c79d",
 
     // dropbox
     dropbox: {
