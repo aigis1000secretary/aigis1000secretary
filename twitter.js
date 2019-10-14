@@ -173,7 +173,7 @@ const twitterCore = {
     api: {
         getTweet: function (id) {
             return new Promise(function (resolve, reject) {
-                bot.get('statuses/show/', { id, include_entities: true, include_ext_alt_text: true }, (error, tweet, response) => {
+                bot.get('statuses/show/' + id, { include_entities: true, include_ext_alt_text: true }, (error, tweet, response) => {
                     // error ? console.log("error", JSON.stringify(error, null, 4)) : {};
                     // tweet ? console.log("tweet", JSON.stringify(tweet, null, 4)) : {};
                     // response ? console.log("response", JSON.stringify(response, null, 4)) : {};
