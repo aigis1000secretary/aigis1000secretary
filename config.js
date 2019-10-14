@@ -14,10 +14,13 @@
 
     0.8.2.1
     twitter.api.getTweet fixed
+
+    0.8.2.2
+    abot log msg fixed
 */
 
 const config = {
-    _version: "0.8.2.1",
+    _version: "0.8.2.2",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
