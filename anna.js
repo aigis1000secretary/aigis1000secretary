@@ -30,7 +30,7 @@ const init = module.exports.init = async function () {
 // bot
 // reply
 const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userId) {
-    debugLog("rawMsg: <" + rawMsg + ">");
+    debugLog()("rawMsg: <" + rawMsg + ">");
 
     // flag
     let _isAdmin = isAdmin(userId);
@@ -49,7 +49,7 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
     let arg2 = ("" + msgs[2]).trim();
     // <command>
     if (command == "undefined") { return false; }
-    debugLog("Args: <" + command + "> <" + arg1 + "> <" + arg2 + ">");
+    debugLog()("Args: <" + command + "> <" + arg1 + "> <" + arg2 + ">");
 
     // reply    
     if (command == "DEBUG") {		// debug switch
@@ -57,6 +57,7 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
         return "debug = " + (config.switchVar.debug ? "on" : "off");
     } else if (command == "DEBUGP") {		// debug switch
         config.switchVar.debugPush = !config.switchVar.debugPush;
+        config.switchVar.debug = config.switchVar.debugPush;
         return "debug push = " + (config.switchVar.debugPush ? "on" : "off");
 
     } else if (command.length == 1) {		// 定型文
@@ -193,20 +194,23 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
             return "[學習] 要學甚麼?\n(>>安娜 學習 NNL:射手ナナリー)";
         }
         let learn = arg1.replace("：", ":");
-        debugLog("learn: <" + learn + ">");
+        debugLog()("learn: <" + learn + ">");
 
         let keys = learn.split(":"); // NNL:黑弓
         if (keys.length < 2) {
             return "[學習] 看不懂...";
         }
+        keys[0] = keys[0].trim();
+        keys[1] = keys[1].trim();
 
-        let arrayA = searchCharacter(keys[0].trim(), true);	// 精確搜索 Nickname
-        let arrayB = searchCharacter(keys[1].trim()).concat(searchByClass(keys[1].trim()));
+        let arrayA = searchCharacter(keys[0], true);	// 精確搜索 Nickname
+        let arrayClass = searchByClass(keys[1]);
+        let arrayB = arrayClass.length == 1 ? arrayClass : searchCharacter(keys[1]).concat(arrayClass);
         let countA = arrayA.length;
         let countB = arrayB.length;
 
-        debugLog("new nick: <" + keys[0] + ">");
-        debugLog("full name: <" + arrayB + ">");
+        debugLog()("new nick: <" + keys[0] + ">");
+        debugLog()("full name: <" + arrayB + ">");
 
         if (countA == 1) {
             return "[學習] 安娜知道的！";
@@ -244,9 +248,9 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
                 await classDatabase.saveDB()
                 await classDatabase.uploadDB()
 
-                botPushLog("上傳完成!");
+                botPush(sourceId, "上傳完成!");
             } catch (error) {
-                botPushError("上傳異常!\n" + error);
+                botPush(sourceId, "上傳異常!\n" + error);
             }
         }; asyncFunc();
 
@@ -264,7 +268,7 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
             return "";  // forgot what?
         }
         let learn = arg1;
-        debugLog("forgot: <" + learn + ">");
+        debugLog()("forgot: <" + learn + ">");
 
         // 同步執行
         let i = nickDatabase.indexOf(learn.trim());
@@ -401,7 +405,8 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
                 return line.createImageMsg(imgArray[0].imageLink, imgArray[0].thumbnailLink);
 
             } else if (arg2 != "undefined") {
-                let charaArray = searchCharacter(arg2).concat(searchByClass(arg2.trim()));
+                let classArray = searchByClass(arg2);
+                let charaArray = classArray.length == 1 ? classArray : searchCharacter(arg2).concat(classArray);
                 if (charaArray.length > 1) {
                     return "搜尋不明確: " + charaArray;
                 }
@@ -438,8 +443,11 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
         }
         return "";
 
+    } else if (_isAdmin && (command == "ABOTINIT")) {
+        line.alphatbotInit();
+        return "";
     } else if (command.indexOf("://LINE.ME/R/") != -1) {
-        line.alphatbot.joinQr(msgs[0].trim());
+        line.abot.joinQr(msgs[0].trim());
         return "";
     }
 
@@ -466,7 +474,7 @@ const searchData = function (command) {
     // 搜索職業
     resultArray = searchByClass(command);
     count = resultArray.length;
-    debugLog("classResult[" + count + "]: <" + resultArray + ">");
+    debugLog()("classResult[" + count + "]: <" + resultArray + ">");
     if (count == 1) {
         // found 1
         return generateCharaData(resultArray[0]);
@@ -479,7 +487,7 @@ const searchData = function (command) {
     // 搜索名稱
     resultArray = searchCharacter(command);
     count = resultArray.length;
-    debugLog("charaResult[" + count + "]: <" + resultArray + ">");
+    debugLog()("charaResult[" + count + "]: <" + resultArray + ">");
     if (count == 1) {
         // found 1
         return generateCharaData(resultArray[0]);
@@ -497,7 +505,7 @@ const searchByClass = function (command) {
     let _rarity = getRarityString(command[0]);
     if (_rarity == "NULL") { return []; }
     let _class = command.indexOf("白金") == 0 ? searchClass(command.substring(2).trim()) : searchClass(command.substring(1).trim());
-    debugLog("_rarity + _class: <" + _rarity + " + " + _class + ">");
+    debugLog()("_rarity + _class: <" + _rarity + " + " + _class + ">");
 
     let result = [];
     // 遍歷角色資料庫
@@ -511,7 +519,7 @@ const searchByClass = function (command) {
 }
 // 建立回覆: 單一角色資料
 const generateCharaData = function (charaName) {
-    debugLog("generateCharaData(" + charaName + ")");
+    debugLog()("generateCharaData(" + charaName + ")");
 
     let i = charaDatabase.indexOf(charaName);
     let obj = charaDatabase.data[i];
@@ -531,12 +539,12 @@ const generateCharaData = function (charaName) {
         return replyMsg;
     }
 
-    debugLog("generateCharaData error! can not found chara!");
+    debugLog()("generateCharaData error! can not found chara!");
     return false;
 }
 // 定型文貼圖
 const replyStamp = module.exports.replyStamp = function (msg) {
-    debugLog("replyStamp(" + msg + ")");
+    debugLog()("replyStamp(" + msg + ")");
 
     let replyMsg = [];
 
@@ -687,7 +695,7 @@ const charaDataCrawler = function (urlPath, sourceId) {
                                 textList.push(skilList[i][0] + "\n" + temp);
                             }
                         }
-                        // debugLog(skilList);
+                        // debugLog()(skilList);
 
                         // put array into skill data
                         if (textList.length != 0) {
@@ -798,7 +806,7 @@ const charaDataCrawler = function (urlPath, sourceId) {
                     newData.urlName = urlPath.replace("https://seesaawiki.jp/aigis/d/", "");
                 }
             });
-            // debugLog(newData);
+            // debugLog()(newData);
             // 新增角色資料
             let msg = charaDatabase.addData(newData);
             if (msg != "") {
@@ -1014,7 +1022,7 @@ let charaDatabase = database.charaDatabase;
 // 模糊搜尋
 const searchCharacter = module.exports.searchCharacter = function (key, accurate) {
     accurate = !!accurate;
-    debugLog("searchCharacter(" + key + ", " + accurate + ")");
+    debugLog()("searchCharacter(" + key + ", " + accurate + ")");
 
     // search from twitter text
     if (key.length > 20) {
@@ -1086,8 +1094,8 @@ const searchCharacter = module.exports.searchCharacter = function (key, accurate
         let metricsMax = array_metrics.length - 1;
         let metricsMin = Math.floor(metricsMax * 0.75);
         // let metricsMin = 0;
-        debugLog("_metricsMax: <" + metricsMax + ">");
-        debugLog("_metricsMin: <" + metricsMin + ">");
+        debugLog()("_metricsMax: <" + metricsMax + ">");
+        debugLog()("_metricsMin: <" + metricsMin + ">");
 
         for (let charaIndex = metricsMax; charaIndex >= metricsMin; charaIndex--) {
             if (!array_metrics[charaIndex]) continue;	// 檢查搜尋結果
@@ -1096,7 +1104,7 @@ const searchCharacter = module.exports.searchCharacter = function (key, accurate
             for (let i in array_metrics[charaIndex]) {
                 let index = array_metrics[charaIndex][i];
 
-                debugLog("_array_metrics : <" + charaIndex + ": " + charaDatabase.data[index].name + ">");
+                debugLog()("_array_metrics : <" + charaIndex + ": " + charaDatabase.data[index].name + ">");
                 result.push(charaDatabase.data[index].name);
             }
         }
@@ -1111,7 +1119,7 @@ let nickDatabase = database.nickDatabase;
 let classDatabase = database.classDatabase;
 // 搜尋職業
 const searchClass = function (str) {
-    debugLog("searchClass(" + str + ")");
+    debugLog()("searchClass(" + str + ")");
     // for (let i = 0; i < classDatabase.length; ++i) {
     for (let i in classDatabase.data) {
 
@@ -1138,17 +1146,15 @@ const getRarityString = function (str) {
 
 
 // 管理用參數
-const debugLog = module.exports.debugLog = function (msg) {
-    if (!config.switchVar.debug) {
-        return;
+const debugLog = module.exports.debugLog = function () {
+    if (config.switchVar.debug) {
+        if (config.isLocalHost) {
+            return console.log;
+        } else if (config.switchVar.debugPush) {
+            return line.abotPushLog;
+        }
     }
-    console.log(msg);
-    debugPush(msg);
-}
-const debugPush = function (msg) {
-    if (config.switchVar.debugPush) {
-        botPushError(msg);
-    }
+    return () => { };
 }
 const isAdmin = function (userId) {
     return (userId == config.adminstrator || config.admins.indexOf(userId) != -1)

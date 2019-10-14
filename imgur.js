@@ -507,9 +507,7 @@ let imgurCore = {
                 this.images.push(newImage);
                 return newImage;
             }
-            for (let key in newImage) {
-                result[0][key] = newImage[key];
-            }
+            Object.assign(result[0], newImage);
             return result[0];
         },
         findImageData({ id, md5, fileName, tag }) {
@@ -571,9 +569,7 @@ let imgurCore = {
                 this.albums.push(newAlbum);
                 return newAlbum;
             }
-            for (let key in newAlbum) {
-                result[0][key] = newAlbum[key];
-            }
+            Object.assign(result[0], newAlbum);
             return result[0];
         },
         findAlbumData({ id, title }) {
