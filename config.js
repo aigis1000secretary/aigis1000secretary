@@ -8,40 +8,7 @@
 
 // commit
 /*
-    >> feature/0.8.0/lineAlphatJS
-    lineAlphatJS online
-    twitter webhook offline
-    alphat bot push tweet image
-    bugs fixed
-    >> feature/0.8.0/DiscordApi
-    discord bot api test online
 
-    0.8.1.1
-    imgur bug fixed
-
-    0.8.1.2
-    anna.replyAI rebuild for discord api
-    
-    0.8.1.3
-    discord bot bug fix
-
-    0.8.1.4
-    anna help msg fix
-
-    0.8.1.5
-    change push method
-
-    0.8.1.6
-    twitter image push fix
-    twitter text push fix
-    multithreading rebuild test done
-
-    0.8.1.7
-    pop bug fixed
-    sonm bug fixed
-
-    0.8.1.8
-    auto-retweet bug fixed?
 */
 
 const config = {
