@@ -258,12 +258,11 @@ class CharaDatabase extends Database {
 
     addData(newData) {
         if (newData.name == "") return "";
-        // debugLog("New character <" + newData.name + "> data add...");
 
         if (this.indexOf(newData.name) == -1) {
             this.data.push(newData);
-            console.log("New character <" + newData.name + "> data add complete!");
-            return "anna " + newData.name + " New character data add complete!";
+            console.log("[+] Add     New character <" + newData.name + "> data!");
+            return "anna " + newData.name + " New character data add!";
 
         } else {
             let i = this.indexOf(newData.name);
@@ -279,10 +278,10 @@ class CharaDatabase extends Database {
             }
 
             if (changed) {
-                console.log("New character <" + newData.name + "> data update complete!");
-                return "anna " + newData.name + " New character data update complete!";
+                console.log("[*] Update  character <" + newData.name + "> data!");
+                return "anna " + newData.name + " New character data update!";
             } else {
-                // console.log("Character <" + newData.name + "> data is existed!");
+                console.log("[-] Existed Character <" + newData.name + "> data no changed.");
                 return "";
             }
         };
@@ -329,7 +328,6 @@ class ClassDatabase extends Database {
         if (this.indexOf(newClass.name) == -1) {
             this.data.push(newClass);
             console.log("New Class <" + newClass.name + "> add complete!");
-            botPushLog("New Class <" + newClass.name + "> add complete!");
             return "New Class <" + newClass.name + "> add complete!";
 
         } else {

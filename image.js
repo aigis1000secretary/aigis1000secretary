@@ -86,7 +86,7 @@ const main = async function () {
                 if (uploadResponse == null) { break; }
                 console.log("upload file: " + uploadResponse.title + ", " + fileName + ", " + tagList);
                 console.log("");
-                await sleep(20000);
+                await sleep(25000);
             } catch (error) {
                 console.log(error);
                 continue;
@@ -132,8 +132,6 @@ const main = async function () {
             }
             console.log("");
         }
-
-        console.log(albumName + ", <" + tagList + ">, " + fileName);
         continue;
 
     } // */
@@ -156,7 +154,7 @@ const getFileList = async function (mainFolder) {
         for (let i = 0, pop; i < 10 && (pop = dirList.pop()); ++i) {
 
             let dir = mainFolder + '/' + pop;
-            let donemsg = "pathArray[" + dirList.length + "]: " + dir;
+            let donemsg = "pathArray[" + dirArray.length + "]: " + dir;
             pArray.push(
                 dbox.listDir(dir).then(function (fileArray) {
                     console.log(donemsg);

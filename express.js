@@ -16,6 +16,7 @@ const server = app.listen(process.env.PORT || 8080, function () {
 });
 
 module.exports = {
+    app: app,
     init: function () {
 
         // http host
@@ -27,6 +28,7 @@ module.exports = {
             let userId = config.adminstrator;
             let command = request.params.command;
             let responseBody = "reply false!";
+            console.log(command);
 
             let result = await anna.replyAI(command, sourceId, userId);
             if (typeof (result) == "string") {
@@ -42,8 +44,8 @@ module.exports = {
             response.send("Hello uptimerobot!");
         });
 
-        // line webhook
-        app.post("/linebot/", line.bot.parser());
+        // // line webhook
+        // app.post("/linebot/", line.bot.parser());
 
         // // twitter webhook
         // app.get("/twitterbot/:function", twitter.webhook.crcFunctions);

@@ -1,54 +1,60 @@
 
 const dbox = require("./dbox.js");
+const express = require("./express.js");
 // line bot
-const linebot = require("linebot");
 const config = require("./config.js");
-const devbot = linebot(Object.assign({}, config.devbot));
+
+const linebot = require("linebot");
+let devbot = linebot(Object.assign({ channelId: '', channelSecret: '', channelAccessToken: '' }, config.devbot));
 
 const linebotAlphat = require("./LineAlphatJS/src/bot.js");
-const alphatbot = linebotAlphat(Object.assign({ authToken: '', certificate: '', ID: '', email: '', password: '' }, config.alphatBot));
+let alphatbot = linebotAlphat(Object.assign({ authToken: '', certificate: '', ID: '', email: '', password: '' }, config.alphatBot));
 
 class LineMessage {
     constructor(rawData) {
-        for (let key in rawData) {
-            this[key] = rawData[key];
-        }
+        Object.assign(this, rawData);
     };
 }
 
 module.exports = {
-    bot: devbot,
-    alphatbot: alphatbot,
+    devbotInit: function () {
+        devbot = linebot(Object.assign({ channelId: '', channelSecret: '', channelAccessToken: '' }, config.devbot));
+        express.app.post("/linebot/", devbot.parser());
+    },
+    alphatbotInit: function () {
+        alphatbot = linebotAlphat(Object.assign({ authToken: '', certificate: '', ID: '', email: '', password: '' }, config.alphatBot));
+    },
 
-    botPush: function (userId, msg) {
-        module.exports.pushMsg(userId, "", msg);
-    },
-    botPushLog: function (msg) {
-        module.exports.pushMsg(config.debugLogger, "log", msg);
-    },
-    botPushError: function (msg) {
-        module.exports.pushMsg(config.debugLogger, "logError", msg);
-    },
-    pushMsg: function (userId, type, msg) {
+    bot: devbot,
+    abot: alphatbot,
+
+    botPush: function (userId, msg, type = "") {
         if (!config.isLocalHost) {
             devbot.push(userId, msg).then(function (result) {
                 if (config.switchVar.logLineBotPush) {
-                    let logObject = {
-                        to: userId,
-                        type: type,
-                        messages: msg,
-                        result: result
-                    };
-
+                    let logObject = { to: userId, type: type, messages: msg, result: result };
+                    let name = (result.message == "You have reached your monthly limit." ? "linePushFail" : "linePush");
                     // log to dropbox
-                    dbox.logToFile("linePush/", (result.message == "You have reached your monthly limit." ? "linePushFail" : "linePush"), logObject);
+                    dbox.logToFile("linePush/", name, logObject);
                 }
             });
         } else {
             console.log(type + ">> " + JSON.stringify(msg, null, 2));
         }
     },
+    botPushLog: function (msg) {
+        module.exports.pushMsg(config.botLogger, msg, "log");
+    },
+    botPushError: function (msg) {
+        module.exports.pushMsg(config.botLogger, msg, "logError");
+    },
 
+    abotPush(userId, msg) {
+        alphatbot.push(userId, msg);
+    },
+    abotPushLog(msg) {
+        alphatbot.push(config.abotLogger, msg);
+    },
 
 
     // Line Message element
