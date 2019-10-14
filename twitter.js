@@ -92,7 +92,7 @@ const twitterCore = {
 
                 // 送信する情報を定義
                 let tweet_data = twitterCore.stream.getTweetData(tweet);
-                if (tweet_data.screen_name == target) {
+                if (tweet_data.screen_name == target || tweet_data.screen_name == "ERROR") {
                     // log
                     if (config.switchVar.logStreamToFile && tweet) {
                         dbox.logToFile("stream/", "twitter", tweet);
@@ -145,8 +145,8 @@ const twitterCore = {
 
             // get tweet data
             tweet_data.id_str = raw.id_str;
-            tweet_data.name = raw.user.name;
-            tweet_data.screen_name = raw.user.screen_name;
+            tweet_data.name = (raw.user ? raw.user.name : "ERROR");
+            tweet_data.screen_name = (raw.user ? raw.user.screen_name : "ERROR");
             tweet_data.created_at = raw.created_at;
             tweet_data.timestamp_ms = raw.timestamp_ms;
 
