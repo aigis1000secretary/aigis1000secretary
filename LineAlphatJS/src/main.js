@@ -48,10 +48,10 @@ class LINE extends Command {
     getOprationType(operations) {
         for (let key in OpType) {
             if (operations.type == OpType[key]) {
-                if (key !== 'NOTIFIED_UPDATE_PROFILE') {
-                    console.info(`\n[* ${operations.type} ] ${key} `);
-                    // logToFile(key, operations);
-                }
+                // if (key !== 'NOTIFIED_UPDATE_PROFILE') {
+                // console.info(`\n[* ${operations.type} ] ${key} `);
+                // }
+                return key;
             }
         }
     }
@@ -61,7 +61,8 @@ class LINE extends Command {
 
         // 'SEND_MESSAGE' : 25, 'RECEIVE_MESSAGE' : 26,
         if (operation.type == OpType['SEND_MESSAGE'] || operation.type == OpType['RECEIVE_MESSAGE']) {
-            anna.debugLog()("[* " + operation.type + ": " + OpType[key] + " ] " + operation.message._from + " -> " + operation.message.to + " : " + operation.message.text);
+            anna.debugLog()("[* " + operation.type + ": " + this.getOprationType(operation) + " ] " +
+                operation.message._from + " -> " + operation.message.to + " : " + operation.message.text);
 
             let message = new Message(operation.message);
             this.receiverID = message.to = (operation.message.to === config.botmid) ? operation.message._from : operation.message.to;
@@ -72,7 +73,7 @@ class LINE extends Command {
 
         // 'NOTIFIED_UPDATE_GROUP' : 11,
         if (operation.type == OpType['NOTIFIED_UPDATE_GROUP']) {
-            anna.debugLog()("[* " + operation.type + ": " + OpType[key] + " ] " +
+            anna.debugLog()("[* " + operation.type + ": " + this.getOprationType(operation) + " ] " +
                 operation.param1 + " : " + operation.param2 +
                 operation.param3 == 1 ? ' change group name.' :
                 operation.param3 == 4 ? ' change QR code status.' : ' Unknown action.');
@@ -94,7 +95,8 @@ class LINE extends Command {
             // param1 = group id
             // param2 = who kick someone
             // param3 = 'someone'
-            anna.debugLog()("[* " + operation.type + ": " + OpType[key] + " ] " + operation.param1 + " : " + operation.param2 + " kick " + operation.param3);
+            anna.debugLog()("[* " + operation.type + ": " + this.getOprationType(operation) + " ] " +
+                operation.param1 + " : " + operation.param2 + " kick " + operation.param3);
 
             if (this.stateStatus.antikick) {
                 if (this.isAdminOrBot(operation.param3)) {
@@ -136,7 +138,8 @@ class LINE extends Command {
 
         // 'NOTIFIED_INVITE_INTO_GROUP' : 13,
         if (operation.type == OpType['NOTIFIED_INVITE_INTO_GROUP']) {
-            anna.debugLog()("[* " + operation.type + ": " + OpType[key] + " ] " + operation.param1 + " : " + operation.param2 + " invite " + operation.param3);
+            anna.debugLog()("[* " + operation.type + ": " + this.getOprationType(operation) + " ] " +
+                operation.param1 + " : " + operation.param2 + " invite " + operation.param3);
 
             // cancel invitation
             if (this.stateStatus.cancelInvitation && !this.isAdminOrBot(operation.param2) && !this.isAdminOrBot(operation.param3)) {
@@ -152,7 +155,7 @@ class LINE extends Command {
             return;
         }
 
-        // anna.debugLog()("[* " + operation.type + ": " + OpType[key] + " ]");
+        // anna.debugLog()("[* " + operation.type + ": " + this.getOprationType(operation) + " ] ");
     }
 
     async command(msg, reply) {
