@@ -12,10 +12,12 @@
     line bot/abot push rebuild
     some bugs fixed
 
+    0.8.2.1
+    twitter.api.getTweet fixed
 */
 
 const config = {
-    _version: "0.8.2.0",
+    _version: "0.8.2.1",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
