@@ -6,6 +6,7 @@ const config = require("./config.js");
 
 const linebot = require("linebot");
 let devbot = linebot(Object.assign({ channelId: '', channelSecret: '', channelAccessToken: '' }, config.devbot));
+express.app.post("/linebot/", devbot.parser());
 
 const linebotAlphat = require("./LineAlphatJS/src/bot.js");
 let alphatbot = linebotAlphat(Object.assign({ authToken: '', certificate: '', ID: '', email: '', password: '' }, config.alphatBot));
@@ -17,16 +18,17 @@ class LineMessage {
 }
 
 module.exports = {
+    bot: devbot,
+    abot: alphatbot,
+
     devbotInit: function () {
-        devbot = linebot(Object.assign({ channelId: '', channelSecret: '', channelAccessToken: '' }, config.devbot));
+        let devbot = linebot(Object.assign({ channelId: '', channelSecret: '', channelAccessToken: '' }, config.devbot));
         express.app.post("/linebot/", devbot.parser());
+        module.exports.bot = devbot;
     },
     alphatbotInit: function () {
         alphatbot = linebotAlphat(Object.assign({ authToken: '', certificate: '', ID: '', email: '', password: '' }, config.alphatBot));
     },
-
-    bot: devbot,
-    abot: alphatbot,
 
     botPush: function (userId, msg, type = "") {
         if (!config.isLocalHost) {
@@ -43,10 +45,10 @@ module.exports = {
         }
     },
     botPushLog: function (msg) {
-        module.exports.pushMsg(config.botLogger, msg, "log");
+        module.exports.botPush(config.botLogger, msg, "log");
     },
     botPushError: function (msg) {
-        module.exports.pushMsg(config.botLogger, msg, "logError");
+        module.exports.botPush(config.botLogger, msg, "logError");
     },
 
     abotPush(userId, msg) {
