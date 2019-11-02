@@ -61,7 +61,7 @@ class LINE extends Command {
 
         // 'SEND_MESSAGE' : 25, 'RECEIVE_MESSAGE' : 26,
         if (operation.type == OpType['SEND_MESSAGE'] || operation.type == OpType['RECEIVE_MESSAGE']) {
-            anna.debugLog()("[* " + operation.type + ": " + this.getOprationType(operation) + " ] " +
+            anna.debugConsoleLog()("[* " + operation.type + ": " + this.getOprationType(operation) + " ] " +
                 operation.message._from + " -> " + operation.message.to + " : " + operation.message.text);
 
             let message = new Message(operation.message);
@@ -73,7 +73,7 @@ class LINE extends Command {
 
         // 'NOTIFIED_UPDATE_GROUP' : 11,
         if (operation.type == OpType['NOTIFIED_UPDATE_GROUP']) {
-            anna.debugLog()("[* " + operation.type + ": " + this.getOprationType(operation) + " ] " +
+            anna.debugConsoleLog()("[* " + operation.type + ": " + this.getOprationType(operation) + " ] " +
                 operation.param1 + " : " + operation.param2 +
                 operation.param3 == 1 ? ' change group name.' :
                 operation.param3 == 4 ? ' change QR code status.' : ' Unknown action.');
@@ -95,7 +95,7 @@ class LINE extends Command {
             // param1 = group id
             // param2 = who kick someone
             // param3 = 'someone'
-            anna.debugLog()("[* " + operation.type + ": " + this.getOprationType(operation) + " ] " +
+            anna.debugConsoleLog()("[* " + operation.type + ": " + this.getOprationType(operation) + " ] " +
                 operation.param1 + " : " + operation.param2 + " kick " + operation.param3);
 
             if (this.stateStatus.antikick) {
@@ -138,7 +138,7 @@ class LINE extends Command {
 
         // 'NOTIFIED_INVITE_INTO_GROUP' : 13,
         if (operation.type == OpType['NOTIFIED_INVITE_INTO_GROUP']) {
-            anna.debugLog()("[* " + operation.type + ": " + this.getOprationType(operation) + " ] " +
+            anna.debugConsoleLog()("[* " + operation.type + ": " + this.getOprationType(operation) + " ] " +
                 operation.param1 + " : " + operation.param2 + " invite " + operation.param3);
 
             // cancel invitation
@@ -155,7 +155,7 @@ class LINE extends Command {
             return;
         }
 
-        // anna.debugLog()("[* " + operation.type + ": " + this.getOprationType(operation) + " ] ");
+        // anna.debugConsoleLog()("[* " + operation.type + ": " + this.getOprationType(operation) + " ] ");
     }
 
     async command(msg, reply) {
