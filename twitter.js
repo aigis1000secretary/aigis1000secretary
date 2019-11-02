@@ -58,7 +58,8 @@ const twitterCore = {
 
                 // エラー時は再接続を試みた方がいいかもしれません(未検証)
                 stream.on('error', function (rawData) {
-                    line.abotPushLog("stream.on = error\ngetTweetData: \n" + JSON.stringify(rawData, null, 4));
+                    // line.abotPushLog("stream.on = error\ngetTweetData: \n" + JSON.stringify(rawData, null, 4));
+                    console.log("stream.on = error\ngetTweetData: \n" + JSON.stringify(rawData, null, 4));
 
                     let tweet = rawData.source;
                     twitterCore.stream.getStreamData(tweet, target, callback);

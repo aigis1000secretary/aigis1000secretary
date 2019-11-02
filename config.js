@@ -24,10 +24,13 @@
     0.8.2.4
     debugLog bug fixed
     alphat bot login method fixed
+
+    0.8.2.5
+    twitter log push bug fixed?
 */
 
 const config = {
-    _version: "0.8.2.4",
+    _version: "0.8.2.5",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
