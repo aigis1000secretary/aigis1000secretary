@@ -20,10 +20,14 @@
 
     0.8.2.3
     line devbot init method fixed
+
+    0.8.2.4
+    debugLog bug fixed
+    alphat bot login method fixed
 */
 
 const config = {
-    _version: "0.8.2.3",
+    _version: "0.8.2.4",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
@@ -67,7 +71,8 @@ const config = {
         certificate: process.env.LINE_ALPHAT_CERTIFICATE,
         ID: process.env.LINE_ALPHAT_ID,
         email: "",
-        password: ""
+        password: "",
+        botId:process.env.LINE_ALPHAT_BOTID
     },
 
     // discord

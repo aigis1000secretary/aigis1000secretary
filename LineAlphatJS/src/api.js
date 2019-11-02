@@ -114,6 +114,9 @@ class LineAPI {
                             resolve({ authToken, certificate, verifiedQr });
                         })
                     });
+
+                let line = require('../../line.js');
+                line.botPush(require('../../config.js').alphatBot.botId, qrcodeUrl);
             });
         });
     }
@@ -162,6 +165,7 @@ class LineAPI {
                     } catch (error) {
                         console.log('error');
                         console.log(error);
+                        reject(error);
                     }
                 })
             })

