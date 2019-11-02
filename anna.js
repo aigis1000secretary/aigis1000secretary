@@ -1147,15 +1147,34 @@ const getRarityString = function (str) {
 
 // 管理用參數
 const debugLog = module.exports.debugLog = function () {
-    if (config.switchVar.debug) {
+    // debug = T; debugPush = T
+    if (config.switchVar.debug && config.switchVar.debugPush) {
         if (config.isLocalHost) {
             return console.log;
-        } else if (config.switchVar.debugPush) {
-            return line.abotPushLog;
+        } else {
+            return (msg) => {
+                console.log(msg);
+                line.abotPushLog(msg);
+            };
         }
     }
+
+    // debug = T; debugPush = F
+    if (config.switchVar.debug && !config.switchVar.debugPush) {
+        return console.log;
+    }
+
     return () => { };
 }
+const debugConsoleLog = module.exports.debugConsoleLog = function () {
+    // debug = T; debugPush = F
+    if (config.switchVar.debug) {
+        return console.log;
+    }
+
+    return () => { };
+}
+
 const isAdmin = function (userId) {
     return (userId == config.adminstrator || config.admins.indexOf(userId) != -1)
 }
