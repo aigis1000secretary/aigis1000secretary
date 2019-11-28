@@ -154,7 +154,7 @@ const getFileList = async function (mainFolder) {
         for (let i = 0, pop; i < 10 && (pop = dirList.pop()); ++i) {
 
             let dir = mainFolder + '/' + pop;
-            let donemsg = "pathArray[" + dirArray.length + "]: " + dir;
+            let donemsg = "pathArray[" + dirList.length + "]: " + dir;
             pArray.push(
                 dbox.listDir(dir).then(function (fileArray) {
                     console.log(donemsg);

@@ -1,36 +1,20 @@
 
-// todo
 /*
+    // todo
     database api input
     character search method rebuild
+    newimg error msg
+    error msg push
 */
 
-// commit
 /*
-    >> feature/0.8.1/debugLog
-    debug logger rebuild
-    line bot/abot push rebuild
-    some bugs fixed
-
-    0.8.2.1
-    twitter.api.getTweet fixed
-
-    0.8.2.2
-    abot log msg fixed
-
-    0.8.2.3
-    line devbot init method fixed
-
-    0.8.2.4
-    debugLog bug fixed
-    alphat bot login method fixed
-
-    0.8.2.5
-    twitter log push bug fixed?
+    // commit 
+    >> feature/0.8.2/regexpCrawler
+    character data crawler rebuild +Regexp
 */
 
 const config = {
-    _version: "0.8.2.5",
+    _version: "0.8.3.0",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
@@ -75,7 +59,7 @@ const config = {
         ID: process.env.LINE_ALPHAT_ID,
         email: "",
         password: "",
-        botId:process.env.LINE_ALPHAT_BOTID
+        botId: process.env.LINE_ALPHAT_BOTID
     },
 
     // discord

@@ -582,231 +582,122 @@ const charaDataCrawler = function (urlPath, sourceId) {
             let html = iconv.decode(Buffer.from(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
             let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
 
+            // init new data obj
             let newData = charaDatabase.newData();
-            let rarity = ["アイアン", "ブロンズ", "シルバー", "ゴールド", "サファイア", "プラチナ", "ブラック", "シルバ｜", "ゴ｜ルド"];
-
+            let skillList = [], awSkillList = [];
             // 搜尋所有表格
             $("div").each(function (i, iElem) {
+                let title = $(this).children("h4").text().trim() || $(this).children("h3").text().trim() || "NULL";
 
-                let buffer = $(this).attr("id");
-                if (buffer && buffer.indexOf("content_block_") != -1 && buffer.indexOf("-") != -1) {
-
-                    // console.log($(this).attr("id"));
-                    // console.log($(this).children("table").eq(0).attr("id"));
-
-                    // ステータス
-                    if ($(this).prev().children().text().trim() == "ステータス") {
-                        $(this).children("table").eq(0).children("tbody").children("tr").children().children().each(function (j, jElem) {
-                            // 名前
-                            if ($(this).attr("href") == urlPath) {
-                                newData.name = $(this).text().trim();
+                // ステータス
+                if (title == "ステータス") {
+                    // get table data
+                    let statusTable = $(this).next("div").children("table").html().replaceAll("<br>", "").tableToArray();
+                    // console.log("statusList");
+                    // console.table(statusList);
+                    // 名前 & クラス & 
+                    for (let i = 0; i < statusTable.length; i++) {
+                        for (let j = 0; j < statusTable[i].length; j++) {
+                            let text = statusTable[i][j];
+                            let data = statusTable[i + 1] ? statusTable[i + 1][j] : "";
+                            if (data) {
+                                data = data.replace(/&ref\([\s\S]*?\)/g, "");
+                                if (text == "名前") { newData.name = data; }
+                                if (text == "クラス" && data != "クラス名") { newData.class = data; }
+                                if (text == "レア") { newData.rarity = data.replace("｜", "ー"); }
                             }
-                            // クラス
-                            let temp = $(this).attr("href");
-                            if (temp && temp.indexOf("class") != -1) {
-                                newData.class = $(this).text().trim();
-                            }
-                            // レア
-                            if (rarity.indexOf($(this).text().trim()) != -1) {
-                                let temp = $(this).text().trim().replace("｜", "ー");
-                                newData.rarity = temp;
-                            }
-                        });
-                    }
-
-                    // アビリティ
-                    if ($(this).prev().children().text().trim() == "アビリティ") {
-                        let temp = $(this).children("ul").text().trim().replaceAll("\n\n", "\n").replaceAll("?", "").replaceAll("？", "");
-                        // format
-                        temp = temp.replaceAll(" ", "、").replaceAll("\s", "、").replaceAll("\r", "、").replaceAll("　", "、");
-                        temp = temp.replace("\n", "@").replaceAll("\n", "、").replaceAll("@", "\n").replaceAll("、、", "、").replaceAll("%", "％");
-                        temp = temp.replaceAll("*1", "*").replaceAll("*2", "*").replaceAll("*3", "*").replaceAll("*4", "*").replaceAll("*5", "*");
-                        temp = temp.replaceAll("*6", "*").replaceAll("*7", "*").replaceAll("*8", "*").replaceAll("*9", "*").replaceAll("*0", "*").replaceAll("*", "");
-                        if (temp.indexOf("説明") == -1) {
-                            newData.ability = temp;
                         }
                     }
+                }
 
-                    // 覚醒アビリティ
-                    if ($(this).prev().children().text().trim() == "覚醒アビリティ") {
-                        let temp = $(this).children("ul").text().trim().replaceAll("\n\n", "\n").replaceAll("?", "").replaceAll("？", "");
-                        // format
-                        temp = temp.replaceAll(" ", "、").replaceAll("\s", "、").replaceAll("\r", "、").replaceAll("　", "、");
-                        temp = temp.replace("\n", "@").replaceAll("\n", "、").replaceAll("@", "\n").replaceAll("、、", "、").replaceAll("%", "％");
-                        temp = temp.replaceAll("*1", "*").replaceAll("*2", "*").replaceAll("*3", "*").replaceAll("*4", "*").replaceAll("*5", "*")
-                        temp = temp.replaceAll("*6", "*").replaceAll("*7", "*").replaceAll("*8", "*").replaceAll("*9", "*").replaceAll("*0", "*").replaceAll("*", "");
-                        if (temp.indexOf("説明") == -1) {
-                            newData.ability_aw = temp;
+                // アビリティ
+                if (title == "アビリティ" || title == "覚醒アビリティ" || title.indexOf("追加アビリティ") != -1) {    // check block tag
+                    // get html data
+                    let temp = $(this).next("div").children("ul").html().replaceAll("<br>", "\n").replace(/<p[\s\S]*?\/p>/g, "").replace(/<[\s\S]*?>/g, "").replace(/\s*\n\s*/g, "\n").trim();
+                    let name = temp.slice(0, temp.indexOf('\n'));
+                    let effect = temp.slice(temp.indexOf('\n') + 1);
+
+                    name = name.replaceAll("(", "（").replaceAll(")", "）");
+                    effect = effect.replace(/\*\d+/g, "").replace(/[?？]/g, "").replace(/[ 　]+/g, "、");
+                    effect = effect.replaceAll("(", "（").replaceAll(")", "）").replaceAll("＋", "+").replaceAll("%", "％");
+                    effect = effect.replace(/いるだけで[、\n]+/, "いるだけで").replace(/配置中[のみ、\n]+/, "配置中").replace(/の[、\n]+/, "の").replace(/さらに[、\n]+/, "さらに")
+                        .replace(/ランダムで?発動/, "ランダムで発動：").replace(/確率で?発動/, "確率で発動：").replace(/：[、\n]+/, "：")
+                        .replaceAll("、/、", "/").replaceAll("防御力、魔法耐性", "防御力と魔法耐性")
+
+                    if (/発動：/.test(effect)) { effect = effect.replaceAll("、", "/") }
+                    effect = effect.replaceAll("\n", "、")
+
+                    if (effect.indexOf("説明") != -1) { return; }
+                    if ($(this).children().text().trim() == "アビリティ") {
+                        newData.ability = name + "\n" + effect;
+                    } else {
+                        newData.ability_aw = name + "\n" + effect;
+                    }
+                }
+
+                // スキル & スキル覚醒
+                if (title == "スキル" || title == "スキル覚醒") {
+                    let isAwTable = (title == "スキル覚醒");
+                    if (isAwTable) skillList = [];
+                    // get table data
+                    let skilTable = $(this).next("div").children("table").html().replaceAll("<br>", "\n").tableToArray();
+
+                    // get data index
+                    let nameRow = isAwTable ? 1 : skilTable[0].indexOf("スキル名");
+                    let effectRow = isAwTable ? 2 : skilTable[0].indexOf("効果");
+                    if (nameRow == -1 || effectRow == -1) { return; }
+
+                    // スキル名  & 効果
+                    for (let i in skilTable) {
+                        let name = skilTable[i][nameRow];
+                        let effect = skilTable[i][effectRow];
+                        let isAw = isAwTable ? (skilTable[i][0] == "通常" ? 1 : (skilTable[i][0] == "覚醒" ? 2 : 0)) : 1
+                        if (effect.indexOf("説明") != -1) { continue; }
+
+                        if (name && effect && !(/スキル名+/.test(name) || /備考+/.test(name))) {
+                            // format
+                            name = name.replaceAll("(", "（").replaceAll(")", "）")
+                            effect = effect.replace(/\*\d+/g, "").replace(/[?？]/g, "").replace(/[\s　、]+/g, "\n");
+                            effect = effect.replaceAll("(", "（").replaceAll(")", "）").replaceAll("＋", "+").replaceAll("%", "％");
+                            effect = effect.replaceAll("\n+", "+").replaceAll("\n", "、").replace(/さらに、/, "さらに")
+                            // console.log(name, effect);
+
+                            if (isAw == 1) {
+                                skillList[name] = effect;
+                            } else if (isAw == 2) {
+                                awSkillList[name] = effect;
+                            }
                         }
                     }
-
-                    // スキル
-                    if ($(this).prev().children().text().trim() == "スキル") {
-                        let skilList = [], textList = [];
-                        skilList = $(this).children("table").html().tableToArray();
-
-                        // get skill name & effect
-                        for (let i in skilList) {
-                            for (let j in skilList[i]) {
-                                if (skilList[i][j] == "") {
-                                    skilList[i][j] = "-";
-                                }
-                                if (skilList[i][j] == "編\n集" ||
-                                    skilList[i][j].toUpperCase() == "LV" ||
-                                    skilList[i][j] == "備考" ||
-                                    skilList[i][j].indexOf("使用までの") != -1 ||
-                                    skilList[i][j] == "所持ユニット" ||
-                                    skilList[0][j] == "!" ||
-                                    skilList[i][0] == "!") {
-                                    skilList[i][j] = "!";
-                                }
-                            }
-                        }
-                        // remove non-skill
-                        for (let i in skilList) {
-                            if (skilList[i].indexOf("スキル名") != -1) {
-                                skilList[i] = [];
-                            }
-                            let j;
-                            while ((j = skilList[i].indexOf("!")) != -1) {
-                                skilList[i].splice(j, 1);
-                            }
-                        }
-                        // remove empty
-                        for (let i = 0; i < skilList.length; ++i) {
-                            if (skilList[i].length == 0) {
-                                skilList.splice(i, 1);
-                                i--;
-                            }
-                        }
-                        // remove same skill (lv1~lv4)
-                        for (let i = 0; i < skilList.length; ++i) {
-                            if (i < skilList.length - 1 && skilList[i][0] == skilList[i + 1][0]) {
-                                skilList.splice(i, 1);
-                                i--;
-                            }
-                        }
-                        // set textList
-                        for (let i in skilList) {
-                            let temp = skilList[i][1].trim().replaceAll("?", "").replaceAll("？", "");
-                            temp = temp.replaceAll(" ", "、").replaceAll("\s", "、").replaceAll("\r", "、").replaceAll("\n", "、").replaceAll("　", "、").replaceAll("、、", "、").replaceAll("%", "％");
-                            temp = temp.replaceAll("*1", "*").replaceAll("*2", "*").replaceAll("*3", "*").replaceAll("*4", "*").replaceAll("*5", "*").replaceAll("*6", "*").replaceAll("*7", "*").replaceAll("*8", "*").replaceAll("*9", "*").replaceAll("*0", "*").replaceAll("*", "");
-                            if (temp.indexOf("効果説明") == -1 && temp != "-") {
-                                textList.push(skilList[i][0] + "\n" + temp);
-                            }
-                        }
-                        // debugLog()(skilList);
-
-                        // put array into skill data
-                        if (textList.length != 0) {
-                            newData.skill = textList.join("\n");
-                        }
-                    }
-
-                    // スキル覚醒
-                    if ($(this).prev().children().text().trim() == "スキル覚醒") {
-                        let skilList = [], textList = [], textList_aw = [];
-                        skilList = $(this).children("table").html().tableToArray();
-
-                        // get skill name & effect
-                        for (let i in skilList) {
-                            for (let j in skilList[i]) {
-                                if (skilList[i][j] == "") {
-                                    skilList[i][j] = "-";
-                                }
-                                if (skilList[i][j] == "編\n集" ||
-                                    skilList[i][j].toUpperCase() == "LV" ||
-                                    skilList[i][j] == "備考" ||
-                                    skilList[i][j].indexOf("使用までの") != -1 ||
-                                    skilList[i][j] == "所持ユニット" ||
-                                    skilList[0][j] == "!" ||
-                                    skilList[i][0] == "!") {
-                                    skilList[i][j] = "!";
-                                }
-                            }
-                        }
-                        // remove non-skill
-                        for (let i in skilList) {
-                            if (skilList[i].indexOf("スキル名") != -1 || skilList[i].indexOf("覚醒スキル名") != -1) {
-                                skilList[i] = [];
-                            }
-                            let j;
-                            while ((j = skilList[i].indexOf("!")) != -1) {
-                                skilList[i].splice(j, 1);
-                            }
-                        }
-                        // remove empty
-                        for (let i = 0; i < skilList.length; ++i) {
-                            if (skilList[i].length == 0) {
-                                skilList.splice(i, 1);
-                                i--;
-                            }
-                        }
-                        // remove same skill (lv1~lv4)
-                        for (let i = 0; i < skilList.length; ++i) {
-                            if (i < skilList.length - 1 && skilList[i][1] == skilList[i + 1][1]) {
-                                skilList.splice(i, 1);
-                                i--;
-                            }
-                        }
-                        // set textList
-                        for (let i in skilList) {
-                            let temp = skilList[i][2].trim().replaceAll("?", "").replaceAll("？", "");
-                            temp = temp.replaceAll(" ", "、").replaceAll("\s", "、").replaceAll("\r", "、").replaceAll("\n", "、").replaceAll("　", "、").replaceAll("、、", "、").replaceAll("%", "％");
-                            temp = temp.replaceAll("*1", "*").replaceAll("*2", "*").replaceAll("*3", "*").replaceAll("*4", "*").replaceAll("*5", "*").replaceAll("*6", "*").replaceAll("*7", "*").replaceAll("*8", "*").replaceAll("*9", "*").replaceAll("*0", "*").replaceAll("*", "");
-                            if (temp.indexOf("効果説明") == -1 && temp != "-") {
-                                if (skilList[i][0] == "通常") {
-                                    textList.push(skilList[i][1] + "\n" + temp);
-                                } else if (skilList[i][0] == "覚醒") {
-                                    textList_aw.push(skilList[i][1] + "\n" + temp);
-                                }
-                            }
-                        }
-
-                        // put array into skill data
-                        if (textList.length != 0) {
-                            newData.skill = textList.join("\n");
-                        }
-                        if (textList_aw.length != 0) {
-                            newData.skill_aw = textList_aw.join("\n");
-                        }
-                    }
-
-                    // 統一格式
-                    newData.skill = newData.skill.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
-                    newData.skill_aw = newData.skill_aw.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
-                    newData.ability = newData.ability.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
-                    newData.ability_aw = newData.ability_aw.replaceAll("＋", "+").replaceAll("、+", "+").replaceAll("(", "（").replaceAll(")", "）").replaceAll("さらに、", "さらに").replaceAll("の、", "の").replaceAll("いるだけで、", "いるだけで").replaceAll("配置中のみ", "配置中").replaceAll("配置中、", "配置中").replaceAll("防御力、魔法耐性", "防御力と魔法耐性");
-
-                    if (newData.ability.indexOf("ランダム") != -1) {
-                        newData.ability = newData.ability.replaceAll("、/、", "、");
-                        newData.ability = newData.ability.replaceAll("発動、", "発動：");
-                        newData.ability = newData.ability.replaceAll("回復、", "回復/");
-                        newData.ability = newData.ability.replaceAll("回避、", "回避/");
-                        newData.ability = newData.ability.replaceAll("攻撃、", "攻撃/");
-                        newData.ability = newData.ability.replaceAll("連射、", "連射/");
-                        newData.ability = newData.ability.replaceAll("無視、", "無視/");
-                        newData.ability = newData.ability.replaceAll("入手、", "入手/");
-                        newData.ability = newData.ability.replaceAll("倍、", "倍/");
-                        newData.ability = newData.ability.replaceAll("硬直なし、", "硬直なし/");
-                    }
-                    if (newData.ability_aw.indexOf("ランダム") != -1) {
-                        newData.ability_aw = newData.ability_aw.replaceAll("、/、", "、");
-                        newData.ability_aw = newData.ability_aw.replaceAll("発動、", "発動：");
-                        newData.ability_aw = newData.ability_aw.replaceAll("回復、", "回復/");
-                        newData.ability_aw = newData.ability_aw.replaceAll("回避、", "回避/");
-                        newData.ability_aw = newData.ability_aw.replaceAll("攻撃、", "攻撃/");
-                        newData.ability_aw = newData.ability_aw.replaceAll("連射、", "連射/");
-                        newData.ability_aw = newData.ability_aw.replaceAll("無視、", "無視/");
-                        newData.ability_aw = newData.ability_aw.replaceAll("入手、", "入手/");
-                        newData.ability_aw = newData.ability_aw.replaceAll("倍、", "倍/");
-                        newData.ability_aw = newData.ability_aw.replaceAll("硬直なし、", "硬直なし/");
-                    }
-
-                    newData.urlName = urlPath.replace("https://seesaawiki.jp/aigis/d/", "");
                 }
             });
-            // debugLog()(newData);
+
+            // put array into skill data
+            let temp = "";
+            for (let key in skillList) {
+                temp += "\n▹" + key + "\n" + skillList[key];
+            }
+            newData.skill = temp.trim();
+            temp = "";
+            for (let key in awSkillList) {
+                temp += "\n▸" + key + "\n" + awSkillList[key];
+            }
+            newData.skill_aw = temp.trim();
+
+            // put url data into newdata
+            newData.urlName = urlPath.replace("https://seesaawiki.jp/aigis/d/", "");
+
+            // format 王子 data
+            if (newData.urlName.indexOf("%b2%a6%bb%d2") != -1) {
+                if (newData.urlName == "%b2%a6%bb%d2") newData.name = "王子【通常】";
+                newData.skill_aw = newData.skill;
+                newData.skill = "";
+                newData.ability_aw = newData.ability;
+                newData.ability = "";
+                newData.class = newData.name;
+            }
+
+            // console.log(JSON.stringify(newData, null, 4));
             // 新增角色資料
             let msg = charaDatabase.addData(newData);
             if (msg != "") {
@@ -823,41 +714,49 @@ const allCharaDataCrawler = function (sourceId) {
     console.log("AllCharaData Crawling...");
 
     // callback
-    let requestCallBack = function (error, response, body) {
-        if (error || !body) {
-            console.log(error);
-            return null;
-        }
+    let _requestGet = async function (url) {
+        return new Promise(function (resolve, reject) {
+            let requestCallBack = function (error, response, body) {
+                if (error || !body) {
+                    console.log(error);
+                    reject();
+                }
 
-        let html = iconv.decode(Buffer.from(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
-        let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
+                let html = iconv.decode(Buffer.from(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
+                let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
 
-        // 搜尋所有超連結
-        $("a").each(function (i, elem) {
+                // 搜尋所有超連結
+                $("a").each(function (i, elem) {
 
-            let buffer = $(this).attr("href");
-            if (buffer && $(this).parent().is("td") &&
-                buffer.indexOf("http") == 0 &&
-                buffer.indexOf("seesaawiki.jp/aigis/d/") != -1 &&
-                buffer.indexOf("/class") == -1 &&
-                buffer.indexOf("#") == -1 &&
-                allCharaUrl.indexOf(buffer) == -1 &&
-                buffer.indexOf("%b2%a6%bb%d2") == -1) {
-                // console.log($(this).text());
-                allCharaUrl.push(buffer);
+                    let buffer = $(this).attr("href");
+                    if (buffer && $(this).parent().is("td") &&
+                        buffer.indexOf("http") == 0 &&
+                        buffer.indexOf("seesaawiki.jp/aigis/d/") != -1 &&
+                        buffer.indexOf("/class") == -1 &&
+                        buffer.indexOf("#") == -1 &&
+                        allCharaUrl.indexOf(buffer) == -1) {
+                        // console.log($(this).text());
+                        allCharaUrl.push(buffer);
+                    }
+                });
+                resolve();
             }
+            request.get(url, { encoding: "binary" }, requestCallBack);
         });
     }
-    request.get("http://seesaawiki.jp/aigis/d/%a5%b4%a1%bc%a5%eb%a5%c9", { encoding: "binary" }, requestCallBack);
-    request.get("http://seesaawiki.jp/aigis/d/%a5%b5%a5%d5%a5%a1%a5%a4%a5%a2", { encoding: "binary" }, requestCallBack);
-    request.get("http://seesaawiki.jp/aigis/d/%a5%d7%a5%e9%a5%c1%a5%ca", { encoding: "binary" }, requestCallBack);
-    request.get("http://seesaawiki.jp/aigis/d/%a5%d6%a5%e9%a5%c3%a5%af", { encoding: "binary" }, requestCallBack);
 
-    request.get("https://seesaawiki.jp/aigis/d/%cc%be%c1%b0%bd%e7%b0%ec%cd%f7", { encoding: "binary" }, requestCallBack);
-    request.get("https://seesaawiki.jp/aigis/d/%bc%c2%c1%f5%bd%e7%b0%ec%cd%f7", { encoding: "binary" }, requestCallBack);
-    request.get("https://seesaawiki.jp/aigis/d/%c2%b0%c0%ad%ca%cc%b0%ec%cd%f7", { encoding: "binary" }, requestCallBack);
+    let asyncFunc = async function () {
+        await Promise.all([
+            _requestGet("http://seesaawiki.jp/aigis/d/%a5%b4%a1%bc%a5%eb%a5%c9"),
+            _requestGet("http://seesaawiki.jp/aigis/d/%a5%b5%a5%d5%a5%a1%a5%a4%a5%a2"),
+            _requestGet("http://seesaawiki.jp/aigis/d/%a5%d7%a5%e9%a5%c1%a5%ca"),
+            _requestGet("http://seesaawiki.jp/aigis/d/%a5%d6%a5%e9%a5%c3%a5%af"),
 
-    setTimeout(async function () {
+            _requestGet("https://seesaawiki.jp/aigis/d/%cc%be%c1%b0%bd%e7%b0%ec%cd%f7"),
+            _requestGet("https://seesaawiki.jp/aigis/d/%bc%c2%c1%f5%bd%e7%b0%ec%cd%f7"),
+            _requestGet("https://seesaawiki.jp/aigis/d/%c2%b0%c0%ad%ca%cc%b0%ec%cd%f7")
+        ]);
+
         let urlList = Object.assign([], allCharaUrl);
         while (urlList.length > 0) {
             let pArray = [];
@@ -871,7 +770,7 @@ const allCharaDataCrawler = function (sourceId) {
         botPush(sourceId, "角色更新完成!");
         // save Database
         charaDatabase.uploadTask();
-    }, 3000);
+    }; asyncFunc();
 
 }
 // 爬職業
@@ -940,64 +839,61 @@ const classDataCrawler = function () {
 // HTML table to array
 String.prototype.tableToArray = function () {
     let result = [];
-    let html = this.replaceAll("<br>", "\n");
-    let i, j, k;
+    let html = this;
+    let i;
 
-    if ((i = html.indexOf("<tbody>")) != -1 && (j = html.indexOf("</tbody>")) != -1) {
+    // regexp
+    const tbody = /<tbody>[\s\S]*?<\/tbody>/;
+    const tr = /<tr[\s\S]*?<\/tr>/;
+    const td = /<t[dh][\s\S]*?<\/t[dh]>/;
+
+    if (tbody.test(html)) {
         // get tbody
-        html = html.substring(i + 7, j);
-
-        // init table data
+        html = tbody.exec(html)[0];
+        // init table array data
         i = -1;
         while ((i = html.indexOf("<tr>", i + 1)) != -1) {
             result.push([]);
         }
 
-        // get single Column body
+        // get all Column body
         let col = 0;
-        while ((i = html.indexOf("<tr>")) != -1 && (j = html.indexOf("</tr>")) != -1) {
-            if (i > j) continue;
-            // split All Row body
-            let columnBody = html.substring(i + 4, j);
-            html = html.substring(j + 5);
+        while (tr.test(html)) {
+            // get single Column body
+            let columnBody = tr.exec(html)[0];
+            html = html.replace(tr, "");
 
-            // get single Cell body
+            // get all Row body
             let row = 0;
-            while ((i = columnBody.indexOf("<td") + 3) != -1 && (j = columnBody.indexOf(">")) != -1 && (k = columnBody.indexOf("</td>")) != -1) {
-                if (i > j || j > k || i > k) continue;
+            while (td.test(columnBody)) {
                 while (result[col][row] == "@") { row++; }
+                // split single Cell body
+                let cellBody = td.exec(columnBody)[0];
+                let cellStyle = /<t[dh][\s\S]*?>/.exec(cellBody)[0]
+                // let cellText = cellBody.replace(/<t[dh][\s\S]*?>/, "").replace(/<\/t[dh]>/, "");
+                let cellText = cellBody.replace(/<[\s\S]*?>/g, "");
+                columnBody = columnBody.replace(td, "");
 
-                // split Cell body
-                let cellStyle = columnBody.substring(i + 1, j);
-                let cellBody = columnBody.substring(j + 1, k).trim();;
-                columnBody = columnBody.substring(k + 5);
-
-                // remove <a> </a>
-                while ((i = cellBody.indexOf("<")) != -1 && (j = cellBody.indexOf(">")) != -1) {
-                    cellBody = cellBody.replace(cellBody.substring(i, j + 1), "");
-                }
-
-                // set table text
-                result[col][row] = cellBody;
-
-                // check span cell
+                // set cell text
+                result[col][row] = cellText.trim();
+                // set span cell text/flag
                 let style = cellStyle.split(" ");
                 for (let l in style) {
                     if (style[l].indexOf("rowspan") != -1) {
-                        let rowspan = parseInt(style[l].replaceAll("\"", "").replace("rowspan=", ""));
+                        let rowspan = parseInt(/\d+/.exec(style[l]));
                         for (let span = 1; span < rowspan; span++) {
-                            // result[col][row] = cellBody;
                             result[col + span][row] = "@";
                         }
                     }
                     if (style[l].indexOf("colspan") != -1) {
-                        let colspan = parseInt(style[l].replaceAll("\"", "").replace("colspan=", ""));
+                        let colspan = parseInt(/\d+/.exec(style[l]));
                         for (let span = 1; span < colspan; span++) {
                             row++;
-                            result[col][row] = cellBody;
+                            result[col][row] = cellText.trim();
                         }
                     }
                 }
+
                 row++;
             }
 
