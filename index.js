@@ -329,6 +329,7 @@ const main = async function () {
     discordBotOn();
     timerBotOn();
 
+    if (config.isLocalHost) console.clear();
     console.log("=====*****Anna secretary online*****=====");
     // line.abotPushLog("Anna secretary online");
 

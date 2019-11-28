@@ -704,13 +704,14 @@ class Image {
         }
         this._constructor(rawData);
     };
-    _constructor({ id, title, description, name, link }) {
+    _constructor({ id, title, description, name, link, deletehash }) {
         this.fileName = name;
         this.md5 = description || "";;
         this.tagList = title || "";
         this.id = id; // imageHash
         this.imageLink = link;
         this.thumbnailLink = (link) ? link.replace(this.id, this.id + "m") : "";
+        this.deleteLink = "https://imgur.com/delete/" + deletehash;
         /*
         Thumbnail Suffix Thumbnail Name  Thumbnail Size Keeps Image Proportions
         "s"     Small Square  90x90   No

@@ -1,12 +1,16 @@
 
-// todo
 /*
+    // todo
     database api input
     character search method rebuild
+    newimg error msg
+    error msg push
 */
 
-// commit
 /*
+    // commit 
+    >> feature/0.8.2/regexpCrawler
+    character data crawler rebuild +Regexp
 */
 
 const config = {
@@ -55,7 +59,7 @@ const config = {
         ID: process.env.LINE_ALPHAT_ID,
         email: "",
         password: "",
-        botId:process.env.LINE_ALPHAT_BOTID
+        botId: process.env.LINE_ALPHAT_BOTID
     },
 
     // discord
