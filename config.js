@@ -7,26 +7,6 @@
 
 // commit
 /*
-    >> feature/0.8.1/debugLog
-    debug logger rebuild
-    line bot/abot push rebuild
-    some bugs fixed
-
-    0.8.2.1
-    twitter.api.getTweet fixed
-
-    0.8.2.2
-    abot log msg fixed
-
-    0.8.2.3
-    line devbot init method fixed
-
-    0.8.2.4
-    debugLog bug fixed
-    alphat bot login method fixed
-
-    0.8.2.5
-    twitter log push bug fixed?
 */
 
 const config = {
