@@ -4,27 +4,29 @@
 const fs = require('fs');
 const Twitter = require('twitter');
 const request = require("request");
-const crypto = require('crypto');
-const line = require("./line.js");
-const dbox = require("./dbox.js");
+// const crypto = require('crypto');
 const config = require("./config.js");
+const dbox = require("./dbox.js");
 
-// oauth認証に使う値
-const twitter_oauth = {
-    consumer_key: config.twitterCfg.TWITTER_CONSUMER_KEY.trim(),
-    consumer_secret: config.twitterCfg.TWITTER_CONSUMER_SECRET.trim(),
-    access_token_key: config.twitterCfg.TWITTER_ACCESS_TOKEN.trim(),
-    access_token_secret: config.twitterCfg.TWITTER_ACCESS_TOKEN_SECRET.trim()
-}
-const bot = new Twitter(twitter_oauth);
-// Twitterオブジェクトの作成
+const _twitter = module.exports = {
+    bot: null,
+    init() {
+        // oauth認証に使う値
+        const twitter_oauth = {
+            consumer_key: config.twitterCfg.TWITTER_CONSUMER_KEY.trim(),
+            consumer_secret: config.twitterCfg.TWITTER_CONSUMER_SECRET.trim(),
+            access_token_key: config.twitterCfg.TWITTER_ACCESS_TOKEN.trim(),
+            access_token_secret: config.twitterCfg.TWITTER_ACCESS_TOKEN_SECRET.trim()
+        }
+        _twitter.bot = new Twitter(twitter_oauth);
+        // Twitterオブジェクトの作成
+    },
 
-const twitterCore = {
     stream: {
-        getUserId: function (target) {
+        getUserId(target) {
             return new Promise(function (resolve, reject) {
                 // 監視するユーザのツイートを取得
-                bot.get('statuses/user_timeline', { screen_name: target },
+                _twitter.bot.get('statuses/user_timeline', { screen_name: target },
                     function (error, tweets, response) {
                         if (!error) {
                             // 取得したtweet情報よりユーザ固有IDを文字列形式で取得
@@ -32,37 +34,36 @@ const twitterCore = {
                             // 取得したユーザIDよりストリーミングで使用するオプションを定義
                             resolve(user_id);
                         } else {
-                            // console.log(error);
-                            line.abotPushLog(error);
+                            console.log(error);
                             //reject(error);
+                            resolve("");
                         }
                     });
             });
         },
 
-        litsen: async function (target, user_id, callback) {
+        async litsen(target, user_id, callback) {
             if (user_id == "") {
-                user_id = await twitterCore.stream.getUserId(target);
+                user_id = await _twitter.stream.getUserId(target);
             }
 
             console.log(target + 'のツイートを取得します。');
 
             // ストリーミングでユーザのタイムラインを監視
-            bot.stream('statuses/filter', { follow: user_id }, function (stream) {
+            _twitter.bot.stream('statuses/filter', { follow: user_id }, function (stream) {
                 // Streamingの開始と受取
                 stream.on('data', function (tweet) {
                     // console.log("stream.on = data")
 
-                    twitterCore.stream.getStreamData(tweet, target, callback);
+                    _twitter.stream.getStreamData(tweet, target, callback);
                 });
 
                 // エラー時は再接続を試みた方がいいかもしれません(未検証)
                 stream.on('error', function (rawData) {
-                    // line.abotPushLog("stream.on = error\ngetTweetData: \n" + JSON.stringify(rawData, null, 4));
                     console.log("stream.on = error\ngetTweetData: \n" + JSON.stringify(rawData, null, 4));
 
                     let tweet = rawData.source;
-                    twitterCore.stream.getStreamData(tweet, target, callback);
+                    _twitter.stream.getStreamData(tweet, target, callback);
                 });
 
                 // 接続が切れた際の再接続
@@ -71,7 +72,7 @@ const twitterCore = {
                     console.log(target + 'のツイートを取得終了。');
 
                     setTimeout(function () {
-                        twitterCore.stream.litsen(target, user_id, callback);
+                        _twitter.stream.litsen(target, user_id, callback);
                     }, 60 * 1000);
                 });
 
@@ -85,12 +86,12 @@ const twitterCore = {
             });
         },
 
-        getStreamData: function (tweet, target, callback) {
+        getStreamData(tweet, target, callback) {
             // RTと自分のツイートは除外
             if (tweet && tweet.user && !tweet.retweeted_status) {
 
                 // 送信する情報を定義
-                let tweet_data = twitterCore.stream.getTweetData(tweet);
+                let tweet_data = _twitter.stream.getTweetData(tweet);
                 if (tweet_data.screen_name == target || tweet_data.screen_name == "ERROR") {
                     // log
                     if (config.switchVar.logStreamToFile && tweet) {
@@ -132,7 +133,7 @@ const twitterCore = {
             }
         },
 
-        getTweetData: function (raw) {
+        getTweetData(raw) {
             let tweet_data = { medias: [] };
 
             if (raw.extended_tweet) {
@@ -172,14 +173,14 @@ const twitterCore = {
     },
 
     api: {
-        getTweet: function (id) {
+        getTweet(id) {
             return new Promise(function (resolve, reject) {
-                bot.get('statuses/show/' + id, { include_entities: true, include_ext_alt_text: true }, (error, tweet, response) => {
+                _twitter.bot.get('statuses/show/' + id, { include_entities: true, include_ext_alt_text: true }, (error, tweet, response) => {
                     // error ? console.log("error", JSON.stringify(error, null, 4)) : {};
                     // tweet ? console.log("tweet", JSON.stringify(tweet, null, 4)) : {};
                     // response ? console.log("response", JSON.stringify(response, null, 4)) : {};
                     // twitterCore.stream.getStreamData(tweet[0], "Aigis1000", (obj) => console.log(JSON.stringify(obj, null, 4)));
-                    resolve(twitterCore.stream.getTweetData(tweet));
+                    resolve(_twitter.stream.getTweetData(tweet));
                 });
             });
         }
@@ -322,7 +323,7 @@ const twitterCore = {
         }
     },
     webhook: {
-        crcFunctions: function (request, response) {
+        crcFunctions(request, response) {
             for (let key in twitterCore.crc) {
                 if (key == request.params.function) {
                     twitterCore.crc[key]();
@@ -332,7 +333,7 @@ const twitterCore = {
             }
             //response.send("Unknown function");
         },
-        get: function (request, response) {
+        get(request, response) {
             // getでchallenge response check (CRC)が来るのでその対応
             const crc_token = request.query.crc_token
             if (crc_token) {
@@ -347,7 +348,7 @@ const twitterCore = {
                 response.send('Error: crc_token missing from request.')
             }
         },
-        post: function (request, response) {
+        post(request, response) {
             if (config.switchVar.logRequestToFile && request.body) {
                 dbox.logToFile("webhook/", "twitter", request.body);
             }
@@ -355,10 +356,10 @@ const twitterCore = {
         }
     },//*/
 
-    /*autoTest: async function () {
+    /*async autoTest() {
         twitterCore.stream.litsen("Aigis1000", "", console.log);
     }//*/
-}; module.exports = twitterCore;
+};
 
 
 

@@ -1,13 +1,15 @@
 // 初始化
 const config = require("./config.js");
-const anna = require("./anna.js");
-const imgur = require("./imgur.js");
 const dbox = require("./dbox.js");
+
+const imgur = require("./imgur.js");
 const express = require("./express.js");
 const line = require("./line.js");
 const twitter = require("./twitter.js");
-let tweetMediaCache = [];
 const discord = require("./discord.js");
+
+const anna = require("./anna.js");
+let tweetMediaCache = [];
 
 // groupDatabase
 const database = require("./database.js");
@@ -290,38 +292,41 @@ const discordBotOn = function () {
 
 const timerBotOn = function () {
 
-    let timer = async function () {
-        let nd = new Date(Date.now());
-        if (nd.getMinutes() < 5) {
+    let timer = async function (lastDate) {
+        let nowDate = new Date(Date.now());
+        if (nowDate.getMinutes() < lastDate.getMinutes()) {
 
             let dayList = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"]
             let str = "";
-            str += nd.getFullYear() + "/";
-            str += (nd.getMonth() + 1) + "/";
-            str += nd.getDate() + " ";
-            str += dayList[nd.getDay()] + " ";
+            str += nowDate.getFullYear() + "/";
+            str += ((nowDate.getMonth() + 1) + "/").padStart(3, '0');
+            str += (nowDate.getDate() + " ").padStart(3, '0');
+            str += dayList[nowDate.getDay()] + " ";
 
-            str += nd.getHours() + ":";
-            str += nd.getMinutes() + ":";
-            str += nd.getSeconds();
+            str += (nowDate.getHours() + ":").padStart(3, '0');
+            str += (nowDate.getMinutes() + ":").padStart(3, '0');
+            str += (nowDate.getSeconds() + "").padStart(2, '0');
 
             // line.abotPushLog(str);
-            await sleep(2 * 60 * 1000);
         }
-        setTimeout(timer, 3 * 60 * 1000);
+        setTimeout(timer, 60 * 1000, new Date(Date.now()));
     };
-    timer();
+    timer(new Date(0));
 }
 
 
 
 const main = async function () {
     // 讀取資料
-    await imgur.init();
+    config.init();
+    express.init();
+    line.init();
+    twitter.init();
+    discord.init();
+
     await anna.init();
     await groupDatabase.init().catch((error) => { console.log("database init error:\n"); console.log(error); });
-
-    express.init();
+    await imgur.init();
 
     // 開始監聽
     lineBotOn();
@@ -329,7 +334,7 @@ const main = async function () {
     discordBotOn();
     timerBotOn();
 
-    if (config.isLocalHost) console.clear();
+    // if (config.isLocalHost) console.clear();
     console.log("=====*****Anna secretary online*****=====");
     // line.abotPushLog("Anna secretary online");
 

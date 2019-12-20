@@ -1,7 +1,7 @@
 
 // 初始化
 const config = require("./config.js");
-module.exports = {};    // 循環依賴對策
+const _anna = module.exports = {};    // 循環依賴對策
 // 爬蟲
 const request = require("request");
 const iconv = require("iconv-lite");
@@ -17,7 +17,7 @@ const database = require("./database.js");
 
 
 // Init
-const init = module.exports.init = async function () {
+const init = _anna.init = async function () {
 
     await charaDatabase.init().catch(console.log);
     await nickDatabase.init().catch(console.log);
@@ -29,7 +29,7 @@ const init = module.exports.init = async function () {
 
 // bot
 // reply
-const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userId) {
+const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
     debugLog()("rawMsg: <" + rawMsg + ">");
 
     // flag
@@ -543,7 +543,7 @@ const generateCharaData = function (charaName) {
     return false;
 }
 // 定型文貼圖
-const replyStamp = module.exports.replyStamp = function (msg) {
+const replyStamp = _anna.replyStamp = function (msg) {
     debugLog()("replyStamp(" + msg + ")");
 
     let replyMsg = [];
@@ -593,8 +593,6 @@ const charaDataCrawler = function (urlPath, sourceId) {
                 if (title == "ステータス") {
                     // get table data
                     let statusTable = $(this).next("div").children("table").html().replaceAll("<br>", "").tableToArray();
-                    // console.log("statusList");
-                    // console.table(statusList);
                     // 名前 & クラス & 
                     for (let i = 0; i < statusTable.length; i++) {
                         for (let j = 0; j < statusTable[i].length; j++) {
@@ -916,7 +914,7 @@ String.prototype.tableToArray = function () {
 // Character
 let charaDatabase = database.charaDatabase;
 // 模糊搜尋
-const searchCharacter = module.exports.searchCharacter = function (key, accurate) {
+const searchCharacter = _anna.searchCharacter = function (key, accurate) {
     accurate = !!accurate;
     debugLog()("searchCharacter(" + key + ", " + accurate + ")");
 
@@ -1042,7 +1040,7 @@ const getRarityString = function (str) {
 
 
 // 管理用參數
-const debugLog = module.exports.debugLog = function () {
+const debugLog = _anna.debugLog = function () {
     // debug = T; debugPush = T
     if (config.switchVar.debug && config.switchVar.debugPush) {
         if (config.isLocalHost) {
@@ -1062,7 +1060,7 @@ const debugLog = module.exports.debugLog = function () {
 
     return () => { };
 }
-const debugConsoleLog = module.exports.debugConsoleLog = function () {
+const debugConsoleLog = _anna.debugConsoleLog = function () {
     // debug = T; debugPush = F
     if (config.switchVar.debug) {
         return console.log;
@@ -1075,7 +1073,7 @@ const isAdmin = function (userId) {
     return (userId == config.adminstrator || config.admins.indexOf(userId) != -1)
 }
 
-module.exports.autoTest = async function () {
+_anna.autoTest = async function () {
     // await init();
     // await imgur.init();
 

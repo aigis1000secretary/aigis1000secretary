@@ -4,15 +4,34 @@ const fs = require("fs");
 const config = require("./config.js");
 const md5f = function (str) { return require('crypto').createHash('md5').update(str).digest('hex'); }
 
-const IMGUR_CLIENT_ID = config.imgur.IMGUR_CLIENT_ID;
-const IMGUR_CLIENT_SECRET = config.imgur.IMGUR_CLIENT_SECRET;
-const IMGUR_REFRESH_TOKEN = config.imgur.IMGUR_REFRESH_TOKEN;
-
-const IMGUR_API_URL = "https://api.imgur.com/3/";
-let IMGUR_ACCESS_TOKEN = "";
-
 // Core
-let imgurCore = {
+let _imgur = module.exports = {
+    IMGUR_CLIENT_ID: "",
+    IMGUR_CLIENT_SECRET: "",
+    IMGUR_REFRESH_TOKEN: "",
+    IMGUR_API_URL: "https://api.imgur.com/3/",
+    IMGUR_ACCESS_TOKEN: "",
+
+    async init() {
+        // vars
+        _imgur.IMGUR_CLIENT_ID = config.imgur.IMGUR_CLIENT_ID;
+        _imgur.IMGUR_CLIENT_SECRET = config.imgur.IMGUR_CLIENT_SECRET;
+        _imgur.IMGUR_REFRESH_TOKEN = config.imgur.IMGUR_REFRESH_TOKEN;
+
+        // access token update
+        await _imgur.oauth2.token();
+
+        _imgur.database.images = [];
+        _imgur.database.albums = [];
+
+        await _imgur.api.account.getAllAlbums().catch(function (error) { console.log("Imgur albums load error!\n" + error) });
+        await _imgur.api.account.getAllImages().catch(function (error) { console.log("Imgur images load error!\n" + error) });
+
+        if (config.isLocalHost) _imgur.database.saveDatabase();
+        return;
+    },
+
+
     // request
     _request(options) {
         return new Promise(function (resolve, reject) {
@@ -52,14 +71,13 @@ let imgurCore = {
         return new Promise(function (resolve, reject) {
             // Set the headers
             options.headers = {
-                Authorization: "Bearer " + IMGUR_ACCESS_TOKEN
+                Authorization: "Bearer " + _imgur.IMGUR_ACCESS_TOKEN
             }
 
             // send reques
-            imgurCore._request(options).then(resolve).catch(reject);
+            _imgur._request(options).then(resolve).catch(reject);
         });
     },
-
 
     // POST Generate Access_Token
     // web API: https://api.imgur.com/oauth2/token
@@ -69,9 +87,9 @@ let imgurCore = {
 
             // Set the body
             let form = {
-                refresh_token: IMGUR_REFRESH_TOKEN,
-                client_id: IMGUR_CLIENT_ID,
-                client_secret: IMGUR_CLIENT_SECRET,
+                refresh_token: _imgur.IMGUR_REFRESH_TOKEN,
+                client_id: _imgur.IMGUR_CLIENT_ID,
+                client_secret: _imgur.IMGUR_CLIENT_SECRET,
                 grant_type: "refresh_token"
             };
 
@@ -84,17 +102,17 @@ let imgurCore = {
 
             // send request
             try {
-                let jsonResponse = await imgurCore._request(options);
+                let jsonResponse = await _imgur._request(options);
 
                 if (config._debug) console.log(jsonResponse);
-                IMGUR_ACCESS_TOKEN = jsonResponse.access_token;
+                _imgur.IMGUR_ACCESS_TOKEN = jsonResponse.access_token;
 
                 //console.log(IMGUR_ACCESS_TOKEN);
                 console.log("IMGUR_ACCESS_TOKEN update complete!")
                 return jsonResponse;
 
             } catch (error) {
-                IMGUR_ACCESS_TOKEN = "";
+                _imgur.IMGUR_ACCESS_TOKEN = "";
                 console.log("IMGUR_ACCESS_TOKEN update error!\n" + error)
                 return null;
             }
@@ -107,15 +125,15 @@ let imgurCore = {
             // GET Images
             async images({ page }) {
                 try {
-                    console.log("GET Images page " + page);
+                    // console.log("GET Images page " + page);
                     // Configure the request
                     let options = {
-                        url: IMGUR_API_URL + "account/me/images/" + page,
+                        url: _imgur.IMGUR_API_URL + "account/me/images/" + page,
                         method: "GET"
                     };
-                    let data = (await imgurCore._apiRequest(options)).data
+                    let data = (await _imgur._apiRequest(options)).data
                     for (let i in data) {
-                        imgurCore.database.newImageData(data[i]);
+                        _imgur.database.newImageData(data[i]);
                     }
                     return data;
 
@@ -130,10 +148,10 @@ let imgurCore = {
                     console.log("GET Images IDs page " + page);
                     // Configure the request
                     let options = {
-                        url: IMGUR_API_URL + "account/me/images/ids/" + page,
+                        url: _imgur.IMGUR_API_URL + "account/me/images/ids/" + page,
                         method: "GET"
                     };
-                    return (await imgurCore._apiRequest(options)).data;
+                    return (await _imgur._apiRequest(options)).data;
                 } catch (error) {
                     console.log(error);
                     return null;
@@ -145,10 +163,10 @@ let imgurCore = {
                     // console.log("GET Image Count");
                     // Configure the request
                     let options = {
-                        url: IMGUR_API_URL + "account/me/images/count",
+                        url: _imgur.IMGUR_API_URL + "account/me/images/count",
                         method: "GET"
                     };
-                    return (await imgurCore._apiRequest(options)).data;
+                    return (await _imgur._apiRequest(options)).data;
                 } catch (error) {
                     console.log(error);
                     return 0;
@@ -163,7 +181,7 @@ let imgurCore = {
                     pArray.push(this.images({ page }));
                 }
                 await Promise.all(pArray);
-                console.log("Imgur account images load complete (" + imgurCore.database.images.length + " images)!");
+                console.log("Imgur account images load complete (" + _imgur.database.images.length + " images)!");
             },
 
             // GET Albums
@@ -172,12 +190,12 @@ let imgurCore = {
                     console.log("GET Albums page " + page);
                     // Configure the request
                     let options = {
-                        url: IMGUR_API_URL + "account/me/albums/" + page,
+                        url: _imgur.IMGUR_API_URL + "account/me/albums/" + page,
                         method: "GET"
                     };
-                    let data = (await imgurCore._apiRequest(options)).data
+                    let data = (await _imgur._apiRequest(options)).data
                     for (let i in data) {
-                        imgurCore.database.newAlbumData(data[i]);
+                        _imgur.database.newAlbumData(data[i]);
                     }
                     return data;
 
@@ -189,20 +207,20 @@ let imgurCore = {
             // GET Album IDs
             async albumsIds({ page }) {
                 try {
-                    console.log("GET Album IDs page " + page);
+                    // console.log("GET Album IDs page " + page);
                     // Configure the request
                     let options = {
-                        url: IMGUR_API_URL + "account/me/albums/ids/" + page,
+                        url: _imgur.IMGUR_API_URL + "account/me/albums/ids/" + page,
                         method: "GET"
                     };
-                    let data = (await imgurCore._apiRequest(options)).data
+                    let data = (await _imgur._apiRequest(options)).data
 
                     let hashList = Object.assign([], data);
                     while (hashList.length > 0) {
                         let pArray = [];
                         // 3 thread
                         for (let i = 0, pop; i < 3 && (pop = hashList.pop()); ++i) {
-                            pArray.push(imgurCore.api.album.album({ albumHash: pop }));
+                            pArray.push(_imgur.api.album.album({ albumHash: pop }));
                         }
                         await Promise.all(pArray);
                     }
@@ -219,10 +237,10 @@ let imgurCore = {
                     // console.log("GET Album Count");
                     // Configure the request
                     let options = {
-                        url: IMGUR_API_URL + "account/me/albums/count",
+                        url: _imgur.IMGUR_API_URL + "account/me/albums/count",
                         method: "GET"
                     };
-                    return (await imgurCore._apiRequest(options)).data;
+                    return (await _imgur._apiRequest(options)).data;
 
                 } catch (error) {
                     console.log(error);
@@ -236,7 +254,7 @@ let imgurCore = {
                 for (let page = 0; page <= pages; page++) {
                     await this.albumsIds({ page });
                 }
-                console.log("Imgur account albums load complete (" + imgurCore.database.albums.length + " albums)!");
+                console.log("Imgur account albums load complete (" + _imgur.database.albums.length + " albums)!");
             }
         },
 
@@ -248,11 +266,11 @@ let imgurCore = {
                     console.log("GET Image " + imageHash);
                     // Configure the request
                     let options = {
-                        url: IMGUR_API_URL + "image/" + imageHash,
+                        url: _imgur.IMGUR_API_URL + "image/" + imageHash,
                         method: "GET"
                     };
-                    let data = (await imgurCore._apiRequest(options)).data;
-                    imgurCore.database.newImageData(data);
+                    let data = (await _imgur._apiRequest(options)).data;
+                    _imgur.database.newImageData(data);
                     return data;
 
                 } catch (error) {
@@ -266,7 +284,7 @@ let imgurCore = {
                     console.log("POST Image Upload " + fileName);
                     // Configure the request
                     let options = {
-                        url: IMGUR_API_URL + "upload",
+                        url: _imgur.IMGUR_API_URL + "upload",
                         method: "POST",
                         // Set the POST body
                         formData: {
@@ -280,7 +298,7 @@ let imgurCore = {
                     // let data = (await imgurCore._apiRequest(options)).data;
                     // imgurCore.database.newImageData(data);
                     // return data;
-                    return (await imgurCore._apiRequest(options)).data;
+                    return (await _imgur._apiRequest(options)).data;
 
                 } catch (error) {
                     console.log(error);
@@ -293,10 +311,10 @@ let imgurCore = {
                     console.log("DEL Image Deletion " + imageHash);
                     // Configure the request
                     let options = {
-                        url: IMGUR_API_URL + "image/" + imageHash,
+                        url: _imgur.IMGUR_API_URL + "image/" + imageHash,
                         method: "DELETE",
                     };
-                    return (await imgurCore._apiRequest(options));//.data;
+                    return (await _imgur._apiRequest(options));//.data;
 
                 } catch (error) {
                     console.log(error);
@@ -313,14 +331,14 @@ let imgurCore = {
                     if (tagList) postBody.title = tagList;
                     // Configure the request
                     let options = {
-                        url: IMGUR_API_URL + "image/" + imageHash,
+                        url: _imgur.IMGUR_API_URL + "image/" + imageHash,
                         method: "POST",
                         formData: postBody
                     };
                     // let data = (await imgurCore._apiRequest(options)).data;
                     // imgurCore.database.newImageData(data);
                     // return data;
-                    return (await imgurCore._apiRequest(options)).data;
+                    return (await _imgur._apiRequest(options)).data;
 
                 } catch (error) {
                     console.log(error);
@@ -334,14 +352,14 @@ let imgurCore = {
             // GET Album
             async album({ albumHash }) {
                 try {
-                    console.log("GET Album " + albumHash);
+                    // console.log("GET Album " + albumHash);
                     // Configure the request
                     let options = {
-                        url: IMGUR_API_URL + "album/" + albumHash,
+                        url: _imgur.IMGUR_API_URL + "album/" + albumHash,
                         method: "GET"
                     };
-                    let data = (await imgurCore._apiRequest(options)).data;
-                    imgurCore.database.newAlbumData(data);
+                    let data = (await _imgur._apiRequest(options)).data;
+                    _imgur.database.newAlbumData(data);
                     return data;
 
                 } catch (error) {
@@ -355,10 +373,10 @@ let imgurCore = {
                     console.log("GET Album Images " + albumHash);
                     // Configure the request
                     let options = {
-                        url: IMGUR_API_URL + "album/" + albumHash + "/images",
+                        url: _imgur.IMGUR_API_URL + "album/" + albumHash + "/images",
                         method: "GET"
                     };
-                    return (await imgurCore._apiRequest(options)).data;
+                    return (await _imgur._apiRequest(options)).data;
 
                 } catch (error) {
                     console.log(error);
@@ -378,11 +396,11 @@ let imgurCore = {
                     if (cover) postBody.cover = cover;
                     // Configure the request
                     let options = {
-                        url: IMGUR_API_URL + "album",
+                        url: _imgur.IMGUR_API_URL + "album",
                         method: "POST",
                         formData: postBody
                     };
-                    return (await imgurCore._apiRequest(options)).data;
+                    return (await _imgur._apiRequest(options)).data;
 
                 } catch (error) {
                     console.log(error);
@@ -403,13 +421,13 @@ let imgurCore = {
                     if (cover) putBody.cover = cover;
                     // Configure the request
                     let options = {
-                        url: IMGUR_API_URL + "album/" + albumHash,
+                        url: _imgur.IMGUR_API_URL + "album/" + albumHash,
                         method: "PUT",
                         json: putBody,
                         // formData: putBody
                     };
                     console.log(putBody);
-                    return (await imgurCore._apiRequest(options))//.data;
+                    return (await _imgur._apiRequest(options))//.data;
 
                 } catch (error) {
                     console.log(error);
@@ -422,10 +440,10 @@ let imgurCore = {
                     console.log("DEL Album Deletion " + albumHash);
                     // Configure the request
                     let options = {
-                        url: IMGUR_API_URL + "album/" + albumHash,
+                        url: _imgur.IMGUR_API_URL + "album/" + albumHash,
                         method: "DELETE",
                     };
-                    return (await imgurCore._apiRequest(options));//.data;
+                    return (await _imgur._apiRequest(options));//.data;
 
                 } catch (error) {
                     console.log(error);
@@ -438,14 +456,14 @@ let imgurCore = {
                     console.log("POST Set Album Images " + albumHash);
                     // Configure the request
                     let options = {
-                        url: IMGUR_API_URL + "album/" + albumHash,
+                        url: _imgur.IMGUR_API_URL + "album/" + albumHash,
                         method: "POST",
                         // Set the POST body
                         formData: {
                             ids: ids.join(",")
                         }
                     };
-                    return (await imgurCore._apiRequest(options)).data;
+                    return (await _imgur._apiRequest(options)).data;
 
                 } catch (error) {
                     if (ids.length == 0 && error.status == 403) return "Object {data: true, success: true, status: 200}";
@@ -460,14 +478,14 @@ let imgurCore = {
                     console.log("POST Add " + ids + " to Album " + albumHash);
                     // Configure the request
                     let options = {
-                        url: IMGUR_API_URL + "album/" + albumHash + "/add",
+                        url: _imgur.IMGUR_API_URL + "album/" + albumHash + "/add",
                         method: "POST",
                         // Set the POST body
                         formData: {
                             ids: ids.join(",")
                         }
                     };
-                    return (await imgurCore._apiRequest(options)).data;
+                    return (await _imgur._apiRequest(options)).data;
 
                 } catch (error) {
                     console.log(error);
@@ -481,10 +499,10 @@ let imgurCore = {
                     let idList = (ids.length == 1 ? ids[0] : ids.join(","));
                     // Configure the request
                     let options = {
-                        url: IMGUR_API_URL + "album/" + albumHash + "/remove_images/?ids=" + ids.join(","),
+                        url: _imgur.IMGUR_API_URL + "album/" + albumHash + "/remove_images/?ids=" + ids.join(","),
                         method: "DELETE",
                     };
-                    return (await imgurCore._apiRequest(options)).data;
+                    return (await _imgur._apiRequest(options)).data;
 
                 } catch (error) {
                     console.log(error);
@@ -493,7 +511,6 @@ let imgurCore = {
             }//
         }
     },
-
 
     // DB
     database: {
@@ -600,11 +617,11 @@ let imgurCore = {
 
         // 儲存資料
         saveDatabase() {
-            console.log("Imgur Database saving...");
+            // console.log("Imgur Database saving...");
 
             // object to json
-            let imagesDB = JSON.stringify(imgurCore.database.images, null, 4);
-            let albumsDB = JSON.stringify(imgurCore.database.albums, null, 4);
+            let imagesDB = JSON.stringify(_imgur.database.images, null, 4);
+            let albumsDB = JSON.stringify(_imgur.database.albums, null, 4);
 
             // callback
             let fsCallBack = function (error, bytesRead, buffer) {
@@ -616,24 +633,10 @@ let imgurCore = {
             // json to file
             fs.writeFile("ImgurDatabase.log", imagesDB, "utf8", fsCallBack);
             fs.writeFile("AlbumDatabase.log", albumsDB, "utf8", fsCallBack);
+            // fs.writeFile("ImgurDatabase.csv", imagesDB.replace(/\s*\n\s*/g, "").replaceAll(",", "、").replaceAll("\"、\"", "\",\"").replaceAll("\}、\{", "}\n{"), "utf8", fsCallBack);
 
             console.log("Imgur Database saved!");
         },
-    },
-
-
-    async init() {
-        // access token update
-        await imgurCore.oauth2.token();
-
-        imgurCore.database.images = [];
-        imgurCore.database.albums = [];
-
-        await imgurCore.api.account.getAllAlbums().catch(function (error) { console.log("Imgur albums load error!\n" + error) });
-        await imgurCore.api.account.getAllImages().catch(function (error) { console.log("Imgur images load error!\n" + error) });
-
-        if (config.isLocalHost) imgurCore.database.saveDatabase();
-        return;
     },
 
 
@@ -690,7 +693,7 @@ let imgurCore = {
     }
     //*/
 
-}; module.exports = imgurCore;
+};
 
 
 class Image {
@@ -742,7 +745,7 @@ class Album {
         this.images = [];
         let newImages = [];
         for (let i in images) {
-            newImages.push(imgurCore.database.newImageData(images[i]));
+            newImages.push(_imgur.database.newImageData(images[i]));
         }
         this.addImages(newImages);
     }

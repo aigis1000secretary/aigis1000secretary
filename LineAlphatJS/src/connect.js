@@ -13,8 +13,7 @@ class LineConnect extends LineAPI {
             this.email = options.email;
             this.password = options.password;
             this.certificate = options.certificate;
-            this.config.Headers['X-Line-Access'] = options.authToken;
-            config.botmid = options.ID;
+            this.config.Headers['X-Line-Access'] = (options.authToken ? options.authToken : "");
         }
     }
 
@@ -25,7 +24,7 @@ class LineConnect extends LineAPI {
                 this.certificate = res.certificate;
                 console.info(`[*] Token: ${this.authToken}`);
                 console.info(`[*] Certificate: ${res.certificate}`);
-                let { mid, displayName } = await this._client.getProfile(); config.botmid = mid;
+                let { mid, displayName } = await this._client.getProfile();
                 console.info(`[*] ID: ${mid}`);
                 console.info(`[*] Name: ${displayName}`);
                 await this._tokenLogin(this.authToken, this.certificate);
@@ -50,10 +49,6 @@ class LineConnect extends LineAPI {
                     line.abotPushLog("[*] Certificate");
                     await sleep(100)
                     line.abotPushLog(certificate);
-                    await sleep(100)
-                    line.abotPushLog("[*] ID");
-                    await sleep(100)
-                    line.abotPushLog(mid);
                 }, 5000);
 
                 // let auth = "module.exports = " + JSON.stringify({ authToken: this.authToken, certificate: res.certificate, ID: mid, email: '', password: '' }, null, 4);
@@ -73,18 +68,18 @@ class LineConnect extends LineAPI {
             try {
                 res = await this.authTokenLogin();
                 console.log("authTokenLogin");
+                let { mid } = await this._client.getProfile(); config.botmid = mid;
                 return res;
             } catch (e) {
                 console.log("authToken Login fail");
             }
         }
-        this.email = "z1022001jp@gmail.com";
-        this.password = "line007x";
 
         if (this.password && this.email) {
             try {
                 res = await this.emailLogin();
                 console.log("emailLogin");
+                let { mid } = await this._client.getProfile(); config.botmid = mid;
                 return res;
             } catch (e) {
                 console.log("email Login fail");
@@ -94,6 +89,7 @@ class LineConnect extends LineAPI {
         try {
             res = await this.manualLogin();
             console.log("manualLogin");
+            let { mid } = await this._client.getProfile(); config.botmid = mid;
             return res;
         } catch (e) {
             console.log("manual Login fail");

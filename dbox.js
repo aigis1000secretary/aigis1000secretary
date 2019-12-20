@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const fetch = require('isomorphic-fetch');
 const Dropbox = require('dropbox').Dropbox;
+
 const config = require("./config.js");
 const dbox = new Dropbox({
     fetch: fetch,
@@ -17,7 +18,7 @@ module.exports = {
     // 應用程式/updog/aigis1000secretary/刻詠の風水士リンネ?preview=6230667.png
 
     // MD
-    makeDir: async function (path) {
+    async makeDir(path) {
         try {
             let response = await dbox.filesCreateFolder({ path: root + path, autorename: false });
             //console.log(response);
@@ -28,7 +29,7 @@ module.exports = {
         }
     },
     // LS
-    listDir: async function (dirPath, filter) {
+    async listDir(dirPath, filter) {
         try {
             let result = [];
             let response = await dbox.filesListFolder({ path: root + dirPath });
@@ -52,7 +53,7 @@ module.exports = {
     },
 
     // download
-    fileDownloadToFile: async function (base, localPath) {
+    async fileDownloadToFile(base, localPath) {
         try {
             let onlinePath = path.format({ root, base });
             if (!localPath) localPath = "." + path.normalize(onlinePath);
@@ -71,7 +72,7 @@ module.exports = {
         }
     },
     //fileDownloadToFile("刻詠の風水士リンネ/6230667.png");
-    fileDownload: async function (base) {
+    async fileDownload(base) {
         try {
             let onlinePath = path.format({ root, base });
             let response = await dbox.filesDownload({ path: onlinePath });
@@ -84,7 +85,7 @@ module.exports = {
     },
 
     // upload
-    fileUpload: async function (dirPath, fileBinary, mode) {
+    async fileUpload(dirPath, fileBinary, mode) {
         let filesCommitInfo = {
             path: root + dirPath,
             contents: fileBinary,
@@ -103,7 +104,7 @@ module.exports = {
     },
 
     // move
-    fileBackup: async function (dirPath) {
+    async fileBackup(dirPath) {
         let filesRelocationArg = {
             from_path: root + dirPath,
             to_path: root + "backup/" + dirPath,
@@ -126,7 +127,7 @@ module.exports = {
     },
 
     // move
-    fileMove: async function (from, to, overwrite = false) {
+    async fileMove(from, to, overwrite = false) {
         let filesRelocationArg = {
             from_path: root + from,
             to_path: root + to,
@@ -148,7 +149,7 @@ module.exports = {
     },
 
     // delete
-    fileDelete: async function (path) {
+    async fileDelete(path) {
         console.log("filesDelete: " + path);
         try {
             await dbox.filesDelete({ path: root + path });
@@ -160,7 +161,7 @@ module.exports = {
     },
 
     // 
-    logToFile: function (base, name, data) {
+    logToFile(base, name, data) {
         let dateNow = new Date(Date.now());
         let path = (dateNow.getMonth() + 1).toString().padStart(2, "0") + "/" + name + "_" +
             dateNow.getFullYear().toString().padStart(4, "0") + "-" +
