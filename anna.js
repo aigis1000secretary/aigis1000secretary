@@ -237,24 +237,21 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
     } else if (command == "上傳" || command == "UPLOAD") {
 
         // 異步執行
-        let asyncFunc = async function () {
-            try {
-                await charaDatabase.saveDB()
-                await charaDatabase.uploadDB()
+        try {
+            await charaDatabase.saveDB()
+            await charaDatabase.uploadDB()
 
-                await nickDatabase.saveDB()
-                await nickDatabase.uploadDB()
+            await nickDatabase.saveDB()
+            await nickDatabase.uploadDB()
 
-                await classDatabase.saveDB()
-                await classDatabase.uploadDB()
+            await classDatabase.saveDB()
+            await classDatabase.uploadDB()
 
-                botPush(sourceId, "上傳完成!");
-            } catch (error) {
-                botPush(sourceId, "上傳異常!\n" + error);
-            }
-        }; asyncFunc();
+        } catch (error) {
+            return "上傳異常!\n" + error;
+        }
 
-        return "上傳中...";
+        return "上傳完成!";
 
     } else if (command == "更新" || command == "UPDATE") {
         allCharaDataCrawler(sourceId);
@@ -699,7 +696,8 @@ const charaDataCrawler = function (urlPath, sourceId) {
             // 新增角色資料
             let msg = charaDatabase.addData(newData);
             if (msg != "") {
-                botPush(sourceId, msg);
+                // botPush(sourceId, msg);
+                abotPushLog(msg);
             }
             resolve();
         }
@@ -765,7 +763,8 @@ const allCharaDataCrawler = function (sourceId) {
             await Promise.all(pArray);
         }
 
-        botPush(sourceId, "角色更新完成!");
+        // botPush(sourceId, "角色更新完成!");
+        abotPushLog("角色更新完成!");
         // save Database
         charaDatabase.uploadTask();
     }; asyncFunc();
@@ -1041,24 +1040,19 @@ const getRarityString = function (str) {
 
 // 管理用參數
 const debugLog = _anna.debugLog = function () {
-    // debug = T; debugPush = T
-    if (config.switchVar.debug && config.switchVar.debugPush) {
-        if (config.isLocalHost) {
-            return console.log;
-        } else {
+    if (config.switchVar.debug) {
+        if (config.switchVar.debugPush && !config.isLocalHost) {
             return (msg) => {
                 console.log(msg);
                 line.abotPushLog(msg);
             };
+        } else {
+            return console.log;
         }
-    }
 
-    // debug = T; debugPush = F
-    if (config.switchVar.debug && !config.switchVar.debugPush) {
-        return console.log;
+    } else {
+        return () => { };
     }
-
-    return () => { };
 }
 const debugConsoleLog = _anna.debugConsoleLog = function () {
     // debug = T; debugPush = F

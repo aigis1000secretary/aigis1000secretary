@@ -29,7 +29,7 @@ const _config = module.exports = {
     isLocalHost: require("fs").existsSync("./debug.js"),
 
     adminstrator: "U9eefeba8c0e5f8ee369730c4f983346b",
-    admins: [],
+    admins: ["Ub211d6652fb860935febc6473d1f9ffc"],
     botLogger: "U9eefeba8c0e5f8ee369730c4f983346b",
     abotLogger: "u33a9a527c6ac1b24e0e4e35dde60c79d",
 
