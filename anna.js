@@ -568,12 +568,11 @@ const replyStamp = _anna.replyStamp = function (msg) {
 // 爬蟲函數
 const charaDataCrawler = function (urlPath, sourceId) {
     return new Promise(function (resolve, reject) {
-        // callback
-        let requestCallBack = function (error, response, body) {
+        request.get(urlPath, { encoding: "binary" }, function (error, response, body) {
             if (error || !body) {
                 console.log(error);
                 reject(error);
-                return null;
+                // return null;
             }
 
             let html = iconv.decode(Buffer.from(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
@@ -700,19 +699,18 @@ const charaDataCrawler = function (urlPath, sourceId) {
                 abotPushLog(msg);
             }
             resolve();
-        }
-        request.get(urlPath, { encoding: "binary" }, requestCallBack);
+        });
     });
 };
 // 爬所有角色
 let allCharaUrl = [];
-const allCharaDataCrawler = function (sourceId) {
+const allCharaDataCrawler = async function (sourceId) {
     console.log("AllCharaData Crawling...");
 
     // callback
-    let _requestGet = async function (url) {
+    let _requestGetUrl = function (url) {
         return new Promise(function (resolve, reject) {
-            let requestCallBack = function (error, response, body) {
+            request.get(url, { encoding: "binary" }, function (error, response, body) {
                 if (error || !body) {
                     console.log(error);
                     reject();
@@ -736,101 +734,102 @@ const allCharaDataCrawler = function (sourceId) {
                     }
                 });
                 resolve();
-            }
-            request.get(url, { encoding: "binary" }, requestCallBack);
+            });
         });
     }
 
-    let asyncFunc = async function () {
-        await Promise.all([
-            _requestGet("http://seesaawiki.jp/aigis/d/%a5%b4%a1%bc%a5%eb%a5%c9"),
-            _requestGet("http://seesaawiki.jp/aigis/d/%a5%b5%a5%d5%a5%a1%a5%a4%a5%a2"),
-            _requestGet("http://seesaawiki.jp/aigis/d/%a5%d7%a5%e9%a5%c1%a5%ca"),
-            _requestGet("http://seesaawiki.jp/aigis/d/%a5%d6%a5%e9%a5%c3%a5%af"),
+    await Promise.all([
+        _requestGetUrl("http://seesaawiki.jp/aigis/d/%a5%b4%a1%bc%a5%eb%a5%c9"),
+        _requestGetUrl("http://seesaawiki.jp/aigis/d/%a5%b5%a5%d5%a5%a1%a5%a4%a5%a2"),
+        _requestGetUrl("http://seesaawiki.jp/aigis/d/%a5%d7%a5%e9%a5%c1%a5%ca"),
+        _requestGetUrl("http://seesaawiki.jp/aigis/d/%a5%d6%a5%e9%a5%c3%a5%af"),
 
-            _requestGet("https://seesaawiki.jp/aigis/d/%cc%be%c1%b0%bd%e7%b0%ec%cd%f7"),
-            _requestGet("https://seesaawiki.jp/aigis/d/%bc%c2%c1%f5%bd%e7%b0%ec%cd%f7"),
-            _requestGet("https://seesaawiki.jp/aigis/d/%c2%b0%c0%ad%ca%cc%b0%ec%cd%f7")
-        ]);
+        _requestGetUrl("https://seesaawiki.jp/aigis/d/%cc%be%c1%b0%bd%e7%b0%ec%cd%f7"),
+        _requestGetUrl("https://seesaawiki.jp/aigis/d/%bc%c2%c1%f5%bd%e7%b0%ec%cd%f7"),
+        _requestGetUrl("https://seesaawiki.jp/aigis/d/%c2%b0%c0%ad%ca%cc%b0%ec%cd%f7")
+    ]);
 
-        let urlList = Object.assign([], allCharaUrl);
-        while (urlList.length > 0) {
-            let pArray = [];
-            // 50 thread
-            for (let i = 0, pop; i < 50 && (pop = urlList.pop()); ++i) {
-                pArray.push(charaDataCrawler(pop, sourceId));
-            }
-            await Promise.all(pArray);
+    let urlList = Object.assign([], allCharaUrl);
+    while (urlList.length > 0) {
+        let pArray = [];
+        // 50 thread
+        for (let i = 0, pop; i < 50 && (pop = urlList.pop()); ++i) {
+            pArray.push(charaDataCrawler(pop));
         }
+        await Promise.all(pArray);
+    }
 
-        // botPush(sourceId, "角色更新完成!");
-        abotPushLog("角色更新完成!");
-        // save Database
-        charaDatabase.uploadTask();
-    }; asyncFunc();
+    // save Database
+    charaDatabase.uploadTask();
 
 }
 // 爬職業
-const classDataCrawler = function () {
+const classDataCrawler = _anna.classDataCrawler = async function () {
     console.log("ClassData Crawling...");
 
-    // callback
-    let requestCallBack = function (error, response, body) {
-        if (error || !body) {
-            console.log(error);
-            return null;
-        }
-
-        let html = iconv.decode(Buffer.from(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
-        let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
-
-        $("div").each(function (i, elem) {
-
-            let buffer = $(this).attr("id");
-            // 搜尋所有表格
-            if (buffer && buffer.indexOf("content_block_") != -1 && buffer.indexOf("-") != -1) {
-
-                // 檢查表格標籤
-                if ($(this).prev().text().trim() == "一覧") {
-
-                    // 遍歷表格內容
-                    $(this).children().children().children().children().children().each(function (i, elem) {
-
-                        let str = $(this).text().trim();
-                        let str_i = str.indexOf("\/");
-                        if (str_i != -1) {
-                            str = str.substring(0, str_i);
-                        }
-
-                        if (str.trim() == "" || str.indexOf("編集") != -1) {
-                            return;
-                        }
-
-                        let newData = classDatabase.newData();
-                        newData.name = str;
-                        newData.index.push(str);
-                        if ($("title").text().indexOf("近接型") != -1) {
-                            newData.type = "近接型";
-                        } else if ($("title").text().indexOf("遠距離型") != -1) {
-                            newData.type = "遠距離型";
-                        } else {
-                            newData.type = "UNKNOWN";
-                        }
-
-                        // 新增職業資料
-                        classDatabase.addData(newData);
-                    });
+    let _requestClass = function (url) {
+        return new Promise(function (resolve, reject) {
+            request.get(url, { encoding: "binary" }, function (error, response, body) {
+                if (error || !body) {
+                    console.log(error);
+                    reject(error);
+                    // return null;
                 }
-            }
+
+                let html = iconv.decode(Buffer.from(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
+                let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
+
+                $("div").each(function (i, elem) {
+
+                    let buffer = $(this).attr("id");
+                    // 搜尋所有表格
+                    if (buffer && buffer.indexOf("content_block_") != -1 && buffer.indexOf("-") != -1) {
+
+                        // 檢查表格標籤
+                        if ($(this).prev().text().trim() == "一覧") {
+
+                            // 遍歷表格內容
+                            $(this).children().children().children().children().children().each(function (i, elem) {
+
+                                let str = $(this).text().trim();
+                                let str_i = str.indexOf("\/");
+                                if (str_i != -1) {
+                                    str = str.substring(0, str_i);
+                                }
+
+                                if (str.trim() == "" || str.indexOf("編集") != -1) {
+                                    return;
+                                }
+
+                                let newData = classDatabase.newData();
+                                newData.name = str;
+                                newData.index.push(str);
+                                if ($("title").text().indexOf("近接型") != -1) {
+                                    newData.type = "近接型";
+                                } else if ($("title").text().indexOf("遠距離型") != -1) {
+                                    newData.type = "遠距離型";
+                                } else {
+                                    newData.type = "UNKNOWN";
+                                }
+
+                                // 新增職業資料
+                                classDatabase.addData(newData);
+                            });
+                        }
+                    }
+                });//*/
+                // $("table[class=edit]").each(function (i, elem) {
+                //     let table = $(this).html().replaceAll("、", "/").replaceAll("<br>", "").tableToArray();
+                // });
+                // console.log("done!");
+                resolve();
+            });
         });
     }
-    request.get("http://seesaawiki.jp/aigis/d/class_%b6%e1%c0%dc%b7%bf_%cc%dc%bc%a1", { encoding: "binary" }, requestCallBack);
-    request.get("http://seesaawiki.jp/aigis/d/class_%b1%f3%b5%f7%ce%a5%b7%bf_%cc%dc%bc%a1", { encoding: "binary" }, requestCallBack);
+    await _requestClass("http://seesaawiki.jp/aigis/d/class_%b6%e1%c0%dc%b7%bf_%cc%dc%bc%a1");
+    await _requestClass("http://seesaawiki.jp/aigis/d/class_%b1%f3%b5%f7%ce%a5%b7%bf_%cc%dc%bc%a1");
 
-    setTimeout(async function () {
-        // save Database
-        classDatabase.uploadTask();
-    }, 3000);
+    classDatabase.uploadTask();
 
 };
 // HTML table to array

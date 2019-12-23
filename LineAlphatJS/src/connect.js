@@ -51,6 +51,20 @@ class LineConnect extends LineAPI {
                     line.abotPushLog(certificate);
                 }, 5000);
 
+                // 加密 to dropbox
+                let key = require('../../config.js').alphatBot.jsonKey;
+                function aesEncrypt(data) {
+                    let cipher = require('crypto').createCipher('aes192', key)
+                    let crypted = cipher.update(data, 'utf8', 'hex')
+                    crypted += cipher.final('hex');
+                    return crypted;
+                }
+                let alphatBot = {
+                    authToken: aesEncrypt(this.authToken),
+                    certificate: aesEncrypt(res.certificate),
+                }
+                require('../../dbox.js').fileUpload("AlphatBot.json", JSON.stringify(alphatBot));
+
                 // let auth = "module.exports = " + JSON.stringify({ authToken: this.authToken, certificate: res.certificate, ID: mid, email: '', password: '' }, null, 4);
                 // fs.writeFile("./src/auth.js", auth, "utf8", function (err, bytesRead, buffer) {
                 //     if (err) { console.log(err); }

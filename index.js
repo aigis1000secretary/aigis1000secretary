@@ -318,7 +318,7 @@ const timerBotOn = function () {
 
 const main = async function () {
     // 讀取資料
-    config.init();
+    await config.init();
     express.init();
     line.init();
     twitter.init();

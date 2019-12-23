@@ -2,10 +2,11 @@
 /*
     // todo
     database api input
-    character search method rebuild
+    character search method rebuild?
     newimg error msg
     error msg push
     tidy bot push msg
+    class Database
 
     config update from dbox
 */
@@ -16,6 +17,8 @@
     fix abot autologin
     disable log msg
     initial Method Rebuild
+    abot login token auto upload
+    crawler fix
 */
 
 const _config = module.exports = {
@@ -43,41 +46,42 @@ const _config = module.exports = {
     // imgur 
     imgur: {
         // https://imgur.com/account/settings/apps
-        IMGUR_CLIENT_ID: "",
-        IMGUR_CLIENT_SECRET: "",
+        IMGUR_CLIENT_ID: process.env.IMGUR_CLIENT_ID,
+        IMGUR_CLIENT_SECRET: process.env.IMGUR_CLIENT_SECRET,
         // vist site: https://api.imgur.com/oauth2/authorize?client_id=84f351fab201d5a&response_type=token
         // check REFRESH_TOKEN variable from url
-        IMGUR_REFRESH_TOKEN: ""
+        IMGUR_REFRESH_TOKEN: process.env.IMGUR_REFRESH_TOKEN
     },
 
     // line
     devbot: {
         // https://developers.line.biz/console/channel/1612493892/basic/
-        channelId: "",
-        channelSecret: "",
-        channelAccessToken: ""
+        channelId: process.env.LINE_CHANNEL_ID,
+        channelSecret: process.env.LINE_CHANNEL_SECRET,
+        channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN
     },
 
     alphatBot: {
-        authToken: "",
-        certificate: "",
+        authToken: process.env.LINE_ALPHAT_AUTHTOKEN,
+        certificate: process.env.LINE_ALPHAT_CERTIFICATE,
         email: "",
         password: "",
-        botId: ""
+        botId: process.env.LINE_ALPHAT_BOTID,
+        jsonKey: process.env.LINE_ALPHAT_JSONKEY
     },
 
     // discord
     discordbot: {
-        token: ""
+        token: process.env.DISCORD_BOT_TOKEN
     },
 
     // twitter
     twitterCfg: {
         // https://developer.twitter.com/en/apps
-        TWITTER_CONSUMER_KEY: "",
-        TWITTER_CONSUMER_SECRET: "",
-        TWITTER_ACCESS_TOKEN: "",
-        TWITTER_ACCESS_TOKEN_SECRET: "",
+        TWITTER_CONSUMER_KEY: process.env.TWITTER_CONSUMER_KEY,
+        TWITTER_CONSUMER_SECRET: process.env.TWITTER_CONSUMER_SECRET,
+        TWITTER_ACCESS_TOKEN: process.env.TWITTER_ACCESS_TOKEN,
+        TWITTER_ACCESS_TOKEN_SECRET: process.env.TWITTER_ACCESS_TOKEN_SECRET,
         devLabel: "aigis1000secretary",
         hookId: "1106006997298761728",
         webhookUrl: "https://aigis1000secretary.herokuapp.com/twitterbot/"
@@ -96,37 +100,52 @@ const _config = module.exports = {
         console.log(JSON.stringify(_config, null, 4));
     },
 
-    init() {
+    async init() {
         // Object.freeze(_config.dropbox);
         // Object.freeze(_config.imgur);
         // Object.freeze(_config.devbot);
         // Object.freeze(_config.twitterCfg);
 
+        // 加密
+        // let key = _config.alphatBot.jsonKey;
+        // function aesEncrypt(data) {
+        //     let cipher = require('crypto').createCipher('aes192', key)
+        //     let crypted = cipher.update(data, 'utf8', 'hex')
+        //     crypted += cipher.final('hex');
+        //     return crypted;
+        // }
+        // let alphatBot = {
+        //     authToken: aesEncrypt(_config.alphatBot.authToken),
+        //     certificate: aesEncrypt(_config.alphatBot.certificate),
+        // }
+        // require("./dbox.js").fileUpload("AlphatBot.json", JSON.stringify(alphatBot));
 
-        // imgur 
-        _config.imgur.IMGUR_CLIENT_ID = process.env.IMGUR_CLIENT_ID;
-        _config.imgur.IMGUR_CLIENT_SECRET = process.env.IMGUR_CLIENT_SECRET;
-        _config.imgur.IMGUR_REFRESH_TOKEN = process.env.IMGUR_REFRESH_TOKEN;
+        let data = await require("./dbox.js").fileDownload("AlphatBot.json");
+        let obj;
+        try { obj = JSON.parse(data); }
+        catch (e) { obj = eval("(" + data + ")"); }
+
+        try {
+            // 解码
+            let key = _config.alphatBot.jsonKey;
+            function aesDecrypt(encrypt) {
+                let decipher = require('crypto').createDecipher('aes192', key);
+                let decrypted = decipher.update(encrypt, 'hex', 'utf8');
+                decrypted += decipher.final('utf8');
+                return decrypted;
+            }
+            obj.authToken = aesDecrypt(obj.authToken);
+            obj.certificate = aesDecrypt(obj.certificate);
+
+            if (!!obj.authToken && !!obj.certificate) {
+                Object.assign(_config.alphatBot, obj);
+            }
+        } catch (e) {
+            // error
+        }
 
 
-        _config.devbot.channelId = process.env.LINE_CHANNEL_ID;
-        _config.devbot.channelSecret = process.env.LINE_CHANNEL_SECRET;
-        _config.devbot.channelAccessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN;
-
-        _config.alphatBot.authToken = process.env.LINE_ALPHAT_AUTHTOKEN;
-        _config.alphatBot.certificate = process.env.LINE_ALPHAT_CERTIFICATE;
-
-        // discord
-        _config.discordbot.token = process.env.DISCORD_BOT_TOKEN;
-
-        // twitter
-        _config.twitterCfg.TWITTER_CONSUMER_KEY = process.env.TWITTER_CONSUMER_KEY;
-        _config.twitterCfg.TWITTER_CONSUMER_SECRET = process.env.TWITTER_CONSUMER_SECRET;
-        _config.twitterCfg.TWITTER_ACCESS_TOKEN = process.env.TWITTER_ACCESS_TOKEN;
-        _config.twitterCfg.TWITTER_ACCESS_TOKEN_SECRET = process.env.TWITTER_ACCESS_TOKEN_SECRET;
-
-
-        console.log(JSON.stringify(_config.dropbox, null, 4));
+        // console.log(JSON.stringify(_config.dropbox, null, 4));
     }
 };
 
