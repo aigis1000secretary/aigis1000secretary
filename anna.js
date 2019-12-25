@@ -1,7 +1,7 @@
 
 // 初始化
 const config = require("./config.js");
-module.exports = {};    // 循環依賴對策
+const _anna = module.exports = {};    // 循環依賴對策
 // 爬蟲
 const request = require("request");
 const iconv = require("iconv-lite");
@@ -17,7 +17,7 @@ const database = require("./database.js");
 
 
 // Init
-const init = module.exports.init = async function () {
+const init = _anna.init = async function () {
 
     await charaDatabase.init().catch(console.log);
     await nickDatabase.init().catch(console.log);
@@ -29,7 +29,7 @@ const init = module.exports.init = async function () {
 
 // bot
 // reply
-const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userId) {
+const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
     debugLog()("rawMsg: <" + rawMsg + ">");
 
     // flag
@@ -237,24 +237,21 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
     } else if (command == "上傳" || command == "UPLOAD") {
 
         // 異步執行
-        let asyncFunc = async function () {
-            try {
-                await charaDatabase.saveDB()
-                await charaDatabase.uploadDB()
+        try {
+            await charaDatabase.saveDB()
+            await charaDatabase.uploadDB()
 
-                await nickDatabase.saveDB()
-                await nickDatabase.uploadDB()
+            await nickDatabase.saveDB()
+            await nickDatabase.uploadDB()
 
-                await classDatabase.saveDB()
-                await classDatabase.uploadDB()
+            await classDatabase.saveDB()
+            await classDatabase.uploadDB()
 
-                botPush(sourceId, "上傳完成!");
-            } catch (error) {
-                botPush(sourceId, "上傳異常!\n" + error);
-            }
-        }; asyncFunc();
+        } catch (error) {
+            return "上傳異常!\n" + error;
+        }
 
-        return "上傳中...";
+        return "上傳完成!";
 
     } else if (command == "更新" || command == "UPDATE") {
         allCharaDataCrawler(sourceId);
@@ -408,7 +405,7 @@ const replyAI = module.exports.replyAI = async function (rawMsg, sourceId, userI
                 let classArray = searchByClass(arg2);
                 let charaArray = classArray.length == 1 ? classArray : searchCharacter(arg2).concat(classArray);
                 if (charaArray.length > 1) {
-                    return "搜尋不明確: " + charaArray;
+                    return "搜尋不明確: " + charaArray.join("\n");
                 }
                 if (charaArray.length == 1) {
                     target = charaArray[0].trim();
@@ -543,7 +540,7 @@ const generateCharaData = function (charaName) {
     return false;
 }
 // 定型文貼圖
-const replyStamp = module.exports.replyStamp = function (msg) {
+const replyStamp = _anna.replyStamp = function (msg) {
     debugLog()("replyStamp(" + msg + ")");
 
     let replyMsg = [];
@@ -571,12 +568,11 @@ const replyStamp = module.exports.replyStamp = function (msg) {
 // 爬蟲函數
 const charaDataCrawler = function (urlPath, sourceId) {
     return new Promise(function (resolve, reject) {
-        // callback
-        let requestCallBack = function (error, response, body) {
+        request.get(urlPath, { encoding: "binary" }, function (error, response, body) {
             if (error || !body) {
                 console.log(error);
                 reject(error);
-                return null;
+                // return null;
             }
 
             let html = iconv.decode(Buffer.from(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
@@ -593,8 +589,6 @@ const charaDataCrawler = function (urlPath, sourceId) {
                 if (title == "ステータス") {
                     // get table data
                     let statusTable = $(this).next("div").children("table").html().replaceAll("<br>", "").tableToArray();
-                    // console.log("statusList");
-                    // console.table(statusList);
                     // 名前 & クラス & 
                     for (let i = 0; i < statusTable.length; i++) {
                         for (let j = 0; j < statusTable[i].length; j++) {
@@ -701,22 +695,21 @@ const charaDataCrawler = function (urlPath, sourceId) {
             // 新增角色資料
             let msg = charaDatabase.addData(newData);
             if (msg != "") {
-                botPush(sourceId, msg);
+                abotPushLog(msg);
             }
             resolve();
-        }
-        request.get(urlPath, { encoding: "binary" }, requestCallBack);
+        });
     });
 };
 // 爬所有角色
 let allCharaUrl = [];
-const allCharaDataCrawler = function (sourceId) {
+const allCharaDataCrawler = async function (sourceId) {
     console.log("AllCharaData Crawling...");
 
     // callback
-    let _requestGet = async function (url) {
+    let _requestGetUrl = function (url) {
         return new Promise(function (resolve, reject) {
-            let requestCallBack = function (error, response, body) {
+            request.get(url, { encoding: "binary" }, function (error, response, body) {
                 if (error || !body) {
                     console.log(error);
                     reject();
@@ -740,100 +733,102 @@ const allCharaDataCrawler = function (sourceId) {
                     }
                 });
                 resolve();
-            }
-            request.get(url, { encoding: "binary" }, requestCallBack);
+            });
         });
     }
 
-    let asyncFunc = async function () {
-        await Promise.all([
-            _requestGet("http://seesaawiki.jp/aigis/d/%a5%b4%a1%bc%a5%eb%a5%c9"),
-            _requestGet("http://seesaawiki.jp/aigis/d/%a5%b5%a5%d5%a5%a1%a5%a4%a5%a2"),
-            _requestGet("http://seesaawiki.jp/aigis/d/%a5%d7%a5%e9%a5%c1%a5%ca"),
-            _requestGet("http://seesaawiki.jp/aigis/d/%a5%d6%a5%e9%a5%c3%a5%af"),
+    await Promise.all([
+        _requestGetUrl("http://seesaawiki.jp/aigis/d/%a5%b4%a1%bc%a5%eb%a5%c9"),
+        _requestGetUrl("http://seesaawiki.jp/aigis/d/%a5%b5%a5%d5%a5%a1%a5%a4%a5%a2"),
+        _requestGetUrl("http://seesaawiki.jp/aigis/d/%a5%d7%a5%e9%a5%c1%a5%ca"),
+        _requestGetUrl("http://seesaawiki.jp/aigis/d/%a5%d6%a5%e9%a5%c3%a5%af"),
 
-            _requestGet("https://seesaawiki.jp/aigis/d/%cc%be%c1%b0%bd%e7%b0%ec%cd%f7"),
-            _requestGet("https://seesaawiki.jp/aigis/d/%bc%c2%c1%f5%bd%e7%b0%ec%cd%f7"),
-            _requestGet("https://seesaawiki.jp/aigis/d/%c2%b0%c0%ad%ca%cc%b0%ec%cd%f7")
-        ]);
+        _requestGetUrl("https://seesaawiki.jp/aigis/d/%cc%be%c1%b0%bd%e7%b0%ec%cd%f7"),
+        _requestGetUrl("https://seesaawiki.jp/aigis/d/%bc%c2%c1%f5%bd%e7%b0%ec%cd%f7"),
+        _requestGetUrl("https://seesaawiki.jp/aigis/d/%c2%b0%c0%ad%ca%cc%b0%ec%cd%f7")
+    ]);
 
-        let urlList = Object.assign([], allCharaUrl);
-        while (urlList.length > 0) {
-            let pArray = [];
-            // 50 thread
-            for (let i = 0, pop; i < 50 && (pop = urlList.pop()); ++i) {
-                pArray.push(charaDataCrawler(pop, sourceId));
-            }
-            await Promise.all(pArray);
+    let urlList = Object.assign([], allCharaUrl);
+    while (urlList.length > 0) {
+        let pArray = [];
+        // 50 thread
+        for (let i = 0, pop; i < 50 && (pop = urlList.pop()); ++i) {
+            pArray.push(charaDataCrawler(pop));
         }
+        await Promise.all(pArray);
+    }
 
-        botPush(sourceId, "角色更新完成!");
-        // save Database
-        charaDatabase.uploadTask();
-    }; asyncFunc();
+    // save Database
+    charaDatabase.uploadTask();
 
 }
 // 爬職業
-const classDataCrawler = function () {
+const classDataCrawler = _anna.classDataCrawler = async function () {
     console.log("ClassData Crawling...");
 
-    // callback
-    let requestCallBack = function (error, response, body) {
-        if (error || !body) {
-            console.log(error);
-            return null;
-        }
-
-        let html = iconv.decode(Buffer.from(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
-        let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
-
-        $("div").each(function (i, elem) {
-
-            let buffer = $(this).attr("id");
-            // 搜尋所有表格
-            if (buffer && buffer.indexOf("content_block_") != -1 && buffer.indexOf("-") != -1) {
-
-                // 檢查表格標籤
-                if ($(this).prev().text().trim() == "一覧") {
-
-                    // 遍歷表格內容
-                    $(this).children().children().children().children().children().each(function (i, elem) {
-
-                        let str = $(this).text().trim();
-                        let str_i = str.indexOf("\/");
-                        if (str_i != -1) {
-                            str = str.substring(0, str_i);
-                        }
-
-                        if (str.trim() == "" || str.indexOf("編集") != -1) {
-                            return;
-                        }
-
-                        let newData = classDatabase.newData();
-                        newData.name = str;
-                        newData.index.push(str);
-                        if ($("title").text().indexOf("近接型") != -1) {
-                            newData.type = "近接型";
-                        } else if ($("title").text().indexOf("遠距離型") != -1) {
-                            newData.type = "遠距離型";
-                        } else {
-                            newData.type = "UNKNOWN";
-                        }
-
-                        // 新增職業資料
-                        classDatabase.addData(newData);
-                    });
+    let _requestClass = function (url) {
+        return new Promise(function (resolve, reject) {
+            request.get(url, { encoding: "binary" }, function (error, response, body) {
+                if (error || !body) {
+                    console.log(error);
+                    reject(error);
+                    // return null;
                 }
-            }
+
+                let html = iconv.decode(Buffer.from(body, "binary"), "EUC-JP"); // EUC-JP to utf8 // Shift_JIS EUC-JP
+                let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
+
+                $("div").each(function (i, elem) {
+
+                    let buffer = $(this).attr("id");
+                    // 搜尋所有表格
+                    if (buffer && buffer.indexOf("content_block_") != -1 && buffer.indexOf("-") != -1) {
+
+                        // 檢查表格標籤
+                        if ($(this).prev().text().trim() == "一覧") {
+
+                            // 遍歷表格內容
+                            $(this).children().children().children().children().children().each(function (i, elem) {
+
+                                let str = $(this).text().trim();
+                                let str_i = str.indexOf("\/");
+                                if (str_i != -1) {
+                                    str = str.substring(0, str_i);
+                                }
+
+                                if (str.trim() == "" || str.indexOf("編集") != -1) {
+                                    return;
+                                }
+
+                                let newData = classDatabase.newData();
+                                newData.name = str;
+                                newData.index.push(str);
+                                if ($("title").text().indexOf("近接型") != -1) {
+                                    newData.type = "近接型";
+                                } else if ($("title").text().indexOf("遠距離型") != -1) {
+                                    newData.type = "遠距離型";
+                                } else {
+                                    newData.type = "UNKNOWN";
+                                }
+
+                                // 新增職業資料
+                                classDatabase.addData(newData);
+                            });
+                        }
+                    }
+                });//*/
+                // $("table[class=edit]").each(function (i, elem) {
+                //     let table = $(this).html().replaceAll("、", "/").replaceAll("<br>", "").tableToArray();
+                // });
+                // console.log("done!");
+                resolve();
+            });
         });
     }
-    request.get("http://seesaawiki.jp/aigis/d/class_%b6%e1%c0%dc%b7%bf_%cc%dc%bc%a1", { encoding: "binary" }, requestCallBack);
-    request.get("http://seesaawiki.jp/aigis/d/class_%b1%f3%b5%f7%ce%a5%b7%bf_%cc%dc%bc%a1", { encoding: "binary" }, requestCallBack);
+    await _requestClass("http://seesaawiki.jp/aigis/d/class_%b6%e1%c0%dc%b7%bf_%cc%dc%bc%a1");
+    await _requestClass("http://seesaawiki.jp/aigis/d/class_%b1%f3%b5%f7%ce%a5%b7%bf_%cc%dc%bc%a1");
 
-    setTimeout(async function () {
-        // save Database
-        classDatabase.uploadTask();
-    }, 3000);
+    classDatabase.uploadTask();
 
 };
 // HTML table to array
@@ -916,7 +911,7 @@ String.prototype.tableToArray = function () {
 // Character
 let charaDatabase = database.charaDatabase;
 // 模糊搜尋
-const searchCharacter = module.exports.searchCharacter = function (key, accurate) {
+const searchCharacter = _anna.searchCharacter = function (key, accurate) {
     accurate = !!accurate;
     debugLog()("searchCharacter(" + key + ", " + accurate + ")");
 
@@ -1042,27 +1037,22 @@ const getRarityString = function (str) {
 
 
 // 管理用參數
-const debugLog = module.exports.debugLog = function () {
-    // debug = T; debugPush = T
-    if (config.switchVar.debug && config.switchVar.debugPush) {
-        if (config.isLocalHost) {
-            return console.log;
-        } else {
+const debugLog = _anna.debugLog = function () {
+    if (config.switchVar.debug) {
+        if (config.switchVar.debugPush && !config.isLocalHost) {
             return (msg) => {
                 console.log(msg);
-                line.abotPushLog(msg);
+                abotPushLog(msg);
             };
+        } else {
+            return console.log;
         }
-    }
 
-    // debug = T; debugPush = F
-    if (config.switchVar.debug && !config.switchVar.debugPush) {
-        return console.log;
+    } else {
+        return () => { };
     }
-
-    return () => { };
 }
-const debugConsoleLog = module.exports.debugConsoleLog = function () {
+const debugConsoleLog = _anna.debugConsoleLog = function () {
     // debug = T; debugPush = F
     if (config.switchVar.debug) {
         return console.log;
@@ -1071,23 +1061,23 @@ const debugConsoleLog = module.exports.debugConsoleLog = function () {
     return () => { };
 }
 
-const isAdmin = function (userId) {
+const isAdmin = _anna.isAdmin = function (userId) {
     return (userId == config.adminstrator || config.admins.indexOf(userId) != -1)
 }
 
-module.exports.autoTest = async function () {
+_anna.autoTest = async function () {
     // await init();
     // await imgur.init();
 
-    let sourceId = "U9eefeba8c0e5f8ee369730c4f983346b";
-    let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
-    // config.switchVar.debug = true;
+    // let sourceId = "U9eefeba8c0e5f8ee369730c4f983346b";
+    // let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
+    // // config.switchVar.debug = true;
 
     // await replyAI("狀態", sourceId, userId).then(console.log);
     // await replyAI("職業", sourceId, userId).then(console.log);
     // await replyAI("職業 ナ", sourceId, userId).then(console.log);
 
-    // await replyAI("學習 NNLK:白ナナリー", sourceId, userId).then(console.log);
+    // await replyAI("學習 NNLK:白射手ナナリー", sourceId, userId).then(console.log);
 
     // await replyAI("NNLK", sourceId, userId).then(console.log);
     // await replyAI("黑弓", sourceId, userId).then(console.log);

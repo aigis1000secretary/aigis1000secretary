@@ -1,8 +1,7 @@
 
 const fs = require('fs');
-const dbox = require("./dbox.js");
-const line = require("./line.js");
 const config = require("./config.js");
+const dbox = require("./dbox.js");
 
 // 網址編碼
 const iconv = require("iconv-lite");
@@ -88,7 +87,7 @@ class Database {
 
     // 讀取資料
     async loadDB() {
-        console.log(this.name + " loading...");
+        // console.log(this.name + " loading...");
 
         let obj = [];
         try {
@@ -126,7 +125,7 @@ class Database {
 
     // 下載
     async downloadDB() {
-        console.log(this.name + " downloading...");
+        // console.log(this.name + " downloading...");
 
         // download json
         try {
@@ -281,7 +280,7 @@ class CharaDatabase extends Database {
                 console.log("[*] Update  character <" + newData.name + "> data!");
                 return "anna " + newData.name + " New character data update!";
             } else {
-                console.log("[-] Existed Character <" + newData.name + "> data no changed.");
+                // console.log("[-] Existed Character <" + newData.name + "> data no changed.");
                 return "";
             }
         };

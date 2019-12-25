@@ -1,13 +1,15 @@
 // 初始化
 const config = require("./config.js");
-const anna = require("./anna.js");
-const imgur = require("./imgur.js");
 const dbox = require("./dbox.js");
+
+const imgur = require("./imgur.js");
 const express = require("./express.js");
 const line = require("./line.js");
 const twitter = require("./twitter.js");
-let tweetMediaCache = [];
 const discord = require("./discord.js");
+
+const anna = require("./anna.js");
+let tweetMediaCache = [];
 
 // groupDatabase
 const database = require("./database.js");
@@ -18,10 +20,9 @@ const lineBotOn = function () {
 
     // wellcome msg
     line.bot.on("memberJoined", function (event) {
-        if (config.switchVar.logRequestToFile && event) {
-            dbox.logToFile("webhook/", "memberJoined", event);
+        if (event && config.switchVar.logRequestToFile) {
+            dbox.logToFile("line/", "memberJoined", event);
         }
-        // anna.debugLog()(event);
 
         // define reply function
         let replyFunc = function (rMsg) {
@@ -35,14 +36,17 @@ const lineBotOn = function () {
         if (result == false) {
             result = "歡迎使用政務官小安娜 v" + config._version + ", 輸入(安娜 HELP)以取得更多訊息";
         }
-        replyFunc(result);
+
+        if (!anna.isAdmin(event.source.userId)) {
+            replyFunc(result);
+        }
         return true;
     });// */
 
     // normal msg
     line.bot.on("message", async function (event) {
         if (config.switchVar.logRequestToFile && event) {
-            dbox.logToFile("webhook/", "message", event);
+            dbox.logToFile("line/", "message", event);
         }
 
         // 文字事件
@@ -65,6 +69,7 @@ const lineBotOn = function () {
                 event.reply(rMsg).then(anna.debugLog).catch(anna.debugLog);
                 return true;
             };
+
             // reply tweet image
             for (let key in tweetMediaCache) {
                 if (msg.indexOf(key) != -1) {
@@ -148,54 +153,6 @@ const lineBotOn = function () {
             return;
         }
     });
-}
-// twitter bot 監聽
-const twitterBotOn = function () {
-
-    if (!config.isLocalHost) {
-        let callback = async function (tweet_data) {
-            let aIDs = (await line.abot.getGroups()).split("\n");
-            for (let i in aIDs) {
-                let aid = aIDs[i];
-
-                // if (!groupDatabase.data[i].alarm) continue;
-                // // 14 days no ant msg idle group	3 * 24 * 60 * 60 * 1000
-                // if (Date.now() - groupDatabase.data[i].timestamp > 259200000) {
-                //     groupDatabase.data[i].alarm = false;
-                //     groupDatabase.uploadTask();
-                //     continue;
-                // }
-
-                let text = tweet_data.text;
-                let mediaUrl = "";
-
-                // push image data
-                if (tweet_data.medias.length > 0) {
-                    // check keyword in text
-                    mediaUrl = tweet_data.medias[0].url.split('/t.co/').splice(-1);
-
-                    if (mediaUrl && text.indexOf(mediaUrl) == -1) {
-                        text += "\n" + mediaUrl;
-                    }
-
-                    // map keyword => media.link
-                    tweetMediaCache[mediaUrl] = [];
-                    for (let j in tweet_data.medias) {
-                        let media = tweet_data.medias[j];
-                        if (media.type == "photo") {
-                            tweetMediaCache[mediaUrl].push(media.link);
-                        }
-                    }
-                }
-
-                line.abot.push(aid, text);
-                // if (tweetMediaCache[mediaUrl] && tweetMediaCache[mediaUrl].length > 3) {
-                //     line.abot.push(aid, mediaUrl);
-                // }
-            }
-        }
-        twitter.stream.litsen("Aigis1000", "", callback);
-    }
 }
 // discord bot 監聽
 const discordBotOn = function () {
@@ -287,41 +244,93 @@ const discordBotOn = function () {
         });
     }
 }
+// twitter bot 監聽
+const twitterBotOn = function () {
+
+    if (!config.isLocalHost) {
+        let callback = async function (tweet_data) {
+            let aIDs = (await line.abot.getGroups()).split("\n");
+            for (let i in aIDs) {
+                let aid = aIDs[i];
+
+                // if (!groupDatabase.data[i].alarm) continue;
+                // // 14 days no ant msg idle group	3 * 24 * 60 * 60 * 1000
+                // if (Date.now() - groupDatabase.data[i].timestamp > 259200000) {
+                //     groupDatabase.data[i].alarm = false;
+                //     groupDatabase.uploadTask();
+                //     continue;
+                // }
+
+                let text = tweet_data.text;
+                let mediaUrl = "";
+
+                // push image data
+                if (tweet_data.medias.length > 0) {
+                    // check keyword in text
+                    mediaUrl = tweet_data.medias[0].url.split('/t.co/').splice(-1);
+
+                    if (mediaUrl && text.indexOf(mediaUrl) == -1) {
+                        text += "\n" + mediaUrl;
+                    }
+
+                    // map keyword => media.link
+                    tweetMediaCache[mediaUrl] = [];
+                    for (let j in tweet_data.medias) {
+                        let media = tweet_data.medias[j];
+                        if (media.type == "photo") {
+                            tweetMediaCache[mediaUrl].push(media.link);
+                        }
+                    }
+                }
+
+                line.abot.push(aid, text);
+                // if (tweetMediaCache[mediaUrl] && tweetMediaCache[mediaUrl].length > 3) {
+                //     line.abot.push(aid, mediaUrl);
+                // }
+            }
+        }
+        twitter.stream.litsen("Aigis1000", "", callback);
+    }
+}
 
 const timerBotOn = function () {
 
-    let timer = async function () {
-        let nd = new Date(Date.now());
-        if (nd.getMinutes() < 5) {
+    let timer = async function (lastDate) {
+        let nowDate = new Date(Date.now());
+        if (nowDate.getMinutes() < lastDate.getMinutes() && // now hh:00 < hh:59 
+            nowDate.getHours() == 8) { // new 08:00 
 
             let dayList = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"]
             let str = "";
-            str += nd.getFullYear() + "/";
-            str += (nd.getMonth() + 1) + "/";
-            str += nd.getDate() + " ";
-            str += dayList[nd.getDay()] + " ";
+            str += nowDate.getFullYear() + "/";
+            str += ((nowDate.getMonth() + 1) + "/").padStart(3, '0');
+            str += (nowDate.getDate() + " ").padStart(3, '0');
+            str += dayList[nowDate.getDay()] + " ";
 
-            str += nd.getHours() + ":";
-            str += nd.getMinutes() + ":";
-            str += nd.getSeconds();
+            str += (nowDate.getHours() + ":").padStart(3, '0');
+            str += (nowDate.getMinutes() + ":").padStart(3, '0');
+            str += (nowDate.getSeconds() + "").padStart(2, '0');
 
-            // line.abotPushLog(str);
-            await sleep(2 * 60 * 1000);
+            abotPushLog(str);
         }
-        setTimeout(timer, 3 * 60 * 1000);
+        setTimeout(timer, 60 * 1000, new Date(Date.now()));// pre min
     };
-    timer();
+    timer(new Date(0));
 }
 
 
 
 const main = async function () {
     // 讀取資料
-    await imgur.init();
+    await config.init();
+    express.init();
+    line.init();
+    twitter.init();
+    discord.init();
+
     await anna.init();
     await groupDatabase.init().catch((error) => { console.log("database init error:\n"); console.log(error); });
-
-    express.init();
+    await imgur.init();
 
     // 開始監聽
     lineBotOn();
@@ -329,9 +338,9 @@ const main = async function () {
     discordBotOn();
     timerBotOn();
 
-    if (config.isLocalHost) console.clear();
+    // if (config.isLocalHost) console.clear();
     console.log("=====*****Anna secretary online*****=====");
-    // line.abotPushLog("Anna secretary online");
+    // abotPushLog("Anna secretary online");
 
 }; main();
 
