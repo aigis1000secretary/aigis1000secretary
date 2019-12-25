@@ -16,10 +16,11 @@
     fix abot autologin
     disable log msg
     initial Method Rebuild
-    abot login token auto upload
+    abot login token auto upload/update
     crawler fix
     tidy bot push msg
     newimg error msg
+    abot timer on
 */
 
 const _config = module.exports = {

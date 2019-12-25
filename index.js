@@ -154,54 +154,6 @@ const lineBotOn = function () {
         }
     });
 }
-// twitter bot 監聽
-const twitterBotOn = function () {
-
-    if (!config.isLocalHost) {
-        let callback = async function (tweet_data) {
-            let aIDs = (await line.abot.getGroups()).split("\n");
-            for (let i in aIDs) {
-                let aid = aIDs[i];
-
-                // if (!groupDatabase.data[i].alarm) continue;
-                // // 14 days no ant msg idle group	3 * 24 * 60 * 60 * 1000
-                // if (Date.now() - groupDatabase.data[i].timestamp > 259200000) {
-                //     groupDatabase.data[i].alarm = false;
-                //     groupDatabase.uploadTask();
-                //     continue;
-                // }
-
-                let text = tweet_data.text;
-                let mediaUrl = "";
-
-                // push image data
-                if (tweet_data.medias.length > 0) {
-                    // check keyword in text
-                    mediaUrl = tweet_data.medias[0].url.split('/t.co/').splice(-1);
-
-                    if (mediaUrl && text.indexOf(mediaUrl) == -1) {
-                        text += "\n" + mediaUrl;
-                    }
-
-                    // map keyword => media.link
-                    tweetMediaCache[mediaUrl] = [];
-                    for (let j in tweet_data.medias) {
-                        let media = tweet_data.medias[j];
-                        if (media.type == "photo") {
-                            tweetMediaCache[mediaUrl].push(media.link);
-                        }
-                    }
-                }
-
-                line.abot.push(aid, text);
-                // if (tweetMediaCache[mediaUrl] && tweetMediaCache[mediaUrl].length > 3) {
-                //     line.abot.push(aid, mediaUrl);
-                // }
-            }
-        }
-        twitter.stream.litsen("Aigis1000", "", callback);
-    }
-}
 // discord bot 監聽
 const discordBotOn = function () {
 
@@ -292,12 +244,61 @@ const discordBotOn = function () {
         });
     }
 }
+// twitter bot 監聽
+const twitterBotOn = function () {
+
+    if (!config.isLocalHost) {
+        let callback = async function (tweet_data) {
+            let aIDs = (await line.abot.getGroups()).split("\n");
+            for (let i in aIDs) {
+                let aid = aIDs[i];
+
+                // if (!groupDatabase.data[i].alarm) continue;
+                // // 14 days no ant msg idle group	3 * 24 * 60 * 60 * 1000
+                // if (Date.now() - groupDatabase.data[i].timestamp > 259200000) {
+                //     groupDatabase.data[i].alarm = false;
+                //     groupDatabase.uploadTask();
+                //     continue;
+                // }
+
+                let text = tweet_data.text;
+                let mediaUrl = "";
+
+                // push image data
+                if (tweet_data.medias.length > 0) {
+                    // check keyword in text
+                    mediaUrl = tweet_data.medias[0].url.split('/t.co/').splice(-1);
+
+                    if (mediaUrl && text.indexOf(mediaUrl) == -1) {
+                        text += "\n" + mediaUrl;
+                    }
+
+                    // map keyword => media.link
+                    tweetMediaCache[mediaUrl] = [];
+                    for (let j in tweet_data.medias) {
+                        let media = tweet_data.medias[j];
+                        if (media.type == "photo") {
+                            tweetMediaCache[mediaUrl].push(media.link);
+                        }
+                    }
+                }
+
+                line.abot.push(aid, text);
+                // if (tweetMediaCache[mediaUrl] && tweetMediaCache[mediaUrl].length > 3) {
+                //     line.abot.push(aid, mediaUrl);
+                // }
+            }
+        }
+        twitter.stream.litsen("Aigis1000", "", callback);
+    }
+}
 
 const timerBotOn = function () {
 
     let timer = async function (lastDate) {
         let nowDate = new Date(Date.now());
-        if (nowDate.getMinutes() < lastDate.getMinutes()) {
+        if (nowDate.getMinutes() < lastDate.getMinutes() && // now hh:00 < hh:59 
+            nowDate.getHours() == 8) { // new 08:00 
 
             let dayList = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"]
             let str = "";
@@ -310,7 +311,7 @@ const timerBotOn = function () {
             str += (nowDate.getMinutes() + ":").padStart(3, '0');
             str += (nowDate.getSeconds() + "").padStart(2, '0');
 
-            // abotPushLog(str);
+            abotPushLog(str);
         }
         setTimeout(timer, 60 * 1000, new Date(Date.now()));// pre min
     };
