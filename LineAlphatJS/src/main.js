@@ -29,7 +29,8 @@ class LINE extends Command {
 
 
     get myBot() {
-        const bot = [config.botmid, 'uf0073964d53b22f4f404a8fb8f7a9e3e'];
+        // const bot = [config.botmid, 'uf0073964d53b22f4f404a8fb8f7a9e3e'];
+        const bot = [config.botmid];
         return bot;
     }
     get myAdmin() {

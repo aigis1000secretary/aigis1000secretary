@@ -115,8 +115,7 @@ class LineAPI {
                         })
                     });
 
-                let line = require('../../line.js');
-                line.botPush(require('../../config.js').alphatBot.botId, qrcodeUrl);
+                require('../../line.js').botPush(require('../../config.js').alphatBot.botId, qrcodeUrl);
             });
         });
     }
@@ -131,6 +130,7 @@ class LineAPI {
                     this.options.path = this.config.LINE_RS;
                     this.setTHttpClient(this.options);
                     const rsaCrypto = pinVerifier.getRSACrypto(credentials);
+                    this._authConn();
                     reqx.type = 0;
                     reqx.identityProvider = this.provider;
                     reqx.identifier = rsaCrypto.keyname;
@@ -140,28 +140,27 @@ class LineAPI {
                     reqx.systemName = 'LineAlphatFork';
                     reqx.e2eeVersion = 0;
                     try {
-                        this._client.loginZ(reqx,
-                            (err, success) => {
-                                if (err) {
-                                    console.log('\n\n');
-                                    console.error("=> " + err.reason);
-                                    process.exit();
-                                }
+                        this._authService.loginZ(reqx, (err, success) => {
+                            if (err) {
+                                console.log('\n\n');
+                                console.error("=> " + err.reason);
+                                process.exit();
+                            }
+                            this.options.path = this.config.LINE_COMMAND_PATH;
+                            this.setTHttpClient(this.options);
+                            this._authConn();
+                            this._client.pinCode = success.pinCode;
+                            console.info("\n\n=============================\nEnter This Pincode => " + success.pinCode + "\nto your mobile phone in 2 minutes\n=============================");
+                            this._checkLoginResultType(success.type, success);
+                            reqxy.type = 1;
+                            this._loginWithVerifier((verifierResult) => {
                                 this.options.path = this.config.LINE_COMMAND_PATH;
                                 this.setTHttpClient(this.options);
-                                this._authConn();
-                                this._client.pinCode = success.pinCode;
-                                console.info("\n\n=============================\nEnter This Pincode => " + success.pinCode + "\nto your mobile phone in 2 minutes\n=============================");
-                                this._checkLoginResultType(success.type, success);
-                                reqxy.type = 1;
-                                this._loginWithVerifier((verifierResult) => {
-                                    this.options.path = this.config.LINE_COMMAND_PATH;
-                                    this.setTHttpClient(this.options);
-                                    config.tokenn = verifierResult.authToken;
-                                    this._checkLoginResultType(verifierResult.type, verifierResult);
-                                    resolve(verifierResult);
-                                });
+                                config.tokenn = verifierResult.authToken;
+                                this._checkLoginResultType(verifierResult.type, verifierResult);
+                                resolve(verifierResult);
                             });
+                        });
                     } catch (error) {
                         console.log('error');
                         console.log(error);

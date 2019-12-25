@@ -1,15 +1,8 @@
 
-const dbox = require("./dbox.js");
-const express = require("./express.js");
 // line bot
 const config = require("./config.js");
-
 const linebot = require("linebot");
-let devbot = linebot(Object.assign({ channelId: '', channelSecret: '', channelAccessToken: '' }, config.devbot));
-express.app.post("/linebot/", devbot.parser());
-
 const linebotAlphat = require("./LineAlphatJS/src/bot.js");
-let alphatbot = linebotAlphat(Object.assign({ authToken: '', certificate: '', ID: '', email: '', password: '' }, config.alphatBot));
 
 class LineMessage {
     constructor(rawData) {
@@ -17,39 +10,42 @@ class LineMessage {
     };
 }
 
-module.exports = {
-    bot: devbot,
-    abot: alphatbot,
+const _line = module.exports = {
+    bot: null,
+    abot: null,
 
-    devbotInit: function () {
-        let devbot = linebot(Object.assign({ channelId: '', channelSecret: '', channelAccessToken: '' }, config.devbot));
-        express.app.post("/linebot/", devbot.parser());
-        module.exports.bot = devbot;
+    init() {
+        _line.devbotInit();
+        _line.alphatbotInit();
     },
-    alphatbotInit: function () {
-        alphatbot = linebotAlphat(Object.assign({ authToken: '', certificate: '', ID: '', email: '', password: '' }, config.alphatBot));
+    devbotInit() {
+        _line.bot = linebot(Object.assign({ channelId: '', channelSecret: '', channelAccessToken: '' }, config.devbot));
+        require("./express.js").app.post("/linebot/", _line.bot.parser());
+    },
+    alphatbotInit() {
+        _line.abot = linebotAlphat(Object.assign({ authToken: '', certificate: '', email: '', password: '' }, config.alphatBot));
     },
 
-    botPush: function (userId, msg, type = "") {
+    botPush(userId, msg, type = "") {
         if (!config.isLocalHost) {
             devbot.push(userId, msg).then(function (result) {
                 if (config.switchVar.logLineBotPush) {
+                    // log to dropbox
                     let logObject = { to: userId, type: type, messages: msg, result: result };
                     let name = (result.message == "You have reached your monthly limit." ? "linePushFail" : "linePush");
-                    // log to dropbox
-                    dbox.logToFile("linePush/", name, logObject);
+                    require("./dbox.js").logToFile("line/", name, logObject);
                 }
             });
         } else {
             console.log(type + ">> " + JSON.stringify(msg, null, 2));
         }
     },
-    botPushLog: function (msg) {
-        module.exports.botPush(config.botLogger, msg, "log");
-    },
-    botPushError: function (msg) {
-        module.exports.botPush(config.botLogger, msg, "logError");
-    },
+    // botPushLog(msg) {
+    //     module.exports.botPush(config.botLogger, msg, "log");
+    // },
+    // botPushError(msg) {
+    //     module.exports.botPush(config.botLogger, msg, "logError");
+    // },
 
     abotPush(userId, msg) {
         alphatbot.push(userId, msg);
@@ -61,7 +57,7 @@ module.exports = {
 
     // Line Message element
     // 文字訊息
-    createTextMsg: function (_text) {
+    createTextMsg(_text) {
         return new LineMessage({
             type: "text",
             text: _text.trim()
@@ -70,7 +66,7 @@ module.exports = {
 
     // 圖片訊息
     // url = https://aigis1000secretary.updog.co/刻詠の風水士リンネ/6230667.png encodeURI(img) (utf8 to %utf8 )
-    createImageMsg: function (image, thumbnail) {
+    createImageMsg(image, thumbnail) {
         return new LineMessage({
             type: "image",
             originalContentUrl: image,
@@ -82,7 +78,7 @@ module.exports = {
     // altText = "Wiki 連結"
     // label = Name
     // url = "https://seesaawiki.jp/aigis/d/刻詠の風水士リンネ"	encodeURI_JP(url)
-    createUriButtons: function (altText, label, url) {
+    createUriButtons(altText, label, url) {
         if (label.length != url.length) return "";
         if (label.length <= 0 || 4 < label.length) return "";
         let replyMsg = {
@@ -109,7 +105,7 @@ module.exports = {
     // altText = "Wiki 連結"
     // label = Name
     // url = "https://seesaawiki.jp/aigis/d/刻詠の風水士リンネ"	encodeURI_JP(url)
-    createMsgButtons: function (altText, label, msg) {
+    createMsgButtons(altText, label, msg) {
         if (label.length != msg.length) return "";
         if (label.length <= 0 || 4 < label.length) return "";
         let replyMsg = {
@@ -136,6 +132,7 @@ module.exports = {
 
 };
 
-botPush = module.exports.botPush;
-botPushLog = module.exports.botPushLog;
-botPushError = module.exports.botPushError;
+// botPush = module.exports.botPush;
+// botPushLog = module.exports.botPushLog;
+// botPushError = module.exports.botPushError;
+abotPushLog = module.exports.abotPushLog;

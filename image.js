@@ -3,7 +3,6 @@
 const anna = require("./anna.js");
 const dbox = require("./dbox.js");
 const imgur = require("./imgur.js");
-const twitter = require("./twitter.js");
 const md5f = function (str) { return require('crypto').createHash('md5').update(str).digest('hex'); }
 
 

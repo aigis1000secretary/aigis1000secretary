@@ -1,9 +1,10 @@
 const Discord = require('discord.js')
 const config = require("./config.js");
 
-const client = new Discord.Client();
-client.login(config.discordbot.token);
-
-module.exports = {
-    bot: client,
+const _discord = module.exports = {
+    bot: null,
+    init() {
+        _discord.bot = new Discord.Client();
+        _discord.bot.login(config.discordbot.token);
+    }
 }
