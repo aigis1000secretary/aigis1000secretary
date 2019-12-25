@@ -8,9 +8,7 @@
 */
 
 /*
-    // commit 
-    >> feature/0.8.2/regexpCrawler
-    character data crawler rebuild +Regexp
+
 */
 
 const config = {
