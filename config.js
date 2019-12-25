@@ -3,8 +3,8 @@
     // todo
     database api input
     character search method rebuild?
-    newimg error msg
     error msg push
+    newimg error msg?
     class Database
 
     config update from dbox
@@ -19,6 +19,7 @@
     abot login token auto upload
     crawler fix
     tidy bot push msg
+    newimg error msg
 */
 
 const _config = module.exports = {

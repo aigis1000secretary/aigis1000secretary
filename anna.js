@@ -405,7 +405,7 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
                 let classArray = searchByClass(arg2);
                 let charaArray = classArray.length == 1 ? classArray : searchCharacter(arg2).concat(classArray);
                 if (charaArray.length > 1) {
-                    return "搜尋不明確: " + charaArray;
+                    return "搜尋不明確: " + charaArray.join("\n");
                 }
                 if (charaArray.length == 1) {
                     target = charaArray[0].trim();
