@@ -5,7 +5,6 @@
     character search method rebuild?
     newimg error msg
     error msg push
-    tidy bot push msg
     class Database
 
     config update from dbox
@@ -19,6 +18,7 @@
     initial Method Rebuild
     abot login token auto upload
     crawler fix
+    tidy bot push msg
 */
 
 const _config = module.exports = {
@@ -32,9 +32,16 @@ const _config = module.exports = {
     isLocalHost: require("fs").existsSync("./debug.js"),
 
     adminstrator: "U9eefeba8c0e5f8ee369730c4f983346b",
-    admins: ["Ub211d6652fb860935febc6473d1f9ffc"],
+    admins: ["U9eefeba8c0e5f8ee369730c4f983346b", "Ub211d6652fb860935febc6473d1f9ffc"],
     botLogger: "U9eefeba8c0e5f8ee369730c4f983346b",
     abotLogger: "u33a9a527c6ac1b24e0e4e35dde60c79d",
+
+    // 黑田
+    // U9eefeba8c0e5f8ee369730c4f983346b
+    // u33a9a527c6ac1b24e0e4e35dde60c79d
+    // 小安娜傳聲筒
+    // Ub211d6652fb860935febc6473d1f9ffc
+    // uf0073964d53b22f4f404a8fb8f7a9e3e
 
     // dropbox
     dropbox: {
@@ -96,15 +103,33 @@ const _config = module.exports = {
         logLineBotPush: true
     },
 
-    autoTest() {
-        console.log(JSON.stringify(_config, null, 4));
-    },
+    // autoTest() {
+    //     let result = [];
+    //     let testlog = Object.keys(_config);
+    //     for (let i in testlog) {
+    //         let key = testlog[i];
+    //         if (typeof (_config[key]) == "object") {
+    //             result.push(key + ":");
+    //             result.push(Object.keys(_config[key]));
+    //         } else if (typeof (_config[key]) == "function") {
+    //             result.push(key + "()");
+    //         } else {
+    //             result.push(key);
+    //         }
+    //     }
+    //     console.log(JSON.stringify(result, null, 4).replace(/\"/g, "").replace(/:,/g, ":"));
+    // },
 
     async init() {
         // Object.freeze(_config.dropbox);
         // Object.freeze(_config.imgur);
         // Object.freeze(_config.devbot);
         // Object.freeze(_config.twitterCfg);
+        setTimeout(function () {
+            require("dns").lookup(require("os").hostname(), function (err, address, fam) {
+                _config.hostIP = address;
+            });
+        }, 1);
 
         // 加密
         // let key = _config.alphatBot.jsonKey;
@@ -143,17 +168,9 @@ const _config = module.exports = {
         } catch (e) {
             // error
         }
-
-
         // console.log(JSON.stringify(_config.dropbox, null, 4));
     }
 };
-
-setTimeout(function () {
-    require("dns").lookup(require("os").hostname(), function (err, address, fam) {
-        _config.hostIP = address;
-    });
-}, 1);
 
 String.prototype.replaceAll = function (s1, s2) {
     let source = this;

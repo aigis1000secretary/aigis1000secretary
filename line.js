@@ -30,22 +30,22 @@ const _line = module.exports = {
         if (!config.isLocalHost) {
             devbot.push(userId, msg).then(function (result) {
                 if (config.switchVar.logLineBotPush) {
+                    // log to dropbox
                     let logObject = { to: userId, type: type, messages: msg, result: result };
                     let name = (result.message == "You have reached your monthly limit." ? "linePushFail" : "linePush");
-                    // log to dropbox
-                    require("./dbox.js").logToFile("linePush/", name, logObject);
+                    require("./dbox.js").logToFile("line/", name, logObject);
                 }
             });
         } else {
             console.log(type + ">> " + JSON.stringify(msg, null, 2));
         }
     },
-    botPushLog(msg) {
-        module.exports.botPush(config.botLogger, msg, "log");
-    },
-    botPushError(msg) {
-        module.exports.botPush(config.botLogger, msg, "logError");
-    },
+    // botPushLog(msg) {
+    //     module.exports.botPush(config.botLogger, msg, "log");
+    // },
+    // botPushError(msg) {
+    //     module.exports.botPush(config.botLogger, msg, "logError");
+    // },
 
     abotPush(userId, msg) {
         alphatbot.push(userId, msg);
@@ -132,7 +132,7 @@ const _line = module.exports = {
 
 };
 
-botPush = module.exports.botPush;
-botPushLog = module.exports.botPushLog;
-botPushError = module.exports.botPushError;
+// botPush = module.exports.botPush;
+// botPushLog = module.exports.botPushLog;
+// botPushError = module.exports.botPushError;
 abotPushLog = module.exports.abotPushLog;

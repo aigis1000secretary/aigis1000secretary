@@ -695,7 +695,6 @@ const charaDataCrawler = function (urlPath, sourceId) {
             // 新增角色資料
             let msg = charaDatabase.addData(newData);
             if (msg != "") {
-                // botPush(sourceId, msg);
                 abotPushLog(msg);
             }
             resolve();
@@ -1043,7 +1042,7 @@ const debugLog = _anna.debugLog = function () {
         if (config.switchVar.debugPush && !config.isLocalHost) {
             return (msg) => {
                 console.log(msg);
-                line.abotPushLog(msg);
+                abotPushLog(msg);
             };
         } else {
             return console.log;
@@ -1062,7 +1061,7 @@ const debugConsoleLog = _anna.debugConsoleLog = function () {
     return () => { };
 }
 
-const isAdmin = function (userId) {
+const isAdmin = _anna.isAdmin = function (userId) {
     return (userId == config.adminstrator || config.admins.indexOf(userId) != -1)
 }
 
@@ -1070,15 +1069,15 @@ _anna.autoTest = async function () {
     // await init();
     // await imgur.init();
 
-    let sourceId = "U9eefeba8c0e5f8ee369730c4f983346b";
-    let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
-    // config.switchVar.debug = true;
+    // let sourceId = "U9eefeba8c0e5f8ee369730c4f983346b";
+    // let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
+    // // config.switchVar.debug = true;
 
     // await replyAI("狀態", sourceId, userId).then(console.log);
     // await replyAI("職業", sourceId, userId).then(console.log);
     // await replyAI("職業 ナ", sourceId, userId).then(console.log);
 
-    // await replyAI("學習 NNLK:白ナナリー", sourceId, userId).then(console.log);
+    // await replyAI("學習 NNLK:白射手ナナリー", sourceId, userId).then(console.log);
 
     // await replyAI("NNLK", sourceId, userId).then(console.log);
     // await replyAI("黑弓", sourceId, userId).then(console.log);

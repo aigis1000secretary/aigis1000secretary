@@ -95,7 +95,7 @@ const _twitter = module.exports = {
                 if (tweet_data.screen_name == target || tweet_data.screen_name == "ERROR") {
                     // log
                     if (config.switchVar.logStreamToFile && tweet) {
-                        dbox.logToFile("stream/", "twitter", tweet);
+                        dbox.logToFile("twitter/", "stream", tweet);
                     }
 
                     // image to dropbox
@@ -350,7 +350,7 @@ const _twitter = module.exports = {
         },
         post(request, response) {
             if (config.switchVar.logRequestToFile && request.body) {
-                dbox.logToFile("webhook/", "twitter", request.body);
+                dbox.logToFile("twitter/", "webhook", request.body);
             }
             response.send("200 OK");
         }
@@ -453,7 +453,7 @@ const httpTwitterAPI = function () {
             console.log(">>" + postText + "<<");
 
             if (postText.indexOf("pic.twitter.com") != -1) {
-                // botPush(postText);
+                
             }
         });
 

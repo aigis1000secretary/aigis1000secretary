@@ -20,10 +20,9 @@ const lineBotOn = function () {
 
     // wellcome msg
     line.bot.on("memberJoined", function (event) {
-        if (config.switchVar.logRequestToFile && event) {
-            dbox.logToFile("webhook/", "memberJoined", event);
+        if (event && config.switchVar.logRequestToFile) {
+            dbox.logToFile("line/", "memberJoined", event);
         }
-        // anna.debugLog()(event);
 
         // define reply function
         let replyFunc = function (rMsg) {
@@ -37,14 +36,17 @@ const lineBotOn = function () {
         if (result == false) {
             result = "歡迎使用政務官小安娜 v" + config._version + ", 輸入(安娜 HELP)以取得更多訊息";
         }
-        replyFunc(result);
+
+        if (!anna.isAdmin(event.source.userId)) {
+            replyFunc(result);
+        }
         return true;
     });// */
 
     // normal msg
     line.bot.on("message", async function (event) {
         if (config.switchVar.logRequestToFile && event) {
-            dbox.logToFile("webhook/", "message", event);
+            dbox.logToFile("line/", "message", event);
         }
 
         // 文字事件
@@ -67,6 +69,7 @@ const lineBotOn = function () {
                 event.reply(rMsg).then(anna.debugLog).catch(anna.debugLog);
                 return true;
             };
+
             // reply tweet image
             for (let key in tweetMediaCache) {
                 if (msg.indexOf(key) != -1) {
@@ -307,9 +310,9 @@ const timerBotOn = function () {
             str += (nowDate.getMinutes() + ":").padStart(3, '0');
             str += (nowDate.getSeconds() + "").padStart(2, '0');
 
-            // line.abotPushLog(str);
+            // abotPushLog(str);
         }
-        setTimeout(timer, 60 * 1000, new Date(Date.now()));
+        setTimeout(timer, 60 * 1000, new Date(Date.now()));// pre min
     };
     timer(new Date(0));
 }
@@ -336,7 +339,7 @@ const main = async function () {
 
     // if (config.isLocalHost) console.clear();
     console.log("=====*****Anna secretary online*****=====");
-    // line.abotPushLog("Anna secretary online");
+    // abotPushLog("Anna secretary online");
 
 }; main();
 
