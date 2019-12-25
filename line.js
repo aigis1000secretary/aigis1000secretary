@@ -28,7 +28,7 @@ const _line = module.exports = {
 
     botPush(userId, msg, type = "") {
         if (!config.isLocalHost) {
-            devbot.push(userId, msg).then(function (result) {
+            _line.bot.push(userId, msg).then(function (result) {
                 if (config.switchVar.logLineBotPush) {
                     // log to dropbox
                     let logObject = { to: userId, type: type, messages: msg, result: result };
@@ -48,10 +48,10 @@ const _line = module.exports = {
     // },
 
     abotPush(userId, msg) {
-        alphatbot.push(userId, msg);
+        _line.abot.push(userId, msg);
     },
     abotPushLog(msg) {
-        alphatbot.push(config.abotLogger, msg);
+        _line.abot.push(config.abotLogger, msg);
     },
 
 
