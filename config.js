@@ -22,10 +22,12 @@
     newimg error msg
     abot timer on
 
+    0.8.4.1
+    cfg Update method Catch dbox error
 */
 
 const _config = module.exports = {
-    _version: "0.8.4.0",
+    _version: "0.8.4.1",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
@@ -148,12 +150,12 @@ const _config = module.exports = {
         // }
         // require("./dbox.js").fileUpload("AlphatBot.json", JSON.stringify(alphatBot));
 
-        let data = await require("./dbox.js").fileDownload("AlphatBot.json");
-        let obj;
-        try { obj = JSON.parse(data); }
-        catch (e) { obj = eval("(" + data + ")"); }
-
         try {
+            let data = await require("./dbox.js").fileDownload("AlphatBot.json");
+            let obj;
+            try { obj = JSON.parse(data); }
+            catch (e) { obj = eval("(" + data + ")"); }
+
             // 解码
             let key = _config.alphatBot.jsonKey;
             function aesDecrypt(encrypt) {
@@ -170,8 +172,8 @@ const _config = module.exports = {
             }
         } catch (e) {
             // error
+            console.log(e);
         }
-        // console.log(JSON.stringify(_config.dropbox, null, 4));
     }
 };
 
