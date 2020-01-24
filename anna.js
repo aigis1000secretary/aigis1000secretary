@@ -392,8 +392,8 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
                     // move image file
                     try {
                         await dbox.fileMove(
-                            "NewImages/NewImages/" + imgArray[0].fileName,
-                            "Character/" + target + "/" + imgArray[0].fileName,
+                            "Images/NewImages/" + imgArray[0].fileName,
+                            "Images/Character/" + target + "/" + imgArray[0].fileName,
                             true);
                     } catch (error) {
                         console.log("分類錯誤!");
