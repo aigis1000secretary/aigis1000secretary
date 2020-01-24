@@ -42,10 +42,13 @@
 
     0.8.4.6
     new image command fix
+
+    0.8.4.7
+    image script fix
 */
 
 const _config = module.exports = {
-    _version: "0.8.4.6",
+    _version: "0.8.4.7",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
