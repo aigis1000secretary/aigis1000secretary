@@ -1,6 +1,7 @@
 
 const request = require("request");
 const fs = require("fs");
+const path = require("path");
 const config = require("./config.js");
 const md5f = function (str) { return require('crypto').createHash('md5').update(str).digest('hex'); }
 
@@ -324,7 +325,7 @@ let _imgur = module.exports = {
             // POST Update Image Information
             async updateImage({ imageHash, tagList, md5 }) {
                 try {
-                    console.log("POST Update Image(" + imageHash + ") Information <" + tagList + ">, <" + md5 + ">");
+                    console.log("POST Update Image(" + imageHash + ") Information <" + tagList + (md5 ? (">, <" + md5 + ">") : (">")));
                     // Set the POST body
                     let postBody = {};
                     if (md5) postBody.description = md5;
@@ -540,7 +541,9 @@ let _imgur = module.exports = {
                     result &= (filter.md5.equali(image.md5));
                 }
                 if (filter.fileName) {
-                    result &= filter.fileName.equali(image.fileName);
+                    let name = path.parse(image.fileName).name;
+                    result &= (filter.fileName.equali(image.fileName) || filter.fileName.equali(name));
+
                 }
                 if (filter.tag) {
                     result &= (
@@ -596,7 +599,7 @@ let _imgur = module.exports = {
             return this.albums.filter(function (album) {
                 let result = (filter != {});
                 for (let key in filter) {
-                    result &= (album[key] == filter[key]);
+                    result &= (album[key].equali(filter[key]));
                 }
                 return result;
             });
@@ -644,36 +647,36 @@ let _imgur = module.exports = {
         // await this.init();
 
         // Account
-        await imgurCore.api.account.albums({ page: 0 }).then((obj) => console.log(obj));;
-        await imgurCore.api.account.albumsCount().then((obj) => console.log(obj));;
-        await imgurCore.api.account.albumsIds({ page: 0 }).then((obj) => console.log(obj));;
-        await imgurCore.api.account.images({ page: 0 }).then((obj) => console.log(obj));;
-        await imgurCore.api.account.imagesCount().then((obj) => console.log(obj));;
-        await imgurCore.api.account.imagesIds({ page: 5 }).then((obj) => console.log(obj));;
+        await imgurCore.api.account.albums({ page: 0 }).then((obj) => console.log(obj));
+        await imgurCore.api.account.albumsCount().then((obj) => console.log(obj));
+        await imgurCore.api.account.albumsIds({ page: 0 }).then((obj) => console.log(obj));
+        await imgurCore.api.account.images({ page: 0 }).then((obj) => console.log(obj));
+        await imgurCore.api.account.imagesCount().then((obj) => console.log(obj));
+        await imgurCore.api.account.imagesIds({ page: 5 }).then((obj) => console.log(obj));
 
         // Image
         let albumHash = "mmtaVlc";   // test album hash
         let imageHash = "J2GU9wI";
         let testImage = ["ovDiJxZ", "CeraaNV", "4kTvWRn", "EUY6l34"];
         let tagList = "水霊使いセノーテ";
-        await imgurCore.api.image.image({ imageHash }).then((obj) => console.log(obj));;
-        await imgurCore.api.image.updateImage({ imageHash, tagList }).then((obj) => console.log(obj));;
-        // await imgurCore.api.image.imageDeletion({ imageHash }).then((obj)=>console.log(obj));;
+        await imgurCore.api.image.image({ imageHash }).then((obj) => console.log(obj));
+        await imgurCore.api.image.updateImage({ imageHash, tagList }).then((obj) => console.log(obj));
+        // await imgurCore.api.image.imageDeletion({ imageHash }).then((obj)=>console.log(obj));
         // let fileName = "IMG_20180928_113244.jpg";
         // let imageBinary = fs.readFileSync(fileName);
-        // await imgurCore.api.image.imageUpload({ imageBinary, fileName }).then((obj)=>console.log(obj));;
+        // await imgurCore.api.image.imageUpload({ imageBinary, fileName }).then((obj)=>console.log(obj));
 
         // Album
-        await imgurCore.api.album.album({ albumHash }).then((obj) => console.log(obj));;
-        await imgurCore.api.album.albumImages({ albumHash }).then((obj) => console.log(obj));;
-        await imgurCore.api.album.setAlbumImages({ albumHash, ids: [] }).then((obj) => console.log(obj));;
-        await imgurCore.api.album.setAlbumImages({ albumHash, ids: [testImage[0], testImage[1]] }).then((obj) => console.log(obj));;
-        await imgurCore.api.album.addAlbumImages({ albumHash, ids: [testImage[2]] }).then((obj) => console.log(obj));;
-        await imgurCore.api.album.addAlbumImages({ albumHash, ids: [testImage[3]] }).then((obj) => console.log(obj));;
-        await imgurCore.api.album.updateAlbum({ albumHash, cover: testImage[0] }).then((obj) => console.log(obj));;
-        await imgurCore.api.album.album({ albumHash }).then((obj) => console.log(obj));;
-        // await imgurCore.api.album.albumCreation({ title: "Test", ids: [testImage[0]] }).then((obj)=>console.log(obj));;
-        // await imgurCore.api.album.albumDeletion({ albumHash }).then((obj)=>console.log(obj));;
+        await imgurCore.api.album.album({ albumHash }).then((obj) => console.log(obj));
+        await imgurCore.api.album.albumImages({ albumHash }).then((obj) => console.log(obj));
+        await imgurCore.api.album.setAlbumImages({ albumHash, ids: [] }).then((obj) => console.log(obj));
+        await imgurCore.api.album.setAlbumImages({ albumHash, ids: [testImage[0], testImage[1]] }).then((obj) => console.log(obj));
+        await imgurCore.api.album.addAlbumImages({ albumHash, ids: [testImage[2]] }).then((obj) => console.log(obj));
+        await imgurCore.api.album.addAlbumImages({ albumHash, ids: [testImage[3]] }).then((obj) => console.log(obj));
+        await imgurCore.api.album.updateAlbum({ albumHash, cover: testImage[0] }).then((obj) => console.log(obj));
+        await imgurCore.api.album.album({ albumHash }).then((obj) => console.log(obj));
+        // await imgurCore.api.album.albumCreation({ title: "Test", ids: [testImage[0]] }).then((obj)=>console.log(obj));
+        // await imgurCore.api.album.albumDeletion({ albumHash }).then((obj)=>console.log(obj));
 
         let rawAlbumData = await imgurCore.api.album.album({ albumHash });
         let rawImageData = await imgurCore.api.image.image({ imageHash });
@@ -708,8 +711,8 @@ class Image {
         this._constructor(rawData);
     };
     _constructor({ id, title, description, name, link, deletehash }) {
-        this.fileName = name;
-        this.md5 = description || "";;
+        this.fileName = name || "";
+        this.md5 = description || "";
         this.tagList = title || "";
         this.id = id; // imageHash
         this.imageLink = link;

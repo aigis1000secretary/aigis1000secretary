@@ -38,6 +38,19 @@ const _express = module.exports = {
             }
             response.send(responseBody);
         });
+        _express.app.get("/stamp/:command", async function (request, response) {
+            let command = request.params.command;
+            let responseBody = "reply false!";
+            console.log(command);
+
+            let result = anna.replyStamp(command);
+            if (typeof (result) == "string") {
+                responseBody = result.replaceAll("\n", "<br>");
+            } else {
+                responseBody = JSON.stringify(result, null, 2).replaceAll("\n", "<br>");
+            }
+            response.send(responseBody);
+        });
 
         // uptimerobot
         _express.app.get("/uptimerobot/", function (request, response) {
