@@ -77,7 +77,7 @@ const main = async function () {
             let rfileName = result.fileName
             // let rmd5 = result.md5
 
-            if (rtagList != tagList) {
+            if (!rtagList.equali(tagList)) {
                 console.log("[" + i + "/" + pathArray.length + "]");
                 await imgur.api.image.updateImage({ imageHash: rId, tagList });
                 console.log("resultImage.length == 1", fileName, mainTag);
@@ -85,7 +85,7 @@ const main = async function () {
                 await sleep(2 * 1000);
                 continue;
             }
-            if (rfileName != fileName) {
+            if (!rfileName.equali(fileName)) {
                 console.log("[" + i + "/" + pathArray.length + "]");
                 await imgur.api.image.imageDeletion({ imageHash: rId });
                 console.log("resultImage.length == 1", fileName, mainTag);
