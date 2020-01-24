@@ -401,13 +401,7 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
                     }
 
                     // set taglist
-                    imgur.api.image.updateImage({ imageHash: imgArray[0].id, tagList: "Character," + target });
-
-                    let albumHash = imgur.database.findAlbumData({ title: "Character" })[0].id;
-                    imgur.api.album.addAlbumImages({ albumHash: albumHash, ids: [imgArray[0].id] });
-
-                    albumHash = imgur.database.findAlbumData({ title: "NewImages" })[0].id;
-                    imgur.api.album.removeAlbumImages({ albumHash: albumHash, ids: [imgArray[0].id] });
+                    imgur.api.image.updateImage({ imageHash: imgArray[0].id, tagList: "Images,Character," + target });
 
                     // update imgur database
                     imgur.database.deleteImageData({ id: imgArray[0].id });
