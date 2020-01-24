@@ -132,18 +132,15 @@ module.exports = {
     },
 
     // move
-    async fileMove(from, to, overwrite = false) {
+    async fileMove(from, to) {
         let filesRelocationArg = {
             from_path: root + from,
             to_path: root + to,
             allow_shared_folder: false,
-            autorename: false,
+            autorename: true,
             allow_ownership_transfer: false
         };
 
-        if (overwrite) {
-            await (dbox.filesDelete({ path: root + to }).catch((error) => { }));
-        }
         try {
             await dbox.filesMoveV2(filesRelocationArg);
             return true;
