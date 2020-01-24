@@ -167,26 +167,6 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
         replyMsg = replyMsg.trim();
         return (replyMsg == "" ? "找不到呢..." : replyMsg);
 
-    } else if (command == "廣播") {
-
-        let i = database.groupDatabase.indexOf(sourceId)
-        if (i != -1) {
-            let alarm = !database.groupDatabase.data[i].alarm;
-            database.groupDatabase.data[i].alarm = alarm;
-
-            let asyncFunc = async function () {
-                try {
-                    await database.groupDatabase.saveDB();
-                    await database.groupDatabase.uploadDB();
-                } catch (error) {
-                    console.log("上傳異常!" + error);
-                }
-            }; asyncFunc();
-
-            return "切換廣播開關，目前為: " + (alarm ? "開" : "關");
-        }
-        return "";  // cant found group id?
-
     } else if (command == "學習") {
         // 關鍵字學習
         // <arg1>
@@ -557,6 +537,22 @@ const replyStamp = _anna.replyStamp = function (msg) {
     if (imgArray.length > 0) {
         replyMsg.push(line.createImageMsg(imgArray[0].imageLink, imgArray[0].thumbnailLink));
         return replyMsg;
+    }
+
+    let cdTime = process.env.CDTIME;
+    if (msg.equali("Rush!!") && (!cdTime || Date.now() - cdTime > 30 * 1000)) {
+        process.env.CDTIME = Date.now();
+
+        let imgArray = imgur.database.findImageData({ tag: "images" });
+        if (imgArray.length > 0) {
+            let i = Math.floor(Math.random() * imgArray.length);
+            let j = Math.floor(Math.random() * i);
+            let k = Math.floor(Math.random() * (imgArray.length - i)) + i;
+            replyMsg.push(line.createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
+            replyMsg.push(line.createImageMsg(imgArray[j].imageLink, imgArray[j].thumbnailLink));
+            replyMsg.push(line.createImageMsg(imgArray[k].imageLink, imgArray[k].thumbnailLink));
+            return replyMsg;
+        }
     }
 
     return false;

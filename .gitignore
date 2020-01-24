@@ -1,10 +1,15 @@
 node_modules/
 .vscode/
+
 test.js
 hotfix.js
+debug.js
+
 node.bat
 *.json
 *.txt
 *.log
 *.csv
-debug\.js
+
+LineAlphatJS/download/
+LineAlphatJS/src/tmp/

@@ -1,5 +1,6 @@
 
 // const fs = require("fs");
+const path = require("path");
 const anna = require("./anna.js");
 const dbox = require("./dbox.js");
 const imgur = require("./imgur.js");
@@ -19,7 +20,9 @@ const main = async function () {
     // get dropbox image list
     let pathArray = [];
 
-    let albumList = ["AutoResponse", "Character", "NewImages"];
+    // let albumList = ["AutoResponse", "Images"];
+    let albumList = ["Images"];
+    // let albumList = ["AutoResponse"];
     for (let i in albumList) {
         let albumName = albumList[i];
         let newPathArray = await getFileList(albumName);
@@ -27,7 +30,7 @@ const main = async function () {
 
         if (imgur.database.findAlbumData({ title: albumName }).length == 0) {
             console.log("album not existed: " + albumName);
-            // await imgur.api.album.albumCreation({ title: albumName });
+            await imgur.api.album.albumCreation({ title: albumName, cover: "LOuRzFE" });
             return;
         }
     }
@@ -35,107 +38,83 @@ const main = async function () {
     console.log("GET DBox Images count: " + pathArray.length);
     // console.log("pathArray = " + JSON.stringify(pathArray, null, 4));
 
-    // // download all image
-    // for (let i in pathArray) {
-    //     console.log(pathArray[i]);
-    //     try {
-    //         let imageBinary = await dbox.fileDownload(pathArray[i]);
-    //         fs.writeFileSync(localImagesPath + pathArray[i].replaceAll("/", "\\"), imageBinary, "Binary");
-    //     } catch (error) {
-    //         console.log(error);
-    //         continue;
-    //     }
-    // }
-
     // image upload script
     for (let i in pathArray) {
         // split folder name for AR key word
-        let parameter = pathArray[i].split("/");
-        let albumName = parameter[0];
-        let tagList = (albumName == parameter[1] ? albumName : albumName + "," + parameter[1]);
-        let fileName = parameter[2];
+        let parse = path.parse(pathArray[i]);
+        let dboxPath = pathArray[i].replace(parse.root, "");
+        let fileName = parse.base;
+        let tagList = dboxPath.replace("/" + fileName, "").split("/").join(",");
         // console.log(albumName + ", <" + tagList + ">, " + fileName);
 
-        let resultImage = [];
-        let onlineAlbum = imgur.database.findAlbumData({ title: albumName })[0];
-        if (onlineAlbum.length == 0) { console.log("findAlbumData error: " + albumName); }
-        let albumHash = onlineAlbum.id;
+        // get albumHash
+        let albumName = dboxPath.split("/")[0];
+        let albumHash = "";
+        let onlineAlbum = imgur.database.findAlbumData({ title: albumName });
+        if (onlineAlbum.length != 0) { albumHash = onlineAlbum[0].id; }
+        else { console.log("findAlbumData error: " + albumName); }
+
         let imageBinary = null, fileMd5 = "";
+        let resultImage = [];
+        // find by filename
+        let tags = tagList.split(",");
+        let mainTag = tags[tags.length - 1];
+        resultImage = imgur.database.findImageData({ fileName, tag: mainTag });
 
-        // filename check
-        resultImage = imgur.database.findImageData({ fileName, tag: tagList.split(",")[1] });
-        if (resultImage.length != 1) {
-            // md5 check
-            try {
-                imageBinary = await dbox.fileDownload(pathArray[i]);
-                fileMd5 = md5f(imageBinary);  // get MD5 for check
-                resultImage = imgur.database.findImageData({ md5: fileMd5 });
-            } catch (error) {
-                console.log(error);
-                continue;
-            }
-        }
-
-        if (resultImage.length == 0) {
-            // upload
-            console.log("file is not exist: " + pathArray[i]);
-            try {
-                if (!imageBinary) imageBinary = await dbox.fileDownload(pathArray[i]);
-                let uploadResponse = await imgur.api.image.imageUpload({ imageBinary, fileName, albumHash, tagList });
-                if (uploadResponse == null) { break; }
-                console.log("upload file: " + uploadResponse.title + ", " + fileName + ", " + tagList);
-                console.log("");
-                await sleep(25000);
-            } catch (error) {
-                console.log(error);
-                continue;
-            }
-        } else if (resultImage.length == 1) {
-            // check data
-            // console.log("file already existed(file): " + pathArray[i]);
-            let onlineImage = resultImage[0];
-            let logFlag = false;
-
-            // check album
-            if (albumHash && onlineAlbum.findImage({ id: onlineImage.id }).length == 0) {
-                console.log("Alarm!! Image is not in album!");
-                // put in
-                imgur.api.album.addAlbumImages({ albumHash: albumHash, ids: [onlineImage.id] });
-                logFlag = true;
-            }
-
-            // check tag list
-            if (onlineImage.tagList != tagList) {
-                console.log("Alarm!! TagList incorrect! " + onlineImage.id);
-                console.log(onlineImage.tagList, onlineImage.md5);
-                console.log(tagList, fileMd5);
-                // update image data
-                await imgur.api.image.updateImage({ imageHash: onlineImage.id, tagList, md5: fileMd5 });
-                logFlag = true;
-            }
-
-            // check filename
-            if (onlineImage.fileName != fileName) {
-                console.log("Alarm!! fileName incorrect!: https://imgur.com/" + onlineImage.id);
-                // delete & upload again Manual
-                console.log("Plz delete & upload again Manual!");
-            }
-            if (logFlag) console.log("");
-        } else if (resultImage.length > 1) {
-            // double upload
-            console.log("many file have same data: " + pathArray[i]);
-            for (let i in resultImage) {
-                // delete all same image
-                if (i != 0) imgur.api.image.imageDeletion({ imageHash: resultImage[i].id });
-                console.log("Now delete file...");
-            }
+        if (resultImage.length > 1) {
+            // error
+            console.log("[" + i + "/" + pathArray.length + "]");
+            console.log("resultImage.length > 1 ", fileName, mainTag);
             console.log("");
+            continue;
         }
+        let flag = false;
+        if (resultImage.length == 1) {
+            // image exist
+            let result = resultImage[0];
+            let rId = result.id
+            let rtagList = result.tagList
+            let rfileName = result.fileName
+            // let rmd5 = result.md5
+
+            if (rtagList != tagList) {
+                console.log("[" + i + "/" + pathArray.length + "]");
+                await imgur.api.image.updateImage({ imageHash: rId, tagList });
+                console.log("resultImage.length == 1", fileName, mainTag);
+                console.log("Update Image (" + rId + ") :" + rtagList + " -> " + tagList);
+                await sleep(2 * 1000);
+                continue;
+            }
+            if (rfileName != fileName) {
+                console.log("[" + i + "/" + pathArray.length + "]");
+                await imgur.api.image.imageDeletion({ imageHash: rId });
+                console.log("resultImage.length == 1", fileName, mainTag);
+                console.log("Delete Image (" + rId + ")");
+                flag = true;
+                await sleep(2 * 1000);
+            }
+        }
+        if (resultImage.length == 0 || flag) {
+            // image is not exist
+            imageBinary = await dbox.fileDownload(dboxPath);
+            fileMd5 = md5f(imageBinary);  // get MD5 for check
+
+            if (!flag) { console.log("[" + i + "/" + pathArray.length + "]"); }
+            let uploadResponse = await imgur.api.image.imageUpload({ imageBinary, fileName, albumHash, tagList });
+            if (uploadResponse != null) {
+
+                console.log("Upload file: " + uploadResponse.title + ", " + fileName + ", " + tagList);
+                await sleep(20 * 1000);
+            }
+            continue;
+        }
+
         continue;
 
     } // */
 
     // annaWebHook("status");
+    anna.replyAI("status");
     console.log("done!")
     return;
 };
@@ -143,28 +122,38 @@ const main = async function () {
 // get dropbox file list
 const getFileList = async function (mainFolder) {
     let pathArray = [];
-    // get AutoResponse key word
-    let dirArray = await dbox.listDir(mainFolder, "folder").catch(console.log);
 
-    let dirList = Object.assign([], dirArray);
-    while (dirList.length > 0) {
-        let pArray = [];
-        // 10 thread
-        for (let i = 0, pop; i < 10 && (pop = dirList.pop()); ++i) {
+    let result = await dbox.listDir(mainFolder).catch(console.log);
+    // filter
+    let dirs = result.filter((obj) => ("folder" == obj[".tag"]));
+    let files = result.filter((obj) => ("file" == obj[".tag"]));
 
-            let dir = mainFolder + '/' + pop;
-            let donemsg = "pathArray[" + dirList.length + "]: " + dir;
-            pArray.push(
-                dbox.listDir(dir).then(function (fileArray) {
-                    console.log(donemsg);
-                    for (let j in fileArray) {
-                        // set AR image full path
-                        pathArray.push(dir + "/" + fileArray[j]);
-                    }
-                }).catch(console.log));
+    let listDirsTask = async function () {
+        let pop;
+        while (dirs.length > 0) {
+            pop = dirs.pop();
+            let _folder = pop.path_display;
+
+            // console.log(_folder);
+            let _result = await dbox.listDir(_folder).catch(console.log);
+
+            let _dirs = _result.filter((obj) => ("folder" == obj[".tag"]));
+            let _files = _result.filter((obj) => ("file" == obj[".tag"]));
+
+            for (let obj in _dirs) { dirs.push(_dirs[obj]); }
+            for (let obj in _files) { files.push(_files[obj]); }
         }
-        await Promise.all(pArray);
+        // console.log("Thread done");
+    };
+
+    let pArray = [];
+    for (let i = 0; i < 10; ++i) {
+        pArray.push(listDirsTask());
+        await sleep(500);
     }
+    await Promise.all(pArray);
+
+    for (let obj in files) { pathArray.push(files[obj].path_display); }
 
     return pathArray;
 }
@@ -178,7 +167,7 @@ const annaWebHook = function (command) {
         let html = '';
         req.on('data', function (data) {
             let str = new String(data);
-            html += str.replaceAll("<br>", "\n");;
+            html += str.replaceAll("<br>", "\n");
         });
         req.on('end', function () {
             console.info(html);
@@ -189,4 +178,5 @@ const annaWebHook = function (command) {
 
 module.exports = {
     upload: main,
+    getFileList: getFileList,
 };
