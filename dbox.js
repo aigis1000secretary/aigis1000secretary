@@ -31,17 +31,22 @@ module.exports = {
     // LS
     async listDir(dirPath, filter) {
         try {
+            // get list
             let result = [];
             let response = await dbox.filesListFolder({ path: root + dirPath });
-            //console.log(response);
+            result = result.concat(response.entries);
 
-            for (let i = 0; i < response.entries.length; ++i) {
-                //result.push(response.entries[i].name + ", " + response.entries[i][".tag"]); continue;
-                if (!filter) {
-                    result.push(response.entries[i].name)
-                } else if (filter == response.entries[i][".tag"]) {
-                    result.push(response.entries[i].name)
-                }
+            // more then
+            while (response.has_more) {
+                await dbox.logToFile("dropbox/", "listDir", response);
+                let cursor = response.cursor;
+                response = await dbox.filesListFolderContinue({ cursor: cursor });
+                result = result.concat(response.entries);
+            }
+
+            // filter
+            if (filter) {
+                result = result.filter(function (obj) { return (filter == obj[".tag"]); });
             }
 
             return result;
@@ -173,7 +178,7 @@ module.exports = {
             dateNow.getMilliseconds().toString().padStart(4, "0");
 
         let binary = Buffer.from(JSON.stringify(data, null, 4))
-        module.exports.fileUpload(base + path + ".json", binary, "add").catch((error) => {
+        module.exports.fileUpload("Logs/" + base + path + ".json", binary, "add").catch((error) => {
             console.log("logToFile error... ");
             console.log(error);
         });
