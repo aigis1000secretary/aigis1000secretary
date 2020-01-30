@@ -655,6 +655,11 @@ const charaDataCrawler = function (urlPath, sourceId) {
                 }
             });
 
+            // テンプレ
+            if (newData.name == "名前") {
+                resolve();
+            }
+
             // put array into skill data
             let temp = "";
             for (let key in skillList) {
@@ -711,14 +716,25 @@ const allCharaDataCrawler = async function (sourceId) {
                 $("a").each(function (i, elem) {
 
                     let buffer = $(this).attr("href");
-                    if (buffer && $(this).parent().is("td") &&
+                    if (buffer &&
+                        // $(this).parent().is("td") &&
                         buffer.indexOf("http") == 0 &&
                         buffer.indexOf("seesaawiki.jp/aigis/d/") != -1 &&
-                        buffer.indexOf("/class") == -1 &&
-                        buffer.indexOf("#") == -1 &&
-                        allCharaUrl.indexOf(buffer) == -1) {
-                        // console.log($(this).text());
-                        allCharaUrl.push(buffer);
+                        buffer.indexOf(encodeURI_JP("テンプレ").toLowerCase()) == -1) {
+
+                        if (buffer.indexOf("/class") == -1 &&
+                            buffer.indexOf("#") == -1 &&
+                            allCharaUrl.indexOf(buffer) == -1) {
+                            allCharaUrl.push(buffer);
+                            // console.log($(this).text());
+                        }
+                        // if (buffer.indexOf("/status_") == -1) {
+                        //     buffer = buffer.replace("status_", "");
+                        //     if (allCharaUrl.indexOf(buffer) == -1) {
+                        //         allCharaUrl.push(buffer);
+                        //         // console.log($(this).text());
+                        //     }
+                        // }
                     }
                 });
                 resolve();
@@ -727,14 +743,16 @@ const allCharaDataCrawler = async function (sourceId) {
     }
 
     await Promise.all([
-        _requestGetUrl("http://seesaawiki.jp/aigis/d/%a5%b4%a1%bc%a5%eb%a5%c9"),
-        _requestGetUrl("http://seesaawiki.jp/aigis/d/%a5%b5%a5%d5%a5%a1%a5%a4%a5%a2"),
-        _requestGetUrl("http://seesaawiki.jp/aigis/d/%a5%d7%a5%e9%a5%c1%a5%ca"),
-        _requestGetUrl("http://seesaawiki.jp/aigis/d/%a5%d6%a5%e9%a5%c3%a5%af"),
+        _requestGetUrl(encodeURI_JP("http://seesaawiki.jp/aigis/d/ゴールド")),
+        _requestGetUrl(encodeURI_JP("http://seesaawiki.jp/aigis/d/サファイア")),
+        _requestGetUrl(encodeURI_JP("http://seesaawiki.jp/aigis/d/プラチナ")),
+        _requestGetUrl(encodeURI_JP("http://seesaawiki.jp/aigis/d/ブラック")),
 
-        _requestGetUrl("https://seesaawiki.jp/aigis/d/%cc%be%c1%b0%bd%e7%b0%ec%cd%f7"),
-        _requestGetUrl("https://seesaawiki.jp/aigis/d/%bc%c2%c1%f5%bd%e7%b0%ec%cd%f7"),
-        _requestGetUrl("https://seesaawiki.jp/aigis/d/%c2%b0%c0%ad%ca%cc%b0%ec%cd%f7")
+        // _requestGetUrl(encodeURI_JP("https://seesaawiki.jp/aigis/d/名前順一覧")),
+        // _requestGetUrl(encodeURI_JP("https://seesaawiki.jp/aigis/d/実装順一覧")),
+        // _requestGetUrl(encodeURI_JP("https://seesaawiki.jp/aigis/d/属性別一覧"))
+
+        // _requestGetUrl("https://seesaawiki.jp/aigis/search?search_target=page_name&keywords=status_")
     ]);
 
     let urlList = Object.assign([], allCharaUrl);
