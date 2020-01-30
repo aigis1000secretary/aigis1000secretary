@@ -3,40 +3,6 @@ const fs = require('fs');
 const config = require("./config.js");
 const dbox = require("./dbox.js");
 
-// 網址編碼
-const iconv = require("iconv-lite");
-const urlEncode = function (str_utf8, codePage) {
-    let buffer = iconv.encode(str_utf8, codePage);
-    let str = "";
-    for (let i = 0; i < buffer.length; ++i) {
-        str += "%" + buffer[i].toString(16);
-    }
-    return str.toUpperCase();
-}
-const urlEncodeJP = function (str_utf8) { return urlEncode(str_utf8, "EUC-JP"); }
-const urlEncodeBIG5 = function (str_utf8) { return urlEncode(str_utf8, "BIG5"); }
-const urlEncodeUTF8 = function (str_utf8) { return urlEncode(str_utf8, "UTF-8"); }
-const encodeURI_JP = function (url) {
-    let result = "";
-
-    let jpEncode = "";
-    let big5Encode = "";
-    let uriEncode = "";
-
-    for (let i = 0; i < url.length; ++i) {
-        jpEncode = urlEncodeJP(url[i]);
-        big5Encode = urlEncodeBIG5(url[i]);
-        uriEncode = encodeURI(url[i]);
-
-        if (jpEncode == big5Encode) {
-            result += uriEncode;
-        } else {
-            result += jpEncode;
-        }
-    }
-    return result;
-}
-
 class Database {
     constructor(dbName, backup) {
         this.name = dbName;
@@ -280,7 +246,9 @@ class CharaDatabase extends Database {
                 console.log("[*] Update  character <" + newData.name + "> data!");
                 return "anna " + newData.name + " New character data update!";
             } else {
-                // console.log("[-] Existed Character <" + newData.name + "> data no changed.");
+                // if (config.isLocalHost) {
+                //     console.log("[ ] Existed Character <" + newData.name + "> data no changed.");
+                // }
                 return "";
             }
         };
