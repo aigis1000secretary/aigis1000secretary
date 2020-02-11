@@ -656,8 +656,9 @@ const charaDataCrawler = function (urlPath, sourceId) {
             });
 
             // テンプレ
-            if (newData.name == "名前") {
+            if (newData.name.trim() == "名前") {
                 resolve();
+                return;
             }
 
             // put array into skill data
