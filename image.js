@@ -20,8 +20,8 @@ const main = async function () {
     // get dropbox image list
     let pathArray = [];
 
-    // let albumList = ["AutoResponse", "Images"];
-    let albumList = ["Images"];
+    let albumList = ["AutoResponse", "Images"];
+    // let albumList = ["Images"];
     // let albumList = ["AutoResponse"];
     for (let i in albumList) {
         let albumName = albumList[i];
@@ -59,7 +59,8 @@ const main = async function () {
         // find by filename
         let tags = tagList.split(",");
         let mainTag = tags[tags.length - 1];
-        resultImage = imgur.database.findImageData({ fileName, tag: mainTag });
+        // resultImage = imgur.database.findImageData({ fileName, tag: mainTag });
+        resultImage = imgur.database.findImageData({ fileName });
 
         if (resultImage.length > 1) {
             // error
