@@ -23,33 +23,65 @@ class Command extends LineAPI {
     }
 
     async getGroups() {
-        let displayGroups = await this._getGroupsJoined();
-        return displayGroups.join('\n');
+        let groupDatas = await this._getGroups(await this._getGroupsJoined());
+        let result = '';
+        for (let i in groupDatas) {
+            result += groupDatas[i].name + '\n' + groupDatas[i].id + '\n\n';
+        }
+
+        return result.trim();
     }
 
-    async getGroupName(gid) {
-        let payload = gid || this.payload.join(' ');
-        let displayGroupName = await this._getGroups([payload]);
-        if (!displayGroupName || displayGroupName.length <= 0) {
-            return "Can not found group #" + payload;
+    async getGroupData(key) {
+        let payload = key || this.payload.join(' ');
+        let groupDatas = await this._getGroups([payload]);
+        if (groupDatas && groupDatas.length > 0) {
+            return groupDatas[0].name + '\n' + groupDatas[0].id;
         }
-        return displayGroupName[0].name;
+
+        groupDatas = await this._getGroups(await this._getGroupsJoined());
+        let result = '';
+        for (let i in groupDatas) {
+            if (groupDatas[i].name.indexOf(payload) != -1) {
+                result += groupDatas[i].name + '\n' + groupDatas[i].id + '\n\n';
+            }
+        }
+        if (result != '') {
+            return result.trim();
+        }
+
+        return "Can not found group #" + payload;
     }
 
     async getContacts() {
-        let displayContacts = await this._getAllContactIds();
-        return displayContacts.join('\n');
+        let contactDatas = await this._getContacts(await this._getAllContactIds());
+        let result = '';
+        for (let i in contactDatas) {
+            result += contactDatas[i].displayName + '\n' + contactDatas[i].mid + '\n\n';
+        }
+
+        return result.trim();
     }
 
-    async getContactData(mid) {
-        let payload = mid || this.payload.join(' ');
-        let contact = await this._getContacts(payload.split('\n'));
-        if (!contact || contact.length <= 0) {
-            return "Can not found contact #" + payload;
+    async getContactData(key) {
+        let payload = key || this.payload.join(' ');
+        let contactDatas = await this._getContacts([payload]);
+        if (contactDatas && contactDatas.length > 0) {
+            return contactDatas[0].displayName + '\n' + contactDatas[0].mid;
         }
-        contact = contact[0];
-        let displayContacts = { mid: payload, displayName: contact.displayName };
-        return JSON.stringify(displayContacts, null, 4);
+
+        contactDatas = await this._getContacts(await this._getAllContactIds());
+        let result = '';
+        for (let i in contactDatas) {
+            if (contactDatas[i].displayName.indexOf(payload) != -1) {
+                result += contactDatas[i].displayName + '\n' + contactDatas[i].mid + '\n\n';
+            }
+        }
+        if (result != '') {
+            return result.trim();
+        }
+
+        return "Can not found contact #" + payload;
     }
 
     async cancelMember() {
@@ -196,6 +228,22 @@ class Command extends LineAPI {
             {
                 mid: 'u236b88bf1eac2b90e848a6198152e647',
                 displayName: 'Alfath Dirk'
+            }
+        }
+        Object.assign(this.messages, msg);
+        this._sendMessage(this.messages);
+        return;
+    }
+
+    botcontent() {
+        let msg = {
+            text: null,
+            contentType: 13,
+            contentPreview: null,
+            contentMetadata:
+            {
+                mid: 'u759a433ed5a22b3f2daa405ab2363a67',
+                displayName: '小安娜'
             }
         }
         Object.assign(this.messages, msg);

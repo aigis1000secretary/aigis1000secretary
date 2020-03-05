@@ -198,6 +198,7 @@ class LINE extends Command {
             this.command(`.clearall`, this.clearall.bind(this));
             this.command('.myid', `Your ID: ${sender}`);
             this.command(`.creator`, this.creator.bind(this));
+            this.command('.anna', this.botcontent.bind(this));
 
             this.command(`cancelInvitation ${payload}`, this.OnOff.bind(this));
             this.command(`acceptInvitation ${payload}`, this.OnOff.bind(this));
@@ -219,9 +220,9 @@ class LINE extends Command {
             // this.command(`vn ${payload}`, this.vn.bind(this));
 
             this.command('.groups', this.getGroups.bind(this));
-            this.command(`.group ${payload}`, this.getGroupName.bind(this));
-            this.command(`.contact ${payload}`, this.getContactData.bind(this));
+            this.command(`.group ${payload}`, this.getGroupData.bind(this));
             this.command('.contacts', this.getContacts.bind(this));
+            this.command(`.contact ${payload}`, this.getContactData.bind(this));
             this.command('.debug', this.debug.bind(this));
         }
 

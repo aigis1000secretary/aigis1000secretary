@@ -51,10 +51,13 @@
 
     0.8.4.9
     some bug fix
+
+    0.8.4.10
+    abot api hot update
 */
 
 const _config = module.exports = {
-    _version: "0.8.4.9",
+    _version: "0.8.4.10",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
@@ -74,6 +77,9 @@ const _config = module.exports = {
     // 小安娜傳聲筒
     // Ub211d6652fb860935febc6473d1f9ffc
     // uf0073964d53b22f4f404a8fb8f7a9e3e
+    // 小安娜
+    // 
+    // u759a433ed5a22b3f2daa405ab2363a67
 
     // dropbox
     dropbox: {
