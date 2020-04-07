@@ -7,7 +7,8 @@
     newimg error msg?
     class Database
 
-    config update from dbox
+    R18 switch
+
 */
 
 /*
@@ -54,6 +55,10 @@
 
     0.8.4.10
     abot api hot update
+
+    0.8.4.11
+    search fail log
+    discord reply style change
 */
 
 const _config = module.exports = {
