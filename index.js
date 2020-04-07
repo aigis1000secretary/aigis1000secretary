@@ -135,6 +135,7 @@ const lineBotOn = function () {
                     replyFunc("王子太短了，找不到...");
                     return;
                 } else {
+                    abotPushLog("Search fail: " + msg);
                     let replyMsgs = ["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"];
                     let replyMsg = replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
                     replyFunc(replyMsg);
@@ -156,93 +157,97 @@ const lineBotOn = function () {
 }
 // discord bot 監聽
 const discordBotOn = function () {
+    
+    discord.bot.on('message', async function (dMsg) {
+        if (dMsg.author.id == 628127387657175040) {
+            return;
+        }
 
-    if (!config.isLocalHost) {
-        discord.bot.on('message', async function (dMsg) {
-            if (dMsg.author.id == 628127387657175040) {
-                return;
+        // define reply function
+        let replyFunc = async function (rMsg) {
+
+            let linemsgToString = function (linemsg) {
+                if (linemsg.type == "text") {
+                    return "```" + linemsg.text + "```";
+                } else if (linemsg.type == "image") {
+                    return linemsg.originalContentUrl;
+                } else if (linemsg.type == "template") {
+                    let str = "";
+                    for (let i in linemsg.template.actions) {
+                        let msg = linemsg.template.actions[i];
+                        str += msg.label + ": " + msg.uri + "\n";
+                    }
+                    return str;
+                }
             }
 
-            // define reply function
-            let replyFunc = async function (rMsg) {
-
-                let linemsgToString = function (linemsg) {
-                    if (linemsg.type == "text") {
-                        return linemsg.text;
-                    } else if (linemsg.type == "image") {
-                        return linemsg.originalContentUrl;
-                    } else if (linemsg.type == "template") {
-                        let str = "";
-                        for (let i in linemsg.template.actions) {
-                            let msg = linemsg.template.actions[i];
-                            str += msg.label + ": " + msg.uri + "\n";
-                        }
-                        return str;
-                    }
-                }
-
-                if (Array.isArray(rMsg)) {
-                    for (let i in rMsg) {
-                        let res = rMsg[i];
-                        if (res.constructor.name == "LineMessage") {
-                            rMsg[i] = linemsgToString(rMsg[i]);
-                        };
-                    }
-                } else {
-                    if (rMsg.constructor.name == "LineMessage") {
-                        rMsg = linemsgToString(rMsg);
+            if (Array.isArray(rMsg)) {
+                for (let i in rMsg) {
+                    let res = rMsg[i];
+                    if (res.constructor.name == "LineMessage") {
+                        rMsg[i] = linemsgToString(rMsg[i]);
                     };
                 }
+            } else {
+                if (rMsg.constructor.name == "LineMessage") {
+                    rMsg = linemsgToString(rMsg);
+                };
+            }
 
-                try {
+            try {
+                if (!config.isLocalHost) {
                     await dMsg.reply(rMsg);
-                } catch (e) { console.log(e); }
-                return;
-            };
-
-            let msg = dMsg.content;
-
-            // in user chat
-            let callAnna = false;
-            if (msg.toUpperCase().indexOf("ANNA ") == 0) {
-                callAnna = true;
-                msg = msg.slice(4).trim();
-            } else if (msg.indexOf("安娜 ") == 0) {
-                callAnna = true;
-                msg = msg.slice(2).trim();
-            }
-
-            // ask ai
-            if (callAnna) {
-                let rMsg = await anna.replyAI(msg)
-
-                // ai done something
-                if (rMsg !== false) {
-                    replyFunc(rMsg);
-                    return;
-                } else if (msg.length == 0) { // normal response
-                    replyFunc("是的！王子？");
-                    return;
-                } else if (msg.length == 1) {
-                    replyFunc("王子太短了，找不到...");
-                    return;
                 } else {
-                    let replyMsgs = ["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"];
-                    let replyMsg = replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
-                    replyFunc(replyMsg);
-                    return;
+                    // console.log("[DC] " + rMsg);
                 }
-            }
+            } catch (e) { console.log(e); }
+            return;
+        };
 
-            // if (msg.indexOf("安娜") == 0 || msg.toLocaleLowerCase().indexOf("anna") == 0) {
-            //     let result = await anna.replyAI(msg)
-            //     if (result != false) {
-            //         replyFunc(result);
-            //         return;
-            //     }
-            // }
-        });
-    }
+        let msg = dMsg.content;
+
+        // in user chat
+        let callAnna = false;
+        if (msg.toUpperCase().indexOf("ANNA ") == 0) {
+            callAnna = true;
+            msg = msg.slice(4).trim();
+        } else if (msg.indexOf("安娜 ") == 0) {
+            callAnna = true;
+            msg = msg.slice(2).trim();
+        }
+
+        // ask ai
+        if (callAnna) {
+            let rMsg = await anna.replyAI(msg)
+
+            // ai done something
+            if (rMsg !== false) {
+                replyFunc(rMsg);
+                return;
+            } else if (msg.length == 0) { // normal response
+                replyFunc("是的！王子？");
+                return;
+            } else if (msg.length == 1) {
+                replyFunc("王子太短了，找不到...");
+                return;
+            } else {
+                abotPushLog("Search fail: " + msg);
+                let replyMsgs = ["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"];
+                let replyMsg = replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
+                replyFunc(replyMsg);
+                return;
+            }
+        }
+
+        // if (msg.indexOf("安娜") == 0 || msg.toLocaleLowerCase().indexOf("anna") == 0) {
+        //     let result = await anna.replyAI(msg)
+        //     if (result != false) {
+        //         replyFunc(result);
+        //         return;
+        //     }
+        // }
+    });
+
 }
 // twitter bot 監聽
 const twitterBotOn = function () {
