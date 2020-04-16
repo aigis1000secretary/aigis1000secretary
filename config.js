@@ -59,10 +59,13 @@
     0.8.4.11
     search fail log
     discord reply style change
+
+    0.8.4.12
+    discord replyStamp method
 */
 
 const _config = module.exports = {
-    _version: "0.8.4.10",
+    _version: "0.8.4.12",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
