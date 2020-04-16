@@ -78,7 +78,7 @@ const lineBotOn = function () {
                         let link = tweetMediaCache[key][i];
                         medias.push(line.createImageMsg(link, link));
                     }
-                    
+
                     // reply media
                     replyFunc(medias);
                     // if (medias.length <= 3) {
@@ -218,7 +218,7 @@ const discordBotOn = function () {
 
         // ask ai
         if (callAnna) {
-            let rMsg = anna.replyStamp(msg);
+            let rMsg = anna.replyStamp(msg, true);
             if (rMsg !== false) {
                 replyFunc(rMsg);
                 return;

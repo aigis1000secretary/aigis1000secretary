@@ -513,20 +513,20 @@ const generateCharaData = function (charaName) {
     return false;
 }
 // 定型文貼圖
-const replyStamp = _anna.replyStamp = function (msg) {
+const replyStamp = _anna.replyStamp = function (msg, isGif = false) {
     debugLog()("replyStamp(" + msg + ")");
 
     let replyMsg = [];
 
-    let imgArray = imgur.database.findImageData({ tag: msg });
+    let imgArray = imgur.database.findImageData({ tag: msg, isGif });
     if (imgArray.length > 0) {
         let i = Math.floor(Math.random() * imgArray.length);
         replyMsg.push(line.createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
         return replyMsg;
     }
 
-    imgArray = imgArray.concat(imgur.database.findImageData({ fileName: msg }));
-    imgArray = imgArray.concat(imgur.database.findImageData({ md5: msg }));
+    imgArray = imgArray.concat(imgur.database.findImageData({ fileName: msg, isGif }));
+    imgArray = imgArray.concat(imgur.database.findImageData({ md5: msg, isGif }));
     if (imgArray.length > 0) {
         replyMsg.push(line.createImageMsg(imgArray[0].imageLink, imgArray[0].thumbnailLink));
         return replyMsg;
@@ -536,7 +536,7 @@ const replyStamp = _anna.replyStamp = function (msg) {
     if (msg.equali("Rush!!") && (!cdTime || Date.now() - cdTime > 30 * 1000)) {
         process.env.CDTIME = Date.now();
 
-        let imgArray = imgur.database.findImageData({ tag: "images" });
+        let imgArray = imgur.database.findImageData({ tag: "images", isGif });
         if (imgArray.length > 0) {
             let i = Math.floor(Math.random() * imgArray.length);
             let j = Math.floor(Math.random() * i);
