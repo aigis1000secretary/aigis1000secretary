@@ -43,7 +43,7 @@ const _express = module.exports = {
             let responseBody = "reply false!";
             console.log(command);
 
-            let result = anna.replyStamp(command);
+            let result = anna.replyStamp(command, true);
             if (typeof (result) == "string") {
                 responseBody = result.replaceAll("\n", "<br>");
             } else {
