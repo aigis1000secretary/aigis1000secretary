@@ -78,7 +78,7 @@ const lineBotOn = function () {
                         let link = tweetMediaCache[key][i];
                         medias.push(line.createImageMsg(link, link));
                     }
-
+                    
                     // reply media
                     replyFunc(medias);
                     // if (medias.length <= 3) {
@@ -157,7 +157,7 @@ const lineBotOn = function () {
 }
 // discord bot 監聽
 const discordBotOn = function () {
-    
+
     discord.bot.on('message', async function (dMsg) {
         if (dMsg.author.id == 628127387657175040) {
             return;
@@ -218,8 +218,13 @@ const discordBotOn = function () {
 
         // ask ai
         if (callAnna) {
-            let rMsg = await anna.replyAI(msg)
+            let rMsg = anna.replyStamp(msg);
+            if (rMsg !== false) {
+                replyFunc(rMsg);
+                return;
+            }
 
+            rMsg = await anna.replyAI(msg);
             // ai done something
             if (rMsg !== false) {
                 replyFunc(rMsg);
