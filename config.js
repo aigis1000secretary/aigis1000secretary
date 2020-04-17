@@ -16,6 +16,7 @@
     >> feature/0.8.4/imageListInterface
     marge line menu api
     html image list v0.1
+    fix twitter images upload path
 */
 
 const _config = module.exports = {
