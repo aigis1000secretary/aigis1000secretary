@@ -115,7 +115,7 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
 
     } else if (command == "照片" || command == "圖片" || command == "相片" || command == "PICTURE") {
         // 圖片空間
-        return line.createUriButtons("圖片空間",
+        return line.createMsgButtons("圖片空間",
             ["上傳新照片", "角色圖庫", "貼圖圖庫"],
             ["https://www.dropbox.com/request/FhIsMnWVRtv30ZL2Ty69",
                 "https://www.dropbox.com/sh/ij3wbm64ynfs7n7/AACmNemWzDhjUBycEMcmos6ha?dl=0",
@@ -133,7 +133,7 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
         urlArray.push("http://aigistool.html.xdomain.jp/EXP.html");
         tagArray.push("體魅計算機");
         urlArray.push("http://aigistool.html.xdomain.jp/ChariSta.html");
-        templateMsgA = line.createUriButtons("實用工具 (1)", tagArray, urlArray);
+        templateMsgA = line.createMsgButtons("實用工具 (1)", tagArray, urlArray);
 
         tagArray = [];
         urlArray = [];
@@ -145,7 +145,7 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
         urlArray.push("https://www.youtube.com/channel/UC8RlGt22URJuM0yM0pUyWBA");
         // tagArray.push("千年戦争アイギス攻略ブログ");
         // urlArray.push("http://sennenaigis.blog.fc2.com/");
-        templateMsgB = line.createUriButtons("實用工具 (2)", tagArray, urlArray);
+        templateMsgB = line.createMsgButtons("實用工具 (2)", tagArray, urlArray);
 
         let replyMsg = [templateMsgA, templateMsgB];
         return replyMsg;
@@ -371,7 +371,7 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
                 return replyMsg;
 
             } else {
-                replyMsg = "沒有新照片";
+                return "沒有新照片";
             }
 
         } else {
@@ -405,9 +405,10 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
 
                     // update imgur database
                     imgur.database.deleteImageData({ id: imgArray[0].id });
+                    imgur.api.image.image({ imageHash: imgArray[0].id });
 
                     // return "分類完成";
-                    return line.createMsgButtons("分類完成", ["next"], ["new"]);
+                    return line.createMsgButtons("分類完成", [target, "next"], ["https://aigis1000secretary.herokuapp.com/images/" + target, "new"]);
                 }
             }
         }
@@ -504,7 +505,7 @@ const generateCharaData = function (charaName) {
             replyMsg.push(line.createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
         }
 
-        replyMsg.push(line.createUriButtons("Wiki 連結", [obj.name], [obj.getWikiUrl()]));
+        replyMsg.push(line.createMsgButtons("Wiki 連結", [obj.name], [obj.getWikiUrl()]));
 
         return replyMsg;
     }

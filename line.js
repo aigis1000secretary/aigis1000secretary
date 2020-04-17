@@ -77,34 +77,7 @@ const _line = module.exports = {
     // 超連結選項
     // altText = "Wiki 連結"
     // label = Name
-    // url = "https://seesaawiki.jp/aigis/d/刻詠の風水士リンネ"	encodeURI_JP(url)
-    createUriButtons(altText, label, url) {
-        if (label.length != url.length) return "";
-        if (label.length <= 0 || 4 < label.length) return "";
-        let replyMsg = {
-            type: "template",
-            altText: altText,
-            template: {
-                type: "buttons",
-                text: altText,
-                actions: []
-            }
-        };
-        for (let i = 0; i < label.length; ++i) {
-            let buttons = {
-                type: "uri",
-                label: label[i],
-                uri: url[i]
-            };
-            replyMsg.template.actions.push(buttons);
-        }
-        return new LineMessage(replyMsg);
-    },
-
-    // 代傳訊息選項
-    // altText = "Wiki 連結"
-    // label = Name
-    // url = "https://seesaawiki.jp/aigis/d/刻詠の風水士リンネ"	encodeURI_JP(url)
+    // msg = "https://seesaawiki.jp/aigis/d/刻詠の風水士リンネ"	encodeURI_JP(url)
     createMsgButtons(altText, label, msg) {
         if (label.length != msg.length) return "";
         if (label.length <= 0 || 4 < label.length) return "";
@@ -118,15 +91,24 @@ const _line = module.exports = {
             }
         };
         for (let i = 0; i < label.length; ++i) {
-            let messages = {
-                type: "message",
-                label: label[i],
-                text: msg[i]
-            };
-            replyMsg.template.actions.push(messages);
+            let buttons = {};
+            if (msg[i].indexOf("http") == 0) {
+                buttons.type = "uri";
+                buttons.label = label[i];
+                buttons.uri = msg[i];
+            } else {
+                buttons.type = "message";
+                buttons.label = label[i];
+                buttons.text = msg[i];
+            }
+            replyMsg.template.actions.push(buttons);
         }
         return new LineMessage(replyMsg);
-    }
+    },
+
+    // 代傳訊息選項
+
+
     // DROPBOX: encodeURI(url);
     // Wiki   : encodeURI_JP(url);
 
