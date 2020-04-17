@@ -547,13 +547,13 @@ let _imgur = module.exports = {
                 }
                 if (filter.tag) {
                     result &= (
-                        image.tagList.toUpperCase().trim().split(",").indexOf(
+                        image.tagList.replaceAll("/", ",").toUpperCase().trim().split(",").indexOf(
                             filter.tag.toUpperCase().trim()
                         ) != -1);
                 }
-                if (isGif == false){
+                if (isGif == false) {
                     let ext = path.parse(image.fileName).ext;
-                    if (".gif".equali(ext)){
+                    if (".gif".equali(ext)) {
                         result = false;
                     }
                 }
@@ -577,7 +577,7 @@ let _imgur = module.exports = {
                 }
                 if (filter.tag) {
                     result &= (
-                        image.tagList.toUpperCase().trim().split(",").indexOf(
+                        image.tagList.replaceAll("/", ",").toUpperCase().trim().split(",").indexOf(
                             filter.tag.toUpperCase().trim()
                         ) != -1);
                 }
