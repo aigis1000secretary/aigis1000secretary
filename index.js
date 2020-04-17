@@ -45,6 +45,7 @@ const lineBotOn = function () {
 
     // normal msg
     line.bot.on("message", async function (event) {
+        // log to file
         if (config.switchVar.logRequestToFile && event) {
             dbox.logToFile("line/", "message", event);
         }
@@ -53,22 +54,15 @@ const lineBotOn = function () {
         if (event.message.type == "text") {
             anna.debugLog()(event);
 
-            // 取出文字內容
-            let msg = event.message.text.trim()
-
-            // get source id
-            let userId = event.source.userId || "U";	// Line API bug?
-            let sourceId = event.source.groupId || event.source.roomId || userId;
-            if (sourceId[0] != "U") {
-                groupDatabase.addData(sourceId, msg.split("\n")[0].trim(), event.timestamp);
-            }
-
             // define reply function
             let replyFunc = function (rMsg) {
                 anna.debugLog()(rMsg);
                 event.reply(rMsg).then(anna.debugLog).catch(anna.debugLog);
                 return true;
             };
+
+            // 取出文字內容
+            let msg = event.message.text.trim()
 
             // reply tweet image
             for (let key in tweetMediaCache) {
@@ -92,6 +86,13 @@ const lineBotOn = function () {
                 }
             }
 
+            // get source id
+            let userId = event.source.userId || "U";	// Line API bug?
+            let sourceId = event.source.groupId || event.source.roomId || userId;
+            if (sourceId[0] != "U") {
+                groupDatabase.addData(sourceId, msg.split("\n")[0].trim(), event.timestamp);
+            }
+
             // bot mode
             // 身分驗證
             if (userId == "U9eefeba8c0e5f8ee369730c4f983346b") {
@@ -111,34 +112,34 @@ const lineBotOn = function () {
             }
 
             // ask ai
-            let result = false;
+            let rMsg = await anna.replyAI(msg, sourceId, userId);
+            let rStamp = anna.replyStamp(msg);
+
+            // callAnna
             if (inChat || callAnna) {
-                result = await anna.replyAI(msg, sourceId, userId)
-            }
-            // ai done something
-            if (result !== false) {
-                replyFunc(result);
-                return;
-            }
-            // search stamp img
-            result = anna.replyStamp(msg);
-            if (result !== false) {
-                replyFunc(result);
-                return;
-            }
-            // normal response
-            if (inChat || callAnna) {
-                if (msg.length == 0) {
-                    replyFunc("是的！王子？");
+
+                // ai done something
+                if (rMsg !== false) {
+                    replyFunc(rMsg);
                     return;
-                } else if (msg.length == 1) {
-                    replyFunc("王子太短了，找不到...");
+                } else if (rStamp !== false) {
+                    replyFunc(rStamp);
                     return;
                 } else {
+                    // not found
                     abotPushLog("Search fail: " + msg);
-                    let replyMsgs = ["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"];
-                    let replyMsg = replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
-                    replyFunc(replyMsg);
+                    if (msg.length == 1) {
+                        replyFunc("王子太短了，找不到...");
+                    } else {
+                        let replyMsgs = ["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"];
+                        let replyMsg = replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
+                        replyFunc(replyMsg);
+                    }
+                    return;
+                }
+            } else {
+                if (rStamp !== false) {
+                    replyFunc(rStamp);
                     return;
                 }
             }
@@ -159,7 +160,8 @@ const lineBotOn = function () {
 const discordBotOn = function () {
 
     discord.bot.on('message', async function (dMsg) {
-        if (dMsg.author.id == 628127387657175040) {
+        // if (dMsg.author.id == 628127387657175040) {
+        if (dMsg.author.id == discord.bot.user.id) {
             return;
         }
 
@@ -218,28 +220,31 @@ const discordBotOn = function () {
 
         // ask ai
         if (callAnna) {
-            let rMsg = anna.replyStamp(msg, true);
-            if (rMsg !== false) {
-                replyFunc(rMsg);
+            if (msg.length == 0) { // normal response
+                replyFunc("是的！王子？");
                 return;
             }
 
-            rMsg = await anna.replyAI(msg);
+            let rMsg = await anna.replyAI(msg);
+            let rStamp = anna.replyStamp(msg);
+
             // ai done something
             if (rMsg !== false) {
                 replyFunc(rMsg);
                 return;
-            } else if (msg.length == 0) { // normal response
-                replyFunc("是的！王子？");
-                return;
-            } else if (msg.length == 1) {
-                replyFunc("王子太短了，找不到...");
+            } else if (rStamp !== false) {
+                replyFunc(rStamp);
                 return;
             } else {
+                // not found
                 abotPushLog("Search fail: " + msg);
-                let replyMsgs = ["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"];
-                let replyMsg = replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
-                replyFunc(replyMsg);
+                if (msg.length == 1) {
+                    replyFunc("王子太短了，找不到...");
+                } else {
+                    let replyMsgs = ["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"];
+                    let replyMsg = replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
+                    replyFunc(replyMsg);
+                }
                 return;
             }
         }
