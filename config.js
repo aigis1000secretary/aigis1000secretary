@@ -15,6 +15,7 @@
     // commit 
     >> feature/0.8.4/imageListInterface
     marge line menu api
+    html image list v0.1
 */
 
 const _config = module.exports = {
