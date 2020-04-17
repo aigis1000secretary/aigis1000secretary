@@ -59,8 +59,8 @@ const main = async function () {
         // find by filename
         let tags = tagList.split(",");
         let mainTag = tags[tags.length - 1];
-        // resultImage = imgur.database.findImageData({ fileName, tag: mainTag });
-        resultImage = imgur.database.findImageData({ fileName });
+        // resultImage = imgur.database.findImageData({ fileName, tag: mainTag, isGif: true });
+        resultImage = imgur.database.findImageData({ fileName, isGif: true });
 
         if (resultImage.length > 1) {
             // error
