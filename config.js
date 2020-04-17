@@ -66,12 +66,15 @@
     0.8.4.13
     stamp method add gif flag
 
-    0.8.4.13
+    0.8.4.14
     discord search bug fixed
+
+    0.8.4.15
+    new tag list image seach
 */
 
 const _config = module.exports = {
-    _version: "0.8.4.14",
+    _version: "0.8.4.15",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
