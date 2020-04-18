@@ -530,8 +530,8 @@ let _imgur = module.exports = {
             Object.assign(result[0], newImage);
             return result[0];
         },
-        findImageData({ id, md5, fileName, tag, isGif = false }) {
-            let filter = { id, md5, fileName, tag, isGif };
+        findImageData({ id, md5, fileName, tag, tagList, isGif = false }) {
+            let filter = { id, md5, fileName, tag, tagList, isGif };
             Object.keys(filter).forEach((key) => (filter[key] == null) && delete filter[key]);
 
             return this.images.filter(function (image) {
@@ -547,12 +547,16 @@ let _imgur = module.exports = {
                     result &= (filter.fileName.equali(image.fileName) || filter.fileName.equali(name));
 
                 }
-                if (filter.tag) {
+                if (filter.tag && filter.tag != "") {
                     result &= (
-                        image.tagList.toUpperCase().trim().split(",").indexOf(
+                        image.tagList.replaceAll("/", ",").toUpperCase().trim().split(",").indexOf(
                             filter.tag.toUpperCase().trim()
                         ) != -1);
                 }
+                if (filter.tagList) {
+                    result &= (image.tagList.equali(filter.tag));
+                }
+
                 if (isGif == false) {
                     let ext = path.parse(image.fileName).ext;
                     if (".gif".equali(ext)) {
@@ -579,7 +583,7 @@ let _imgur = module.exports = {
                 }
                 if (filter.tag) {
                     result &= (
-                        image.tagList.toUpperCase().trim().split(",").indexOf(
+                        image.tagList.replaceAll("/", ",").toUpperCase().trim().split(",").indexOf(
                             filter.tag.toUpperCase().trim()
                         ) != -1);
                 }

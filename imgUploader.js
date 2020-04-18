@@ -20,8 +20,6 @@ const main = async function () {
     // get dropbox image list
     let pathArray = [];
 
-    let loaclPath = "C:/Users/Mirror/Dropbox/應用程式/aigis1000secretary";
-
     // check album
     let albumList = ["AutoResponse", "Images"];
     for (let i in albumList) {
@@ -31,19 +29,19 @@ const main = async function () {
             await imgur.api.album.albumCreation({ title: albumName, cover: "vtHXE4B" });
         }
         // get filelist
-        pathArray = pathArray.concat(await getFileList(loaclPath + "/" + albumList[i]));
+        pathArray = pathArray.concat(await getFileList(albumList[i]));
     }
 
     // loop
-    console.log("GET local Images count: " + pathArray.length);
+    console.log("GET DBox Images count: " + pathArray.length);
     for (let i in pathArray) {
         let filePath = pathArray[i];
 
         // image data
-        let imageBinary = fs.readFileSync(filePath);
+        let imageBinary = null;
         // image var
-        let md5 = md5f(imageBinary);  // get MD5 for check
-        let tagList = filePath.replace(loaclPath, "");
+        let md5 = null;  // get MD5 for check
+        let tagList = filePath;
         let fileName = path.parse(filePath).base;
         // album id
         let albumHash = "";
@@ -63,6 +61,8 @@ const main = async function () {
             continue;
         }
 
+        imageBinary = await dbox.fileDownload(dboxPath);
+        md5 = md5f(imageBinary);  // get MD5 for check
         if (resultImage.length == 0) {
             console.log("[", i, "/", pathArray.length, "] result.length == 0");
             await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
@@ -88,17 +88,41 @@ const main = async function () {
     return;
 };
 
-// get local file list
-let getFileList = function (dirPath) {
+// get dropbox file list
+const getFileList = async function (mainFolder) {
     let result = [];
-    let apiResult = fs.readdirSync(dirPath);
-    for (let i in apiResult) {
-        if (fs.lstatSync(dirPath + "/" + apiResult[i]).isDirectory()) {
-            result = result.concat(getFileList(dirPath + "/" + apiResult[i]));
-        } else {
-            result.push(dirPath + "/" + apiResult[i]);
+    let apiResult = await dbox.listDir(mainFolder).catch(console.log);
+    // filter
+    let dirs = apiResult.filter((obj) => ("folder" == obj[".tag"]));
+    let files = apiResult.filter((obj) => ("file" == obj[".tag"]));
+
+    let listDirsTask = async function () {
+        let pop;
+        while (dirs.length > 0) {
+            pop = dirs.pop();
+            let _folder = pop.path_display;
+
+            // console.log(_folder);
+            let _result = await dbox.listDir(_folder).catch(console.log);
+
+            let _dirs = _result.filter((obj) => ("folder" == obj[".tag"]));
+            let _files = _result.filter((obj) => ("file" == obj[".tag"]));
+
+            for (let obj in _dirs) { dirs.push(_dirs[obj]); }
+            for (let obj in _files) { files.push(_files[obj]); }
         }
+        // console.log("Thread done");
+    };
+
+    let pArray = [];
+    for (let i = 0; i < 10; ++i) {
+        pArray.push(listDirsTask());
+        await sleep(500);
     }
+    await Promise.all(pArray);
+
+    for (let obj in files) { result.push(files[obj].path_display); }
+
     return result;
 };
 

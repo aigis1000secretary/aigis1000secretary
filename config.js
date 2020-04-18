@@ -19,6 +19,7 @@
     fix twitter images upload path
     new taglist/api
     image uploader script update
+    imgur api update
 */
 
 const _config = module.exports = {
