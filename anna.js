@@ -6,6 +6,7 @@ const _anna = module.exports = {};    // 循環依賴對策
 const request = require("request");
 const iconv = require("iconv-lite");
 const cheerio = require("cheerio");
+const path = require("path");
 
 const imgur = require("./imgur.js");
 const dbox = require("./dbox.js");
