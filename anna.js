@@ -6,6 +6,7 @@ const _anna = module.exports = {};    // 循環依賴對策
 const request = require("request");
 const iconv = require("iconv-lite");
 const cheerio = require("cheerio");
+const path = require("path");
 
 const imgur = require("./imgur.js");
 const dbox = require("./dbox.js");
@@ -426,7 +427,7 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
 
             try {
                 await imgur.api.image.imageDeletion({ imageHash: imgArray[0].id });
-                await dbox.fileMove(tagList, "DelImages/" + fileName);
+                await dbox.fileMove(tagList.substring(1), "DelImages/" + fileName);
             } catch (error) {
                 console.log("刪除錯誤!");
                 console.log(error);
