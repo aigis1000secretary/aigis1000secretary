@@ -17,6 +17,8 @@
     marge line menu api
     html image list v0.1
     fix twitter images upload path
+    new taglist/api
+    image uploader script update
 */
 
 const _config = module.exports = {

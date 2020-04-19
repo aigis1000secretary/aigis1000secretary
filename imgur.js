@@ -520,7 +520,7 @@ let _imgur = module.exports = {
         images: [],
         newImageData(rawData) {
             let newImage = new Image(rawData);
-            let result = this.findImageData({ id: newImage.id });
+            let result = this.findImageData({ id: newImage.id, isGif: true });
 
             if (result.length == 0) {
                 // new image
@@ -631,6 +631,8 @@ let _imgur = module.exports = {
             // console.log("Imgur Database saving...");
 
             // object to json
+            _imgur.database.images.sort(function (A, B) { return A.id.localeCompare(B.id) });
+            _imgur.database.albums.sort(function (A, B) { return A.id.localeCompare(B.id) });
             let imagesDB = JSON.stringify(_imgur.database.images, null, 4);
             let albumsDB = JSON.stringify(_imgur.database.albums, null, 4);
 
@@ -753,23 +755,23 @@ class Album {
         this.id = id; // albumHash
         this.title = title;
         this.link = link;
-        this.images = [];
+        this.albumImages = [];
         let newImages = [];
         for (let i in images) {
             newImages.push(_imgur.database.newImageData(images[i]));
         }
         this.addImages(newImages);
     }
-    addImages(images) {
-        for (let i in images) {
-            if (this.images.indexOf(images[i]) == -1) {
-                this.images.push(images[i]);
+    addImages(newImages) {
+        for (let i in newImages) {
+            if (this.albumImages.indexOf(newImages[i]) == -1) {
+                this.albumImages.push(newImages[i]);
             }
         }
     }
-    removeImages(images) {
-        for (let i in images) {
-            let j = this.images.indexOf(images[i]);
+    removeImages(newImages) {
+        for (let i in newImages) {
+            let j = this.albumImages.indexOf(newImages[i]);
             if (j != -1) {
                 this.image.splice(j, 1);
             }
@@ -779,7 +781,7 @@ class Album {
         let filter = { id, md5, fileName, tag };
         Object.keys(filter).forEach((key) => (filter[key] == null) && delete filter[key]);
 
-        return this.images.filter(function (image) {
+        return this.albumImages.filter(function (image) {
             let result = (filter != {});
             if (filter.id) {
                 result &= (filter.id == image.id);

@@ -11,7 +11,7 @@ const imgur = require("./imgur.js");
 const dbox = require("./dbox.js");
 const line = require("./line.js");
 const twitter = require("./twitter.js");
-const imgUploader = require("./image.js");
+const imgUploader = require("./imgUploader.js");
 // 資料庫
 const database = require("./database.js");
 

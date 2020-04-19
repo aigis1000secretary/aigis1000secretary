@@ -15,89 +15,84 @@ const main = async function () {
     // // // for (let i in imgur.database.images) { await imgur.image.ImageDeletion(imgur.database.images[i].id); }
 
     // save database
-    console.log("== image.js ==");
+    console.log("== imgUploader.js ==");
 
     // get dropbox image list
     let pathArray = [];
 
     let albumList = ["AutoResponse", "/Images"];
 
-    let _readdirSync = function (dirPath) {
-        let files = fs.readdirSync(dirPath);
-        let result = [];
-        for (let i in files) {
-            if (fs.lstatSync(dirPath + "/" + files[i]).isDirectory()) {
-                result = result.concat(_readdirSync(dirPath + "/" + files[i]));
-            } else {
-                result.push(dirPath + "/" + files[i]);
-            }
+    for (let i in albumList) {
+        let albumName = albumList[i];
+        let albums = imgur.database.findAlbumData({ title: albumName });
+        if (albums.length == 0) {
+            await imgur.api.album.albumCreation({ title: albumName, cover: "vtHXE4B" });
         }
-        return result;
-    };
-    pathArray = _readdirSync("C:/Users/HUANG/Dropbox/應用程式/aigis1000secretary/" + albumList[0])
-        .concat(_readdirSync("C:/Users/HUANG/Dropbox/應用程式/aigis1000secretary/" + albumList[1]));
-
-    // pathArray.forEach(file => {
-    //     console.log(file);
-    // });
-    // console.log(pathArray.length);
-
-    for (let i in pathArray) {
-        console.log("[", i, "/", pathArray.length, "]");
-        let filePath = pathArray[i];
-
-        let imageBinary = fs.readFileSync(filePath);;
-
-        let md5 = md5f(imageBinary);  // get MD5 for check
-        let tagList = filePath.replace("C:/Users/HUANG/Dropbox/應用程式/aigis1000secretary/", "");
-        let fileName = path.parse(filePath).base;
-
-        let resultImage = imgur.database.findImageData({ md5, isGif: true });
-        console.log();
-
-
-        if (resultImage.length == 1) {
-            let img = resultImage[0];
-            if (img.tagList != tagList) {
-                await imgur.api.image.updateImage({ imageHash: img.id, tagList, md5 });
-            }
-            continue;
-        } else if (resultImage.length == 0) {
-
-            let uploadResponse = await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash: "mOa2UfF", tagList });
-            // if (uploadResponse != null) {
-            //     console.log("Upload file: " + uploadResponse.title + ", " + fileName + ", " + tagList);
-            // }
-            continue;
-        } else {
-            console.log("resultImage.length != 1", filePath);
-        }
-
     }
 
+    if (true) {
+        let dboxPath = "C:/Users/Mirror/Dropbox/應用程式/aigis1000secretary/";
+        // build method
+        let _readdirSync = function (dirPath) {
+            let files = fs.readdirSync(dirPath);
+            let result = [];
+            for (let i in files) {
+                if (fs.lstatSync(dirPath + "/" + files[i]).isDirectory()) {
+                    result = result.concat(_readdirSync(dirPath + "/" + files[i]));
+                } else {
+                    result.push(dirPath + "/" + files[i]);
+                }
+            }
+            return result;
+        };
+        // get filelist
+        pathArray = _readdirSync(dboxPath + albumList[0])
+            .concat(_readdirSync(dboxPath + albumList[1]));
+
+        // loop
+        for (let i in pathArray) {
+            let filePath = pathArray[i];
+
+            // image data
+            let imageBinary = fs.readFileSync(filePath);;
+            // image var
+            let md5 = md5f(imageBinary);  // get MD5 for check
+            let tagList = filePath.replace(dboxPath, "");
+            let fileName = path.parse(filePath).base;
+            // album id
+            let albumHash = "";
+            let albums = imgur.database.findAlbumData({ title: filePath.substring(0, filePath.indexOf("/")) });
+            if (albums.length != 0) { albumHash = albums[0].id; }
+
+            // get image data
+            let resultImage = imgur.database.findImageData({ md5, isGif: true });
+
+            //
+            if (resultImage.length == 1) {
+                if (resultImage[0].tagList != tagList) {
+                    console.log("[", i, "/", pathArray.length, "]");
+                    await imgur.api.image.updateImage({ imageHash: resultImage[0].id, tagList, md5 });
+                }
+                continue;
+            } else if (resultImage.length == 0) {
+                console.log("[", i, "/", pathArray.length, "]");
+                await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
+                continue;
+            } else {
+                console.log("[", i, "/", pathArray.length, "]");
+                for (let j in resultImage) {
+                    await imgur.api.image.imageDeletion({ imageHash: resultImage[j].id })
+                }
+                await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
+                continue;
+            }
+        }
+    } else {
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    }
+    anna.replyAI("status");
+    console.log("done!")
     return;/*
 
     let albumList = ["AutoResponse", "Images"];
