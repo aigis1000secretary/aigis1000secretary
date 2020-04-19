@@ -108,7 +108,7 @@ module.exports = {
         }
     },
 
-    // move
+    // Backup
     async fileBackup(dirPath) {
         let filesRelocationArg = {
             from_path: root + dirPath,

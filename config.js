@@ -13,68 +13,18 @@
 
 /*
     // commit 
-    >> feature/0.8.3/initialMethodRebuild
-    fix abot autologin
-    disable log msg
-    initial Method Rebuild
-    abot login token auto upload/update
-    crawler fix
-    tidy bot push msg
-    newimg error msg
-    abot timer on
-
-    0.8.4.1
-    cfg Update method Catch dbox error
-
-    0.8.4.2
-    abot push/abot login fix
-
-    0.8.4.3
-    Rush!! command
-    image upload script update
-    dropbox api update
+    >> feature/0.8.4/imageListInterface
+    marge line menu api
+    html image list v0.1
+    fix twitter images upload path
+    new taglist/api
+    image uploader script update
     imgur api update
-
-    0.8.4.4
-    new image command fix
-
-    0.8.4.5
-    dropbox api bug fix
-
-    0.8.4.6
-    new image command fix
-
-    0.8.4.7
-    image script fix
-
-    0.8.4.8
-    update script update
-
-    0.8.4.9
-    some bug fix
-
-    0.8.4.10
-    abot api hot update
-
-    0.8.4.11
-    search fail log
-    discord reply style change
-
-    0.8.4.12
-    discord replyStamp method
-
-    0.8.4.13
-    stamp method add gif flag
-
-    0.8.4.14
-    discord search bug fixed
-
-    0.8.4.15
-    new tag list image seach
+    DELIMG method
 */
 
 const _config = module.exports = {
-    _version: "0.8.4.15",
+    _version: "0.8.5.0",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正

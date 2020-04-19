@@ -280,9 +280,10 @@ let _imgur = module.exports = {
                 }
             },
             // POST Image Upload
-            async imageUpload({ imageBinary, fileName = null, albumHash = "", tagList = "" }) {
+            async imageUpload({ imageBinary, fileName = null, md5 = null, albumHash = "", tagList = "" }) {
                 try {
-                    console.log("POST Image Upload " + fileName);
+                    console.log("POST Image Upload(" + fileName + ")" + (md5 ? (" <" + md5 + ">") : "") + (albumHash ? (" <" + albumHash + ">") : ""));
+                    console.log("    " + (tagList ? (" <" + tagList + ">") : ""))
                     // Configure the request
                     let options = {
                         url: _imgur.IMGUR_API_URL + "upload",
@@ -293,7 +294,7 @@ let _imgur = module.exports = {
                             album: albumHash,
                             title: tagList,
                             name: fileName,
-                            description: md5f(imageBinary)
+                            description: (md5 ? md5 : md5f(imageBinary))
                         }
                     };
                     // let data = (await imgurCore._apiRequest(options)).data;
@@ -325,7 +326,8 @@ let _imgur = module.exports = {
             // POST Update Image Information
             async updateImage({ imageHash, tagList, md5 }) {
                 try {
-                    console.log("POST Update Image(" + imageHash + ") Information <" + tagList + (md5 ? (">, <" + md5 + ">") : (">")));
+                    console.log("POST Image Update(" + imageHash + ")" + (md5 ? (" <" + md5 + ">") : ""));
+                    console.log("    " + (tagList ? (" <" + tagList + ">") : ""))
                     // Set the POST body
                     let postBody = {};
                     if (md5) postBody.description = md5;
@@ -518,7 +520,7 @@ let _imgur = module.exports = {
         images: [],
         newImageData(rawData) {
             let newImage = new Image(rawData);
-            let result = this.findImageData({ id: newImage.id });
+            let result = this.findImageData({ id: newImage.id, isGif: true });
 
             if (result.length == 0) {
                 // new image
@@ -528,8 +530,8 @@ let _imgur = module.exports = {
             Object.assign(result[0], newImage);
             return result[0];
         },
-        findImageData({ id, md5, fileName, tag, isGif = false }) {
-            let filter = { id, md5, fileName, tag, isGif };
+        findImageData({ id, md5, fileName, tag, tagList, isGif = false }) {
+            let filter = { id, md5, fileName, tag, tagList, isGif };
             Object.keys(filter).forEach((key) => (filter[key] == null) && delete filter[key]);
 
             return this.images.filter(function (image) {
@@ -545,12 +547,16 @@ let _imgur = module.exports = {
                     result &= (filter.fileName.equali(image.fileName) || filter.fileName.equali(name));
 
                 }
-                if (filter.tag) {
+                if (filter.tag && filter.tag != "") {
                     result &= (
                         image.tagList.replaceAll("/", ",").toUpperCase().trim().split(",").indexOf(
                             filter.tag.toUpperCase().trim()
                         ) != -1);
                 }
+                if (filter.tagList) {
+                    result &= (image.tagList.equali(filter.tagList));
+                }
+
                 if (isGif == false) {
                     let ext = path.parse(image.fileName).ext;
                     if (".gif".equali(ext)) {
@@ -629,6 +635,8 @@ let _imgur = module.exports = {
             // console.log("Imgur Database saving...");
 
             // object to json
+            _imgur.database.images.sort(function (A, B) { return A.id.localeCompare(B.id) });
+            _imgur.database.albums.sort(function (A, B) { return A.id.localeCompare(B.id) });
             let imagesDB = JSON.stringify(_imgur.database.images, null, 4);
             let albumsDB = JSON.stringify(_imgur.database.albums, null, 4);
 
@@ -640,8 +648,8 @@ let _imgur = module.exports = {
                 }
             }
             // json to file
-            fs.writeFile("ImgurDatabase.log", imagesDB, "utf8", fsCallBack);
-            fs.writeFile("AlbumDatabase.log", albumsDB, "utf8", fsCallBack);
+            fs.writeFile("ImgurDatabase.json", imagesDB, "utf8", fsCallBack);
+            fs.writeFile("AlbumDatabase.json", albumsDB, "utf8", fsCallBack);
             // fs.writeFile("ImgurDatabase.csv", imagesDB.replace(/\s*\n\s*/g, "").replaceAll(",", "、").replaceAll("\"、\"", "\",\"").replaceAll("\}、\{", "}\n{"), "utf8", fsCallBack);
 
             console.log("Imgur Database saved!");
@@ -751,23 +759,23 @@ class Album {
         this.id = id; // albumHash
         this.title = title;
         this.link = link;
-        this.images = [];
+        this.albumImages = [];
         let newImages = [];
         for (let i in images) {
             newImages.push(_imgur.database.newImageData(images[i]));
         }
         this.addImages(newImages);
     }
-    addImages(images) {
-        for (let i in images) {
-            if (this.images.indexOf(images[i]) == -1) {
-                this.images.push(images[i]);
+    addImages(newImages) {
+        for (let i in newImages) {
+            if (this.albumImages.indexOf(newImages[i]) == -1) {
+                this.albumImages.push(newImages[i]);
             }
         }
     }
-    removeImages(images) {
-        for (let i in images) {
-            let j = this.images.indexOf(images[i]);
+    removeImages(newImages) {
+        for (let i in newImages) {
+            let j = this.albumImages.indexOf(newImages[i]);
             if (j != -1) {
                 this.image.splice(j, 1);
             }
@@ -777,7 +785,7 @@ class Album {
         let filter = { id, md5, fileName, tag };
         Object.keys(filter).forEach((key) => (filter[key] == null) && delete filter[key]);
 
-        return this.images.filter(function (image) {
+        return this.albumImages.filter(function (image) {
             let result = (filter != {});
             if (filter.id) {
                 result &= (filter.id == image.id);
