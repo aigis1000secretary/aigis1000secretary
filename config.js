@@ -12,6 +12,15 @@
 */
 
 /*
+    // commit 
+    >> feature/0.8.4/imageListInterface
+    marge line menu api
+    html image list v0.1
+    fix twitter images upload path
+    new taglist/api
+    image uploader script update
+    imgur api update
+    DELIMG method
 */
 
 const _config = module.exports = {

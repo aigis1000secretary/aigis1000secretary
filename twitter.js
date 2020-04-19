@@ -119,7 +119,7 @@ const _twitter = module.exports = {
                                     .on("error", (e) => { console.log("pipe error", e) })
                                     .on("close", () => {
                                         let body = fs.readFileSync("./" + filename);
-                                        dbox.fileUpload("NewImages/NewImages/" + filename, body);
+                                        dbox.fileUpload("Images/NewImages/" + filename, body);
                                     });
                             }
                         }
