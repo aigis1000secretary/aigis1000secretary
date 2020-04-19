@@ -280,9 +280,10 @@ let _imgur = module.exports = {
                 }
             },
             // POST Image Upload
-            async imageUpload({ imageBinary, fileName = null, albumHash = "", tagList = "" }) {
+            async imageUpload({ imageBinary, fileName = null, md5 = null, albumHash = "", tagList = "" }) {
                 try {
-                    console.log("POST Image Upload " + fileName);
+                    console.log("POST Image Upload(" + fileName + ")" + (md5 ? (" <" + md5 + ">") : "") + (albumHash ? (" <" + albumHash + ">") : ""));
+                    console.log("    " + (tagList ? (" <" + tagList + ">") : ""))
                     // Configure the request
                     let options = {
                         url: _imgur.IMGUR_API_URL + "upload",
@@ -293,7 +294,7 @@ let _imgur = module.exports = {
                             album: albumHash,
                             title: tagList,
                             name: fileName,
-                            description: md5f(imageBinary)
+                            description: (md5 ? md5 : md5f(imageBinary))
                         }
                     };
                     // let data = (await imgurCore._apiRequest(options)).data;
@@ -325,7 +326,8 @@ let _imgur = module.exports = {
             // POST Update Image Information
             async updateImage({ imageHash, tagList, md5 }) {
                 try {
-                    console.log("POST Update Image(" + imageHash + ") Information <" + tagList + (md5 ? (">, <" + md5 + ">") : (">")));
+                    console.log("POST Image Update(" + imageHash + ")" + (md5 ? (" <" + md5 + ">") : ""));
+                    console.log("    " + (tagList ? (" <" + tagList + ">") : ""))
                     // Set the POST body
                     let postBody = {};
                     if (md5) postBody.description = md5;
@@ -551,9 +553,9 @@ let _imgur = module.exports = {
                             filter.tag.toUpperCase().trim()
                         ) != -1);
                 }
-                if (isGif == false){
+                if (isGif == false) {
                     let ext = path.parse(image.fileName).ext;
-                    if (".gif".equali(ext)){
+                    if (".gif".equali(ext)) {
                         result = false;
                     }
                 }

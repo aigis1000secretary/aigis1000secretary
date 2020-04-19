@@ -1,5 +1,5 @@
 
-// const fs = require("fs");
+const fs = require("fs");
 const path = require("path");
 const anna = require("./anna.js");
 const dbox = require("./dbox.js");
@@ -19,6 +19,86 @@ const main = async function () {
 
     // get dropbox image list
     let pathArray = [];
+
+    let albumList = ["AutoResponse", "/Images"];
+
+    let _readdirSync = function (dirPath) {
+        let files = fs.readdirSync(dirPath);
+        let result = [];
+        for (let i in files) {
+            if (fs.lstatSync(dirPath + "/" + files[i]).isDirectory()) {
+                result = result.concat(_readdirSync(dirPath + "/" + files[i]));
+            } else {
+                result.push(dirPath + "/" + files[i]);
+            }
+        }
+        return result;
+    };
+    pathArray = _readdirSync("C:/Users/HUANG/Dropbox/應用程式/aigis1000secretary/" + albumList[0])
+        .concat(_readdirSync("C:/Users/HUANG/Dropbox/應用程式/aigis1000secretary/" + albumList[1]));
+
+    // pathArray.forEach(file => {
+    //     console.log(file);
+    // });
+    // console.log(pathArray.length);
+
+    for (let i in pathArray) {
+        console.log("[", i, "/", pathArray.length, "]");
+        let filePath = pathArray[i];
+
+        let imageBinary = fs.readFileSync(filePath);;
+
+        let md5 = md5f(imageBinary);  // get MD5 for check
+        let tagList = filePath.replace("C:/Users/HUANG/Dropbox/應用程式/aigis1000secretary/", "");
+        let fileName = path.parse(filePath).base;
+
+        let resultImage = imgur.database.findImageData({ md5, isGif: true });
+        console.log();
+
+
+        if (resultImage.length == 1) {
+            let img = resultImage[0];
+            if (img.tagList != tagList) {
+                await imgur.api.image.updateImage({ imageHash: img.id, tagList, md5 });
+            }
+            continue;
+        } else if (resultImage.length == 0) {
+
+            let uploadResponse = await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash: "mOa2UfF", tagList });
+            // if (uploadResponse != null) {
+            //     console.log("Upload file: " + uploadResponse.title + ", " + fileName + ", " + tagList);
+            // }
+            continue;
+        } else {
+            console.log("resultImage.length != 1", filePath);
+        }
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    return;/*
 
     let albumList = ["AutoResponse", "Images"];
     // let albumList = ["Images"];
@@ -117,7 +197,7 @@ const main = async function () {
     // annaWebHook("status");
     anna.replyAI("status");
     console.log("done!")
-    return;
+    return;//*/
 };
 
 // get dropbox file list
