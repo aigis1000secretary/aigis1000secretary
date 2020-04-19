@@ -12,65 +12,6 @@
 */
 
 /*
-    // commit 
-    >> feature/0.8.3/initialMethodRebuild
-    fix abot autologin
-    disable log msg
-    initial Method Rebuild
-    abot login token auto upload/update
-    crawler fix
-    tidy bot push msg
-    newimg error msg
-    abot timer on
-
-    0.8.4.1
-    cfg Update method Catch dbox error
-
-    0.8.4.2
-    abot push/abot login fix
-
-    0.8.4.3
-    Rush!! command
-    image upload script update
-    dropbox api update
-    imgur api update
-
-    0.8.4.4
-    new image command fix
-
-    0.8.4.5
-    dropbox api bug fix
-
-    0.8.4.6
-    new image command fix
-
-    0.8.4.7
-    image script fix
-
-    0.8.4.8
-    update script update
-
-    0.8.4.9
-    some bug fix
-
-    0.8.4.10
-    abot api hot update
-
-    0.8.4.11
-    search fail log
-    discord reply style change
-
-    0.8.4.12
-    discord replyStamp method
-
-    0.8.4.13
-    stamp method add gif flag
-
-    0.8.4.14
-    discord search bug fixed
-
-    0.8.4.15
-    new tag list image seach
 */
 
 const _config = module.exports = {
