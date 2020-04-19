@@ -61,7 +61,7 @@ const main = async function () {
             continue;
         }
 
-        imageBinary = await dbox.fileDownload(dboxPath);
+        imageBinary = await dbox.fileDownload(tagList.substring(1));
         md5 = md5f(imageBinary);  // get MD5 for check
         if (resultImage.length == 0) {
             console.log("[", i, "/", pathArray.length, "] result.length == 0");
