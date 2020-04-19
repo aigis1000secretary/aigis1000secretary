@@ -401,7 +401,7 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
                     }
 
                     // set taglist
-                    imgur.api.image.updateImage({ imageHash: imgArray[0].id, tagList: "Images/Character/" + target + "/" + imgArray[0].fileName });
+                    imgur.api.image.updateImage({ imageHash: imgArray[0].id, tagList: "/Images/Character/" + target + "/" + imgArray[0].fileName });
 
                     // update imgur database
                     imgur.database.deleteImageData({ id: imgArray[0].id });
