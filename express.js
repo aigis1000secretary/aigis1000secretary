@@ -57,7 +57,7 @@ const _express = module.exports = {
             let responseBody = "reply false!";
             // console.log(command);
 
-            let result = imgur.database.findImageData({ tag: command });
+            let result = imgur.database.findImageData({ tag: command, isGif: true });
             if (result.length != 0) {
                 result.sort(function (A, B) { return A.tagList.localeCompare(B.tagList) })
 

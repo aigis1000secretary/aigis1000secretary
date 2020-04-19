@@ -554,7 +554,7 @@ let _imgur = module.exports = {
                         ) != -1);
                 }
                 if (filter.tagList) {
-                    result &= (image.tagList.equali(filter.tag));
+                    result &= (image.tagList.equali(filter.tagList));
                 }
 
                 if (isGif == false) {
@@ -648,8 +648,8 @@ let _imgur = module.exports = {
                 }
             }
             // json to file
-            fs.writeFile("ImgurDatabase.log", imagesDB, "utf8", fsCallBack);
-            fs.writeFile("AlbumDatabase.log", albumsDB, "utf8", fsCallBack);
+            fs.writeFile("ImgurDatabase.json", imagesDB, "utf8", fsCallBack);
+            fs.writeFile("AlbumDatabase.json", albumsDB, "utf8", fsCallBack);
             // fs.writeFile("ImgurDatabase.csv", imagesDB.replace(/\s*\n\s*/g, "").replaceAll(",", "、").replaceAll("\"、\"", "\",\"").replaceAll("\}、\{", "}\n{"), "utf8", fsCallBack);
 
             console.log("Imgur Database saved!");

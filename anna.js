@@ -33,7 +33,7 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
     debugLog()("rawMsg: <" + rawMsg + ">");
 
     // flag
-    let _isAdmin = isAdmin(userId);
+    let _isAdmin = isAdmin(userId) || config.isLocalHost;
 
     // 分析命令
     rawMsg.replaceAll("\n\n", "\n");
@@ -414,6 +414,26 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
         }
         return "";
 
+    } else if (_isAdmin && (command == "DELIMG")) {
+        if (arg1 != "undefined") {
+            let tagList = msg1.substring(7);
+            let imgArray = imgur.database.findImageData({ tagList, isGif: true });
+            if (imgArray.length != 1) {
+                console.log("刪除錯誤: 目標異常!");
+                return "刪除錯誤: 目標異常!";
+            }
+
+            try {
+                await imgur.api.image.imageDeletion({ imageHash: imgArray[0].id });
+                await dbox.fileMove(tagList, "DelImages/" + filename);
+            } catch (error) {
+                console.log("刪除錯誤!");
+                console.log(error);
+                return "刪除錯誤!";
+            }
+            return "刪除成功";
+        }
+        return "";
     } else if (_isAdmin && (command == "ABOTINIT")) {
         line.alphatbotInit();
         return "";

@@ -20,6 +20,7 @@
     new taglist/api
     image uploader script update
     imgur api update
+    DELIMG method
 */
 
 const _config = module.exports = {
