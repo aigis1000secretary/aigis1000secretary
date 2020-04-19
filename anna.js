@@ -417,6 +417,7 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
     } else if (_isAdmin && (command == "DELIMG")) {
         if (arg1 != "undefined") {
             let tagList = msg1.substring(7);
+            let fileName = path.parse(tagList).base;
             let imgArray = imgur.database.findImageData({ tagList, isGif: true });
             if (imgArray.length != 1) {
                 console.log("刪除錯誤: 目標異常!");
@@ -425,7 +426,7 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
 
             try {
                 await imgur.api.image.imageDeletion({ imageHash: imgArray[0].id });
-                await dbox.fileMove(tagList, "DelImages/" + filename);
+                await dbox.fileMove(tagList, "DelImages/" + fileName);
             } catch (error) {
                 console.log("刪除錯誤!");
                 console.log(error);
