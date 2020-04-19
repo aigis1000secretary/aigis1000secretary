@@ -27,10 +27,13 @@
 
     0.8.5.2
     fix delimg
+
+    0.8.5.3
+    fix newimg
 */
 
 const _config = module.exports = {
-    _version: "0.8.5.2",
+    _version: "0.8.5.3",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
