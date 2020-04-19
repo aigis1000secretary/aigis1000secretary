@@ -8,7 +8,7 @@ const md5f = function (str) { return require('crypto').createHash('md5').update(
 
 
 const main = async function () {
-    console.log("Image Upload Script");
+    console.log("Image Upload (Local) Script");
     await imgur.init();
 
     // delete all image from imgur
