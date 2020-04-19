@@ -427,7 +427,7 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
 
             try {
                 await imgur.api.image.imageDeletion({ imageHash: imgArray[0].id });
-                await dbox.fileMove(tagList, "DelImages/" + fileName);
+                await dbox.fileMove(tagList.substring(1), "DelImages/" + fileName);
             } catch (error) {
                 console.log("刪除錯誤!");
                 console.log(error);
