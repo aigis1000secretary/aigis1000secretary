@@ -107,7 +107,7 @@ const _twitter = module.exports = {
 
             // image to dropbox
             if (tweet_data.medias) {
-                getTweetImages(tweet_data);
+                _twitter.stream.getTweetImages(tweet_data);
             }
 
         },
