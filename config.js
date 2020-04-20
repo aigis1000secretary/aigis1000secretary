@@ -14,6 +14,7 @@
 /*
     // commit 
     >> feature/0.8.5/munualUploadTwitterImages
+    fix newimg method
 */
 
 const _config = module.exports = {

@@ -200,7 +200,7 @@ const discordBotOn = function () {
                 if (!config.isLocalHost) {
                     await dMsg.reply(rMsg);
                 } else {
-                    // console.log("[DC] " + rMsg);
+                    console.log("[DC] " + rMsg);
                 }
             } catch (e) { console.log(e); }
             return;
