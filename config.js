@@ -16,6 +16,7 @@
     >> feature/0.8.5/munualUploadTwitterImages
     fix newimg method
     twitter api upgrade
+    munual upload twitter images command
 */
 
 const _config = module.exports = {
