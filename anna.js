@@ -402,14 +402,14 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
                     }
 
                     // set taglist
-                    imgur.api.image.updateImage({ imageHash: imgArray[0].id, tagList: "/Images/Character/" + target + "/" + imgArray[0].fileName });
+                    await imgur.api.image.updateImage({ imageHash: imgArray[0].id, tagList: "/Images/Character/" + target + "/" + imgArray[0].fileName });
 
                     // update imgur database
                     imgur.database.deleteImageData({ id: imgArray[0].id });
                     imgur.api.image.image({ imageHash: imgArray[0].id });
 
                     // return "分類完成";
-                    return line.createMsgButtons("分類完成", [target, "next"], ["https://aigis1000secretary.herokuapp.com/images/" + target, "new"]);
+                    return line.createMsgButtons("分類完成", [">>" + target, "next"], ["https://aigis1000secretary.herokuapp.com/images/" + target, "new"]);
                 }
             }
         }
@@ -441,6 +441,26 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
         return "";
     } else if (command.indexOf("://LINE.ME/R/") != -1) {
         line.abot.joinQr(msgs[0].trim());
+        return "";
+    } else if (command.indexOf("HTTP") == 0) {
+        let url = command;
+
+        const _regex1 = /\/\d{18,19}\?/;
+        if (_regex1.test(url)) {
+            const _regex2 = /\d{18,19}/;
+            let tweetId = _regex2.exec(url);
+            let tweet_data = await twitter.api.getTweet(tweetId);
+            twitter.stream.getTweetImages(tweet_data);
+
+            let replyMsg = [];
+            for (let i in tweet_data.medias) {
+                let media = tweet_data.medias[i];
+                if (media.type == "photo") {
+                    replyMsg.push(line.createImageMsg(media.link, media.link));
+                }
+            }
+            return replyMsg;
+        }
         return "";
     }
 

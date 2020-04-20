@@ -13,30 +13,14 @@
 
 /*
     // commit 
-    >> feature/0.8.4/imageListInterface
-    marge line menu api
-    html image list v0.1
-    fix twitter images upload path
-    new taglist/api
-    image uploader script update
-    imgur api update
-    DELIMG method
-
-    0.8.5.1
-    fix imgUploader
-
-    0.8.5.2
-    fix delimg
-
-    0.8.5.3
-    fix newimg
-
-    0.8.5.4
-    fix delimg v2
+    >> feature/0.8.5/munualUploadTwitterImages
+    fix newimg method
+    twitter api upgrade
+    munual upload twitter images command
 */
 
 const _config = module.exports = {
-    _version: "0.8.5.4",
+    _version: "0.8.6.0",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
