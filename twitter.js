@@ -2,6 +2,7 @@
 
 // ライブラリ読み込み
 const fs = require('fs');
+const path = require('path');
 const Twitter = require('twitter');
 const request = require("request");
 // const crypto = require('crypto');
@@ -88,47 +89,53 @@ const _twitter = module.exports = {
 
         getStreamData(tweet, target, callback) {
             // RTと自分のツイートは除外
-            if (tweet && tweet.user && !tweet.retweeted_status) {
+            if (!tweet || !tweet.user || tweet.retweeted_status) { return; }
 
-                // 送信する情報を定義
-                let tweet_data = _twitter.stream.getTweetData(tweet);
-                if (tweet_data.screen_name == target || tweet_data.screen_name == "ERROR") {
-                    // log
-                    if (config.switchVar.logStreamToFile && tweet) {
-                        dbox.logToFile("twitter/", "stream", tweet);
-                    }
+            // 送信する情報を定義
+            let tweet_data = _twitter.stream.getTweetData(tweet);
+            if (tweet_data.screen_name != target || tweet_data.screen_name == "ERROR") { return; }
 
-                    // image to dropbox
-                    if (tweet_data.medias) {
-                        for (let i in tweet_data.medias) {
-                            let media = tweet_data.medias[i];
+            // log
+            if (config.switchVar.logStreamToFile && tweet) {
+                dbox.logToFile("twitter/", "stream", tweet);
+            }
 
-                            if (media.type == "photo") {
-                                let tweetTime = new Date(parseInt(tweet_data.timestamp_ms));
-                                let filename = target + "-" + tweet_data.id_str + "-" +
-                                    tweetTime.getFullYear().toString().padStart(4, "0") +
-                                    (tweetTime.getMonth() + 1).toString().padStart(2, "0") +
-                                    tweetTime.getDate().toString().padStart(2, "0") + "_" +
-                                    tweetTime.getHours().toString().padStart(2, "0") +
-                                    tweetTime.getMinutes().toString().padStart(2, "0") +
-                                    tweetTime.getSeconds().toString().padStart(2, "0") +
-                                    "-img" + (parseInt(i) + 1) + ".jpg";
+            // 送信
+            if (tweet_data.text) {
+                callback(tweet_data);
+            }
 
-                                request.get(media.link)
-                                    .pipe(fs.createWriteStream("./" + filename))
-                                    .on("error", (e) => { console.log("pipe error", e) })
-                                    .on("close", () => {
-                                        let body = fs.readFileSync("./" + filename);
-                                        dbox.fileUpload("Images/NewImages/" + filename, body);
-                                    });
-                            }
-                        }
-                    }
+            // image to dropbox
+            if (tweet_data.medias) {
+                getTweetImages(tweet_data);
+            }
 
-                    // 送信
-                    if (tweet_data.text) {
-                        callback(tweet_data);
-                    }
+        },
+
+        getTweetImages(tweet_data) {
+            // image to dropbox
+            for (let i in tweet_data.medias) {
+                let media = tweet_data.medias[i];
+
+                if (media.type == "photo") {
+                    let tweetTime = new Date(parseInt(tweet_data.timestamp_ms));
+                    let filename = tweet_data.screen_name + "-" + tweet_data.id_str + "-" +
+                        tweetTime.getFullYear().toString().padStart(4, "0") +
+                        (tweetTime.getMonth() + 1).toString().padStart(2, "0") +
+                        tweetTime.getDate().toString().padStart(2, "0") + "_" +
+                        tweetTime.getHours().toString().padStart(2, "0") +
+                        tweetTime.getMinutes().toString().padStart(2, "0") +
+                        tweetTime.getSeconds().toString().padStart(2, "0") +
+                        "-img" + (parseInt(i) + 1) + path.parse(media.link).ext;
+
+                    request.get(media.link)
+                        .pipe(fs.createWriteStream("./" + filename))
+                        .on("error", (e) => { console.log("pipe error", e) })
+                        .on("close", async () => {
+                            let body = fs.readFileSync("./" + filename);
+                            await dbox.fileUpload("Images/NewImages/" + filename, body);
+                            fs.unlinkSync("./" + filename);
+                        });
                 }
             }
         },
@@ -148,7 +155,7 @@ const _twitter = module.exports = {
             tweet_data.name = (raw.user ? raw.user.name : "ERROR");
             tweet_data.screen_name = (raw.user ? raw.user.screen_name : "ERROR");
             tweet_data.created_at = raw.created_at;
-            tweet_data.timestamp_ms = raw.timestamp_ms;
+            tweet_data.timestamp_ms = raw.timestamp_ms || Date.parse(raw.created_at);
 
             // tweet text
             tweet_data.text = raw.full_text || raw.text;
@@ -453,7 +460,7 @@ const httpTwitterAPI = function () {
             console.log(">>" + postText + "<<");
 
             if (postText.indexOf("pic.twitter.com") != -1) {
-                
+
             }
         });
 

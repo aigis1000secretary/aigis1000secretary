@@ -262,50 +262,50 @@ const discordBotOn = function () {
 // twitter bot 監聽
 const twitterBotOn = function () {
 
-    if (!config.isLocalHost) {
-        let callback = async function (tweet_data) {
-            let aIDs = (await line.abot.getGroups()).split("\n");
-            for (let i in aIDs) {
-                let aid = aIDs[i];
+    if (config.isLocalHost) { return; }
 
-                // if (!groupDatabase.data[i].alarm) continue;
-                // // 14 days no ant msg idle group	3 * 24 * 60 * 60 * 1000
-                // if (Date.now() - groupDatabase.data[i].timestamp > 259200000) {
-                //     groupDatabase.data[i].alarm = false;
-                //     groupDatabase.uploadTask();
-                //     continue;
-                // }
+    let callback = async function (tweet_data) {
+        let aIDs = (await line.abot.getGroups()).split("\n");
+        for (let i in aIDs) {
+            let aid = aIDs[i];
 
-                let text = tweet_data.text;
-                let mediaUrl = "";
+            // if (!groupDatabase.data[i].alarm) continue;
+            // // 14 days no ant msg idle group	3 * 24 * 60 * 60 * 1000
+            // if (Date.now() - groupDatabase.data[i].timestamp > 259200000) {
+            //     groupDatabase.data[i].alarm = false;
+            //     groupDatabase.uploadTask();
+            //     continue;
+            // }
 
-                // push image data
-                if (tweet_data.medias.length > 0) {
-                    // check keyword in text
-                    mediaUrl = tweet_data.medias[0].url.split('/t.co/').splice(-1);
+            let text = tweet_data.text;
+            let mediaUrl = "";
 
-                    if (mediaUrl && text.indexOf(mediaUrl) == -1) {
-                        text += "\n" + mediaUrl;
-                    }
+            // push image data
+            if (tweet_data.medias.length > 0) {
+                // check keyword in text
+                mediaUrl = tweet_data.medias[0].url.split('/t.co/').splice(-1);
 
-                    // map keyword => media.link
-                    tweetMediaCache[mediaUrl] = [];
-                    for (let j in tweet_data.medias) {
-                        let media = tweet_data.medias[j];
-                        if (media.type == "photo") {
-                            tweetMediaCache[mediaUrl].push(media.link);
-                        }
-                    }
+                if (mediaUrl && text.indexOf(mediaUrl) == -1) {
+                    text += "\n" + mediaUrl;
                 }
 
-                line.abot.push(aid, text);
-                // if (tweetMediaCache[mediaUrl] && tweetMediaCache[mediaUrl].length > 3) {
-                //     line.abot.push(aid, mediaUrl);
-                // }
+                // map keyword => media.link
+                tweetMediaCache[mediaUrl] = [];
+                for (let j in tweet_data.medias) {
+                    let media = tweet_data.medias[j];
+                    if (media.type == "photo") {
+                        tweetMediaCache[mediaUrl].push(media.link);
+                    }
+                }
             }
+
+            line.abot.push(aid, text);
+            // if (tweetMediaCache[mediaUrl] && tweetMediaCache[mediaUrl].length > 3) {
+            //     line.abot.push(aid, mediaUrl);
+            // }
         }
-        twitter.stream.litsen("Aigis1000", "", callback);
     }
+    twitter.stream.litsen("Aigis1000", "", callback);
 }
 
 const timerBotOn = function () {
