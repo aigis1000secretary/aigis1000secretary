@@ -17,10 +17,13 @@
     fix newimg method
     twitter api upgrade
     munual upload twitter images command
+
+    0.8.6.1
+    twitter bot fix
 */
 
 const _config = module.exports = {
-    _version: "0.8.6.0",
+    _version: "0.8.6.1",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
