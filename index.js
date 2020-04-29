@@ -265,7 +265,7 @@ const twitterBotOn = function () {
     if (config.isLocalHost) { return; }
 
     let callback = async function (tweet_data) {
-        let aIDs = (await line.abot.getGroups()).split("\n");
+        let aIDs = await line.abot._getGroupsJoined();
         for (let i in aIDs) {
             let aid = aIDs[i];
 
