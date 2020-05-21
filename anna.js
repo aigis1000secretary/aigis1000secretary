@@ -140,8 +140,8 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
         urlArray = [];
         tagArray.push("DPS 一覽表 (日)");
         urlArray.push("http://www116.sakura.ne.jp/~kuromoji/aigis_dps.htm");
-        tagArray.push("Buff 試算表");
-        urlArray.push("https://aki-m.github.io/aigistools/buff.html");
+        tagArray.push("Buff 試算表 (暫)");
+        urlArray.push("https://vprjct.github.io/aigistools/buff.html");
         tagArray.push("Youtube 攻略頻道");
         urlArray.push("https://www.youtube.com/channel/UC8RlGt22URJuM0yM0pUyWBA");
         // tagArray.push("千年戦争アイギス攻略ブログ");
