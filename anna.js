@@ -238,7 +238,7 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
         // forgot
         // <arg1>
         if (arg1 == "undefined") {
-            return "";  // forgot what?
+            return "[忘記] 沒有目標";  // forgot what?
         }
         let learn = arg1;
         debugLog()("forgot: <" + learn + ">");
@@ -251,7 +251,7 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
         // wait 10 min to save
         nickDatabase.uploadTask();
 
-        return "[學習] 忘記了!";
+        return "[忘記] 忘記了!";
 
     } else if (_isAdmin && (command == "資料庫" || command == "DB")) {
 
@@ -272,7 +272,7 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
         let targetDB;
         if (targetDBName == "CharaDatabase") {
             targetDB = charaDatabase;
-            index = charaDatabase.indexOf(getFullnamesByIndex(indexStr)[0]);
+            index = charaDatabase.indexOf(searchName(indexStr)[0]);
         } else if (targetDBName == "NickDatabase") {
             targetDB = nickDatabase;
             index = nickDatabase.indexOf(indexStr);
@@ -474,34 +474,47 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
 }
 
 // 搜尋&回復
-const searchData = function (command) {
-    let resultArray = []
-    let count = 0
+const searchName = function (command) {
+    let results = [];
+    let count = 0;
 
-    // class?
-    // 搜索職業
-    resultArray = searchByClass(command);
-    count = resultArray.length;
-    debugLog()("classResult[" + count + "]: <" + resultArray + ">");
-    if (count == 1) {
+    // is nickname?
+    // 搜索暱稱
+    results = getFullnameByNick(command);
+    debugLog()("nick Result: <" + results + ">");
+    if (results != false) {
         // found 1
-        return generateCharaData(resultArray[0]);
-    } else if (count > 1) {
-        // found list
-        return resultArray.join("\n");
+        return [results];
     }
 
-    // not class or not found
-    // 搜索名稱
-    resultArray = getFullnamesByIndex(command);
-    count = resultArray.length;
-    debugLog()("charaResult[" + count + "]: <" + resultArray + ">");
-    if (count == 1) {
+    // is class?
+    // 搜索職業
+    results = getFullnamesByClass(command);
+    count = results.length;
+    debugLog()("class Result[" + count + "]: <" + results + ">");
+    if (count >= 1) {
+        return results;
+    }
+
+    // 模糊搜索名稱
+    results = getFullnamesByIndex(command);
+    count = results.length;
+    debugLog()("chara Result[" + count + "]: <" + results + ">");
+    if (count >= 1) {
+        return results;
+    }
+
+    return [];
+}
+const searchData = function (command) {
+    let results = searchName(command);
+
+    if (results.length == 1) {
         // found 1
-        return generateCharaData(resultArray[0]);
+        return generateCharaData(results[0]);
     } else if (count > 1) {
         // found list
-        return resultArray.join("\n");
+        return results.join("\n");
     }
 
     return false;
