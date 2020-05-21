@@ -15,19 +15,7 @@
 
 /*
     // commit 
-    >> feature/0.8.5/munualUploadTwitterImages
-    fix newimg method
-    twitter api upgrade
-    munual upload twitter images command
-
-    0.8.6.1
-    twitter bot fix
-
-    0.8.6.2
-    abot push all id bug fix
-
-    0.8.6.3
-    fix buff tool url & title
+    >> feature/0.8.6/searchSystem
 */
 
 const _config = module.exports = {
