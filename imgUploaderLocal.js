@@ -66,6 +66,7 @@ const main = async function () {
         if (resultImage.length == 0) {
             console.log("[", i, "/", pathArray.length, "] result.length == 0");
             await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
+            await sleep(20 * 1000);
 
             continue;
         } else {
