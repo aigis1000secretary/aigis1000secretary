@@ -184,9 +184,9 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
         keys[0] = keys[0].trim();
         keys[1] = keys[1].trim();
 
-        let arrayA = searchCharacter(keys[0], true);	// 精確搜索 Nickname
+        let arrayA = getFullnamesByIndex(keys[0], true);	// 精確搜索 Nickname
         let arrayClass = searchByClass(keys[1]);
-        let arrayB = arrayClass.length == 1 ? arrayClass : searchCharacter(keys[1]).concat(arrayClass);
+        let arrayB = arrayClass.length == 1 ? arrayClass : getFullnamesByIndex(keys[1]).concat(arrayClass);
         let countA = arrayA.length;
         let countB = arrayB.length;
 
@@ -277,7 +277,7 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
         let targetDB;
         if (targetDBName == "CharaDatabase") {
             targetDB = charaDatabase;
-            index = charaDatabase.indexOf(searchCharacter(indexStr)[0]);
+            index = charaDatabase.indexOf(getFullnamesByIndex(indexStr)[0]);
         } else if (targetDBName == "NickDatabase") {
             targetDB = nickDatabase;
             index = nickDatabase.indexOf(indexStr);
@@ -342,7 +342,7 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
                     const _regex2 = /\d{18,19}/;
                     let tweetId = _regex2.exec(img.fileName);
                     let data = await twitter.api.getTweet(tweetId);
-                    let array = searchCharacter(data.text);
+                    let array = getFullnamesByIndex(data.text);
 
                     if (array.length > 0) {
                         replyMsg.push(line.createImageMsg(img.imageLink, img.thumbnailLink));
@@ -383,8 +383,8 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
                 return line.createImageMsg(imgArray[0].imageLink, imgArray[0].thumbnailLink);
 
             } else if (arg2 != "undefined") {
-                let classArray = searchByClass(arg2);
-                let charaArray = classArray.length == 1 ? classArray : searchCharacter(arg2).concat(classArray);
+                let classArray = getFullnamesByClass(arg2);
+                let charaArray = classArray.length == 1 ? classArray : getFullnamesByIndex(arg2).concat(classArray);
                 if (charaArray.length > 1) {
                     return "搜尋不明確: " + charaArray.join("\n");
                 }
@@ -498,7 +498,7 @@ const searchData = function (command) {
 
     // not class or not found
     // 搜索名稱
-    resultArray = searchCharacter(command);
+    resultArray = getFullnamesByIndex(command);
     count = resultArray.length;
     debugLog()("charaResult[" + count + "]: <" + resultArray + ">");
     if (count == 1) {
@@ -512,12 +512,15 @@ const searchData = function (command) {
     return false;
 }
 // 搜索職業
-const searchByClass = function (command) {
+const getFullnamesByClass = function (command) {
     // 搜索職業
     // 分割命令
     let _rarity = getRarityString(command[0]);
-    if (_rarity == "NULL") { return []; }
-    let _class = command.indexOf("白金") == 0 ? searchClass(command.substring(2).trim()) : searchClass(command.substring(1).trim());
+    if (_rarity == false) { return []; }
+    let _class = command.indexOf("白金") == 0 ? command.substring(2).trim() : command.substring(1).trim();
+    _class = getClassnameByIndex(_class);
+    if (_class == false) { return []; }
+
     debugLog()("_rarity + _class: <" + _rarity + " + " + _class + ">");
 
     let result = [];
@@ -558,9 +561,9 @@ const generateCharaData = function (charaName) {
 // 定型文貼圖
 const replyStamp = _anna.replyStamp = function (msg, isGif = false) {
     debugLog()("replyStamp(" + msg + ")");
-
     let replyMsg = [];
 
+    // by tag
     let imgArray = imgur.database.findImageData({ tag: msg, isGif });
     if (imgArray.length > 0) {
         let i = Math.floor(Math.random() * imgArray.length);
@@ -568,6 +571,7 @@ const replyStamp = _anna.replyStamp = function (msg, isGif = false) {
         return replyMsg;
     }
 
+    // by filename or md5
     imgArray = imgArray.concat(imgur.database.findImageData({ fileName: msg, isGif }));
     imgArray = imgArray.concat(imgur.database.findImageData({ md5: msg, isGif }));
     if (imgArray.length > 0) {
@@ -575,6 +579,7 @@ const replyStamp = _anna.replyStamp = function (msg, isGif = false) {
         return replyMsg;
     }
 
+    // Rush!!
     let cdTime = process.env.CDTIME;
     if (msg.equali("Rush!!") && (!cdTime || Date.now() - cdTime > 30 * 1000)) {
         process.env.CDTIME = Date.now();
@@ -961,30 +966,25 @@ String.prototype.tableToArray = function () {
 // 資料庫
 // Character
 let charaDatabase = database.charaDatabase;
-// 模糊搜尋
-const searchCharacter = _anna.searchCharacter = function (key, accurate) {
-    accurate = !!accurate;
-    debugLog()("searchCharacter(" + key + ", " + accurate + ")");
-
-    // search from twitter text
-    if (key.length > 20) {
-        let result = [];
-        for (let charaIndex in charaDatabase.data) {
-            let name = charaDatabase.data[charaIndex].name;
-            if (key.indexOf(name) != -1) {
-                result.push(name);
-            }
+// search from twitter text
+const getFullnamesFromText = function (text) {
+    debugLog()("getFullnamesFromText( text... )");
+    let result = [];
+    for (let charaIndex in charaDatabase.data) {
+        let name = charaDatabase.data[charaIndex].name;
+        if (key.indexOf(name) != -1) {
+            result.push(name);
         }
-        return result;
     }
+    return result;
+}
+// 模糊搜尋 (非暱稱)
+const getFullnamesByIndex = function (key) {
+    debugLog()("getFullnamesByIndex(" + key + ")");
 
     let t;
     if ((t = charaDatabase.indexOf(key)) != -1) {
-        return [key];
-    } else if ((t = nickDatabase.indexOf(key)) != -1) {
-        return [nickDatabase.data[t].target];
-    } else if (accurate) {
-        return [];
+        return [key];   // 精確符合全名
     }
 
     // 加權陣列
@@ -993,9 +993,9 @@ const searchCharacter = _anna.searchCharacter = function (key, accurate) {
         let obj = charaDatabase.data[charaIndex];
 
         // 模糊加權
-        const metricsA = 8;	// 同字
-        const metricsB = 1;	// 同順
-        const metricsC = 2;	// 連接
+        const metricsA = 8; // 同字
+        const metricsB = 1; // 同順
+        const metricsC = 3; // 連接
         let metrics = -5 * key.length;
 
         let keyMetrics = new Array(key.length);
@@ -1010,14 +1010,14 @@ const searchCharacter = _anna.searchCharacter = function (key, accurate) {
         // 計算權重
         for (let i = 0; i < keyMetrics.length; ++i) {
             if (keyMetrics[i] != -1) {
-                metrics += metricsA;	// 同字元
+                metrics += metricsA; // 同字元
 
                 if (i > 0) {
                     if (keyMetrics[i] > keyMetrics[i - 1]) {
-                        metrics += metricsB;	// 字元同順
+                        metrics += metricsB; // 字元同順
                     }
                     if (keyMetrics[i] == (keyMetrics[i - 1] + 1)) {
-                        metrics += metricsC;	// 同sub字串
+                        metrics += metricsC; // 同sub字串
                     }
                 }
             }
@@ -1040,7 +1040,7 @@ const searchCharacter = _anna.searchCharacter = function (key, accurate) {
         debugLog()("_metricsMin: <" + metricsMin + ">");
 
         for (let charaIndex = metricsMax; charaIndex >= metricsMin; charaIndex--) {
-            if (!array_metrics[charaIndex]) continue;	// 檢查搜尋結果
+            if (!array_metrics[charaIndex]) continue; // 檢查搜尋結果
 
             // 遍歷搜尋結果
             for (let i in array_metrics[charaIndex]) {
@@ -1056,12 +1056,22 @@ const searchCharacter = _anna.searchCharacter = function (key, accurate) {
 
 // Nickname
 let nickDatabase = database.nickDatabase;
+// 搜尋暱稱 (nickname to fullname)
+const getFullnameByNick = _anna.getFullnameByNick = function (str) {
+    debugLog()("getFullnameByNick(" + str + ")");
+    let result = nickDatabase.indexOf(str);
+    if (result != -1) { return nickDatabase.data[result].target; }
+
+    result = charaDatabase.indexOf(str);
+    if (result != -1) { return str; }
+    return false;
+}
 
 // Class
 let classDatabase = database.classDatabase;
-// 搜尋職業
-const searchClass = function (str) {
-    debugLog()("searchClass(" + str + ")");
+// 搜尋職業 (index to full classname)
+const getClassnameByIndex = function (str) {
+    debugLog()("getClassnameByIndex(" + str + ")");
     // for (let i = 0; i < classDatabase.length; ++i) {
     for (let i in classDatabase.data) {
 
@@ -1071,7 +1081,7 @@ const searchClass = function (str) {
             }
         }
     }
-    return "NULL";
+    return false;
 }
 // value to key
 const getRarityString = function (str) {
@@ -1082,7 +1092,7 @@ const getRarityString = function (str) {
     else if (str == "藍") return "サファイア";
     else if (str == "白" || str == "鉑") return "プラチナ";
     else if (str == "黑") return "ブラック";
-    else return "NULL";
+    else return false;
 }
 
 
