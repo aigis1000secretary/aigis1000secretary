@@ -1,4 +1,4 @@
-﻿
+
 /*
     // todo
     database api input
@@ -201,9 +201,9 @@ const urlEncode = function (str_utf8, codePage) {
     }
     return str.toUpperCase();
 }
-global. urlEncodeJP = function (str_utf8) { return urlEncode(str_utf8, "EUC-JP"); }
-global. urlEncodeBIG5 = function (str_utf8) { return urlEncode(str_utf8, "BIG5"); }
-global. urlEncodeUTF8 = function (str_utf8) { return urlEncode(str_utf8, "UTF-8"); }
+global.urlEncodeJP = function (str_utf8) { return urlEncode(str_utf8, "EUC-JP"); }
+global.urlEncodeBIG5 = function (str_utf8) { return urlEncode(str_utf8, "BIG5"); }
+global.urlEncodeUTF8 = function (str_utf8) { return urlEncode(str_utf8, "UTF-8"); }
 global.encodeURI_JP = function (url) {
     let result = "";
 

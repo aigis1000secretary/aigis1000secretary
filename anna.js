@@ -1,7 +1,7 @@
 
 // 初始化
 const config = require("./config.js");
-const _anna = module.exports = {};    // 循環依賴對策
+const _anna = module.exports = {}; // 循環依賴對策
 // 爬蟲
 const request = require("request");
 const iconv = require("iconv-lite");
@@ -38,9 +38,9 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
 
     // 分析命令
     rawMsg.replaceAll("\n\n", "\n");
-    let msg1 = rawMsg.split("\n")[0].trim();    // line 1
-    let msg2 = (rawMsg.split("\n")[1] || "").trim();    // line 2~
-    let msgs = msg1.split(" ").filter(function (n) { return (n && (n != "")) });   // delete null data
+    let msg1 = rawMsg.split("\n")[0].trim(); // line 1
+    let msg2 = (rawMsg.split("\n")[1] || "").trim(); // line 2~
+    let msgs = msg1.split(" ").filter(function (n) { return (n && (n != "")) }); // delete null data
 
     // >> <command>     <arg1>          <arg2>
     // >> 學習          NNL:黑弓
@@ -53,20 +53,30 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
     debugLog()("Args: <" + command + "> <" + arg1 + "> <" + arg2 + ">");
 
     // reply    
-    if (command == "DEBUG") {   // debug switch
+    if (command == "DEBUG") { // debug switch
         config.switchVar.debug = !config.switchVar.debug;
         return "debug = " + (config.switchVar.debug ? "on" : "off");
 
-    } else if (command == "DEBUGP") {   // debug switch
+    } else if (command == "DEBUGP") { // debug switch
         config.switchVar.debugPush = !config.switchVar.debugPush;
         config.switchVar.debug = config.switchVar.debugPush;
         return "debug push = " + (config.switchVar.debugPush ? "on" : "off");
+
+    } else if (command.length == 1) {		// 定型文
+        // 同步執行
+        let result = getFullnameByNick(command);
+        if (result != false) {
+            command = result;
+        } else {
+            // return "王子太短了，找不到...";
+            return false;
+        }
 
     } else if (command == "巨根") {
         return "王子太小了，找不到...";
 
     } else if (command == "醒醒" || command == "WAKE") {
-        return "呣喵~?";    // wake
+        return "呣喵~?"; // wake
 
     } else if (command == "指令" || command == "HELP") {
         // help
@@ -238,7 +248,7 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
         // forgot
         // <arg1>
         if (arg1 == "undefined") {
-            return "[忘記] 沒有目標";  // forgot what?
+            return "[忘記] 沒有目標"; // forgot what?
         }
         let learn = arg1;
         debugLog()("forgot: <" + learn + ">");
@@ -517,7 +527,7 @@ const searchData = function (command) {
     if (results.length == 1) {
         // found 1
         return generateCharaData(results[0]);
-    } else if (count > 1) {
+    } else if (results.length > 1) {
         // found list
         return results.join("\n");
     }
@@ -655,7 +665,7 @@ const charaDataCrawler = function (urlPath, sourceId) {
                 }
 
                 // アビリティ
-                if (title == "アビリティ" || title == "覚醒アビリティ" || title.indexOf("追加アビリティ") != -1) {    // check block tag
+                if (title == "アビリティ" || title == "覚醒アビリティ" || title.indexOf("追加アビリティ") != -1) { // check block tag
                     // get html data
                     let temp = $(this).next("div").children("ul").html().replaceAll("<br>", "\n").replace(/<p[\s\S]*?\/p>/g, "").replace(/<[\s\S]*?>/g, "").replace(/\s*\n\s*/g, "\n").trim();
                     let name = temp.slice(0, temp.indexOf('\n'));
@@ -885,7 +895,7 @@ const classDataCrawler = _anna.classDataCrawler = async function () {
                             });
                         }
                     }
-                });//*/
+                }); //*/
                 // $("table[class=edit]").each(function (i, elem) {
                 //     let table = $(this).html().replaceAll("、", "/").replaceAll("<br>", "").tableToArray();
                 // });
@@ -997,7 +1007,7 @@ const getFullnamesByIndex = function (key) {
 
     let t;
     if ((t = charaDatabase.indexOf(key)) != -1) {
-        return [key];   // 精確符合全名
+        return [key]; // 精確符合全名
     }
 
     // 加權陣列
@@ -1145,26 +1155,24 @@ _anna.autoTest = async function () {
 
     // let sourceId = "U9eefeba8c0e5f8ee369730c4f983346b";
     // let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
-    // // config.switchVar.debug = true;
+    // config.switchVar.debug = true;
 
-    // await replyAI("狀態", sourceId, userId).then(console.log);
-    // await replyAI("職業", sourceId, userId).then(console.log);
-    // await replyAI("職業 ナ", sourceId, userId).then(console.log);
+    // replyAI("狀態", sourceId, userId).then(console.log);
+    // replyAI("職業", sourceId, userId).then(console.log);
+    // replyAI("職業 ナ", sourceId, userId).then(console.log);
 
-    // await replyAI("學習 NNLK:白射手ナナリー", sourceId, userId).then(console.log);
+    // replyAI("學習 NNLK:白射手ナナリー", sourceId, userId).then(console.log);
 
-    // await replyAI("NNLK", sourceId, userId).then(console.log);
-    // await replyAI("黑弓", sourceId, userId).then(console.log);
-    // await replyAI("忘記 NNLK", sourceId, userId).then(console.log);
-    // await replyAI("NNLK", sourceId, userId).then(console.log);
+    // replyAI("NNLK", sourceId, userId).then(console.log);
+    // replyAI("黑弓", sourceId, userId).then(console.log);
+    // replyAI("忘記 NNLK", sourceId, userId).then(console.log);
+    // replyAI("NNLK", sourceId, userId).then(console.log);
 
-    // await replyAI("射", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
-    // await replyAI("シャル", sourceId, userId).then(obj => console.log(obj));
-    // await replyAI("白き射手ナナリー", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
-    // await replyAI("王子通常", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
-    // await replyAI("1528476371865.JPEG", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
-    // await replyAI("0ab61ce0f94dc2f81b38a08f150a17fb", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
-    // await replyAI("刻詠の風水士リンネ", sourceId, userId).then(obj => console.log(JSON.stringify(obj, null, 4)));
+    // replyAI("射", sourceId, userId).then(console.json);
+    // replyAI("シャル", sourceId, userId).then(obj => console.log(obj));
+    // replyAI("白き射手ナナリー", sourceId, userId).then(console.json);
+    // replyAI("王子通常", sourceId, userId).then(console.json);
+    // replyAI("刻詠の風水士リンネ", sourceId, userId).then(console.json);
 
     // replyAI("update", sourceId, userId).then(console.log);
 
