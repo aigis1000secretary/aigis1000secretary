@@ -38,14 +38,14 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
 
     // 分析命令
     rawMsg.replaceAll("\n\n", "\n");
-    let msg1 = rawMsg.indexOf("\n") == -1 ? rawMsg.trim() : rawMsg.split("\n")[0].trim();   // line 1
-    let msg2 = rawMsg.indexOf("\n") == -1 ? "" : rawMsg.substring(rawMsg.indexOf("\n") + 1).trim(); // line 2~
-    let msgs = msg1.split(" ");
-    msgs = msgs.filter(function (n) { return (n && (n != "")) });   // delete null data
-    // >> <command>		<arg1>			<arg2>
-    // >> 學習			NNL:黑弓
-    // >> 資料庫		CharaDatabase	NNL.ability_aw
-    let command = ("" + msgs[0].toUpperCase()).trim();
+    let msg1 = rawMsg.split("\n")[0].trim();    // line 1
+    let msg2 = (rawMsg.split("\n")[1] || "").trim();    // line 2~
+    let msgs = msg1.split(" ").filter(function (n) { return (n && (n != "")) });   // delete null data
+
+    // >> <command>     <arg1>          <arg2>
+    // >> 學習          NNL:黑弓
+    // >> 資料庫        CharaDatabase   NNL.ability_aw
+    let command = ("" + msgs[0]).toUpperCase().trim();
     let arg1 = ("" + msgs[1]).trim();
     let arg2 = ("" + msgs[2]).trim();
     // <command>
@@ -53,23 +53,14 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
     debugLog()("Args: <" + command + "> <" + arg1 + "> <" + arg2 + ">");
 
     // reply    
-    if (command == "DEBUG") {		// debug switch
+    if (command == "DEBUG") {   // debug switch
         config.switchVar.debug = !config.switchVar.debug;
         return "debug = " + (config.switchVar.debug ? "on" : "off");
-    } else if (command == "DEBUGP") {		// debug switch
+
+    } else if (command == "DEBUGP") {   // debug switch
         config.switchVar.debugPush = !config.switchVar.debugPush;
         config.switchVar.debug = config.switchVar.debugPush;
         return "debug push = " + (config.switchVar.debugPush ? "on" : "off");
-
-    } else if (command.length == 1) {		// 定型文
-        // 同步執行
-        let result = nickDatabase.indexOf(command);
-        if (result != -1) {
-            command = nickDatabase.data[result].target;
-        } else {
-            // return "王子太短了，找不到...";
-            return false;
-        }
 
     } else if (command == "巨根") {
         return "王子太小了，找不到...";
@@ -260,8 +251,8 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
 
     } else if (_isAdmin && (command == "資料庫" || command == "DB")) {
 
-        // >> ANNA <command>	<arg1>			<arg2>
-        // >> ANNA 資料庫		CharaDatabase	NNL.ability_aw
+        // >> ANNA <command> <arg1>   <arg2>
+        // >> ANNA 資料庫  CharaDatabase NNL.ability_aw
 
         if (arg1 == "undefined") {
             return "請選擇資料庫:\nCharaDatabase\nNickDatabase\nClassDatabase\n\n(>>資料庫 CharaDatabase NNL.ability_aw)";
