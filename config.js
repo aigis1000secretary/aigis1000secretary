@@ -1,4 +1,4 @@
-
+﻿
 /*
     // todo
     database api input
@@ -8,6 +8,8 @@
     class Database
 
     R18 switch
+    
+    nickname to charname method for discord keyword
 
 */
 
@@ -23,10 +25,13 @@
 
     0.8.6.2
     abot push all id bug fix
+
+    0.8.6.3
+    fix buff tool url & title
 */
 
 const _config = module.exports = {
-    _version: "0.8.6.2",
+    _version: "0.8.6.3",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
