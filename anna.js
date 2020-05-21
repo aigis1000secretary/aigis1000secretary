@@ -323,21 +323,24 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
         return "上傳圖檔中...";
 
     } else if (_isAdmin && (command == "NEW")) {
-        if (arg1 == "undefined") {
-            let imgArray = imgur.database.findImageData({ tag: "NewImages" });
+        if (arg1 == "undefined" || arg2 == "undefined") {
+            let imgArray = (arg1 == "undefined" ?
+                imgur.database.findImageData({ tag: "NewImages" }) :
+                imgur.database.findImageData({ md5: arg1 }));
 
             let replyMsg = [];
             if (imgArray.length > 0) {
                 let i = Math.floor(Math.random() * imgArray.length);
                 let img = imgArray[i];
 
+                // twitter image
                 const _regex1 = /^Aigis1000-\d{18,19}-\d{8}_\d{6}/;
                 if (_regex1.test(img.fileName)) {
                     // image from Aigis1000 twitter
                     const _regex2 = /\d{18,19}/;
                     let tweetId = _regex2.exec(img.fileName);
                     let data = await twitter.api.getTweet(tweetId);
-                    let array = getFullnamesByIndex(data.text);
+                    let array = getFullnamesFromText(data.text);
 
                     if (array.length > 0) {
                         replyMsg.push(line.createImageMsg(img.imageLink, img.thumbnailLink));
@@ -348,8 +351,11 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
                             labels.push(array[j]);
                             msgs.push("new " + img.md5 + " " + array[j]);
                         }
-                        labels.push("next");
-                        msgs.push("new");
+
+                        if (array.length < 4) {
+                            labels.push("next");
+                            msgs.push("new");
+                        }
 
                         replyMsg.push(line.createMsgButtons("[" + i + "/" + imgArray.length + "]", labels, msgs));
                         // console.log(JSON.stringify(replyMsg));
@@ -367,24 +373,22 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
                 return replyMsg;
 
             } else {
-                return "沒有新照片";
+                return (arg1 == "undefined" ? "沒有新照片" : "md5錯誤!");
             }
 
         } else {
             let imgArray = imgur.database.findImageData({ md5: arg1, tag: "NewImages" });
             if (imgArray.length != 1) { return "md5錯誤! " + imgArray.length + " result!"; }
 
-            if (arg2 == "undefined") {
-                return line.createImageMsg(imgArray[0].imageLink, imgArray[0].thumbnailLink);
+            if (arg2 != "undefined") {
 
-            } else if (arg2 != "undefined") {
-                let classArray = getFullnamesByClass(arg2);
-                let charaArray = classArray.length == 1 ? classArray : getFullnamesByIndex(arg2).concat(classArray);
-                if (charaArray.length > 1) {
-                    return "搜尋不明確: " + charaArray.join("\n");
-                }
-                if (charaArray.length == 1) {
-                    target = charaArray[0].trim();
+                let charaArray = searchName(arg2);
+                if (charaArray.length == 0) {
+                    return "搜尋失敗!";
+                } else if (charaArray.length > 1) {
+                    return "搜尋不明確: \n" + charaArray.join("\n");
+                } else if (charaArray.length == 1) {
+                    let target = charaArray[0].trim();
                     // move image file
                     try {
                         await dbox.fileMove(
@@ -408,7 +412,7 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
                 }
             }
         }
-        return "";
+        return false;
 
     } else if (_isAdmin && (command == "DELIMG")) {
         if (arg1 != "undefined") {
@@ -430,7 +434,8 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
             }
             return "刪除成功";
         }
-        return "";
+        return "刪除錯誤: 目標異常!";
+
     } else if (_isAdmin && (command == "ABOTINIT")) {
         line.alphatbotInit();
         return "";
