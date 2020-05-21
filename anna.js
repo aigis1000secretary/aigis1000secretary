@@ -175,37 +175,41 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
         keys[0] = keys[0].trim();
         keys[1] = keys[1].trim();
 
-        let arrayA = getFullnamesByIndex(keys[0], true);	// 精確搜索 Nickname
-        let arrayClass = searchByClass(keys[1]);
-        let arrayB = arrayClass.length == 1 ? arrayClass : getFullnamesByIndex(keys[1]).concat(arrayClass);
-        let countA = arrayA.length;
-        let countB = arrayB.length;
+        // search
+        let target;
+        target = getFullnameByNick(keys[0]);
+        if (target != false) {
+            return "[學習] 安娜知道！ 是 " + target;
+        }
+        target = getFullnamesByClass(keys[1]);
+        if (target.length != 1) {
+            target = target.concat(getFullnamesByIndex(keys[1]));
+            // del same element
+            target = target.filter((el, i, arr) => arr.indexOf(el) === i);
+        }
 
         debugLog()("new nick: <" + keys[0] + ">");
-        debugLog()("full name: <" + arrayB + ">");
+        debugLog()("full name: <" + target + ">");
 
-        if (countA == 1) {
-            return "[學習] 安娜知道的！";
-
-        } else if (countB == 0) {
+        // reply
+        if (target.length == 0) {
             let replyMsgs = ["不認識的人呢...", "那是誰？"];
             let replyMsg = "[學習] " + replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
             return replyMsg;
 
-        } else if (countB > 1) {
+        } else if (target.length > 1) {
             return "[學習] 太多人了，不知道是誰";
 
         } else {
-            let key = arrayB[0];
-            let nick = keys[0];
-
+            // 搜索成功
             // 異步執行
-            nickDatabase.addData(key, nick);
+            nickDatabase.addData(target[0], keys[0]);
             // wait 10 min to save
             nickDatabase.uploadTask();
 
             return "[學習] 嗯！記住了！";
         }
+
     } else if (command == "上傳" || command == "UPLOAD") {
 
         // 異步執行
