@@ -125,12 +125,12 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
         urlArray.push("http://aigistool.html.xdomain.jp/EXP.html");
         tagArray.push("體魅計算機");
         urlArray.push("http://aigistool.html.xdomain.jp/ChariSta.html");
+        tagArray.push("DPS 一覽表 (日)");
+        urlArray.push("http://www116.sakura.ne.jp/~kuromoji/aigis_dps.htm");
         templateMsgA = line.createMsgButtons("實用工具 (1)", tagArray, urlArray);
 
         tagArray = [];
         urlArray = [];
-        tagArray.push("DPS 一覽表 (日)");
-        urlArray.push("http://www116.sakura.ne.jp/~kuromoji/aigis_dps.htm");
         tagArray.push("Buff 試算表 (暫)");
         urlArray.push("https://vprjct.github.io/aigistools/buff.html");
         tagArray.push("Youtube 攻略頻道");
