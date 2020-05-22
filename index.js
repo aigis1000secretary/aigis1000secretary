@@ -206,6 +206,7 @@ const discordBotOn = function () {
             return;
         };
 
+        let target = anna.getFullnameByNick(dMsg.content);
         let msg = dMsg.content;
 
         // in user chat
@@ -226,7 +227,7 @@ const discordBotOn = function () {
             }
 
             let rMsg = await anna.replyAI(msg);
-            let rStamp = anna.replyStamp(msg);
+            let rStamp = anna.replyStamp(msg, true);
 
             // ai done something
             if (rMsg !== false) {
@@ -247,15 +248,13 @@ const discordBotOn = function () {
                 }
                 return;
             }
+        } else if (target) {
+            let rStamp = anna.replyStamp(target, true);
+            if (rStamp !== false) {
+                replyFunc(rStamp);
+                return;
+            }
         }
-
-        // if (msg.indexOf("安娜") == 0 || msg.toLocaleLowerCase().indexOf("anna") == 0) {
-        //     let result = await anna.replyAI(msg)
-        //     if (result != false) {
-        //         replyFunc(result);
-        //         return;
-        //     }
-        // }
     });
 
 }
