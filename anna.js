@@ -995,7 +995,7 @@ const getFullnamesFromText = function (text) {
     let result = [];
     for (let charaIndex in charaDatabase.data) {
         let name = charaDatabase.data[charaIndex].name;
-        if (key.indexOf(name) != -1) {
+        if (text.indexOf(name) != -1) {
             result.push(name);
         }
     }
