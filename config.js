@@ -16,6 +16,14 @@
 /*
     // commit 
     >> feature/0.8.6/searchSystem
+    new search method
+    raw text read method update
+    learn method update
+    main search Upgrade
+    tools menu update
+    NEW command Upgrade
+    anna.js autotest doen
+    abot login method fixed
 */
 
 const _config = module.exports = {
