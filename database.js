@@ -189,7 +189,7 @@ class CharaDatabase extends Database {
             let nickList = [];
             for (let i in nickDatabase.data) {
                 if (nickDatabase.data[i].target == this.name) {
-                    nickList.push(nickDatabase.data[i].name);
+                    nickList.push("#" + nickDatabase.data[i].name);
                 }
             }
             if (nickList.length > 0) {

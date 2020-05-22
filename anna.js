@@ -1082,9 +1082,10 @@ let nickDatabase = database.nickDatabase;
 // 搜尋暱稱 (nickname to fullname)
 const getFullnameByNick = _anna.getFullnameByNick = function (str) {
     debugLog()("getFullnameByNick(" + str + ")");
+    // 搜尋暱稱
     let result = nickDatabase.indexOf(str);
     if (result != -1) { return nickDatabase.data[result].target; }
-
+    // 搜尋全名
     result = charaDatabase.indexOf(str);
     if (result != -1) { return str; }
     return false;
