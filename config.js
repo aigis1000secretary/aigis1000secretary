@@ -24,10 +24,14 @@
     NEW command Upgrade
     anna.js autotest doen
     abot login method fixed
+
+    0.8.7.1
+    deprecated crypto.createCipher 
 */
 
+const crypto = require("./crypto.js");
 const _config = module.exports = {
-    _version: "0.8.7.0",
+    _version: "0.8.7.1",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
@@ -145,26 +149,17 @@ const _config = module.exports = {
             let rawData = await require("./dbox.js").fileDownload("AlphatBot.json");
             let data = Buffer.from(rawData, "binary");
 
-            let obj;
-            try { obj = JSON.parse(data); } catch (e) { obj = eval("(" + data + ")"); }
+            let obj; try { obj = JSON.parse(data); } catch (e) { obj = eval("(" + data + ")"); }
 
-            // 解码
+            // 解密
             let key = _config.alphatBot.jsonKey;
+            obj.authToken = crypto.decrypt(obj.authToken, key);
+            obj.certificate = crypto.decrypt(obj.certificate, key);
+            obj.email = crypto.decrypt(obj.email, key);
+            obj.password = crypto.decrypt(obj.password, key);
 
-            function aesDecrypt(dara) {
-                if (!data) return null;
-                let decipher = require('crypto').createDecipher('aes192', key);
-                let decrypted = decipher.update(dara, 'hex', 'utf8');
-                decrypted += decipher.final('utf8');
-                return decrypted;
-            }
-            obj.authToken = aesDecrypt(obj.authToken);
-            obj.certificate = aesDecrypt(obj.certificate);
-            obj.email = aesDecrypt(obj.email);
-            obj.password = aesDecrypt(obj.password);
-
-            if (!!obj.authToken && !!obj.certificate) {
-                console.log("Update auth token from dropbox");
+            if (!!obj.authToken) {
+                console.log("Update auth token from dropbox, EMail: " + obj.email);
                 Object.assign(_config.alphatBot, obj);
             }
         } catch (e) {
@@ -177,22 +172,15 @@ const _config = module.exports = {
 
         // 加密 to dropbox
         let key = _config.alphatBot.jsonKey;
-
-        function aesEncrypt(data) {
-            if (!data) return null;
-            let cipher = require('crypto').createCipher('aes192', key)
-            let crypted = cipher.update(data, 'utf8', 'hex')
-            crypted += cipher.final('hex');
-            return crypted;
-        }
         let alphatBot = {
-            authToken: aesEncrypt(raw.authToken),
-            certificate: aesEncrypt(raw.certificate),
-            email: aesEncrypt(raw.email),
-            password: aesEncrypt(raw.password),
+            authToken: crypto.encrypt(raw.authToken, key),
+            certificate: crypto.encrypt(raw.certificate, key),
+            email: crypto.encrypt(raw.email, key),
+            password: crypto.encrypt(raw.password, key),
         }
-        require("./dbox.js").fileUpload("AlphatBot.json", JSON.stringify(alphatBot));
+        console.log("Upload auth token to dropbox, EMail: " + alphatBot.email);
 
+        require("./dbox.js").fileUpload("AlphatBot.json", JSON.stringify(alphatBot, null, 4));
     }
 };
 
