@@ -14,6 +14,16 @@
 */
 
 /*
+    // commit 
+    >> feature/0.8.6/searchSystem
+    new search method
+    raw text read method update
+    learn method update
+    main search Upgrade
+    tools menu update
+    NEW command Upgrade
+    anna.js autotest doen
+    abot login method fixed
 */
 
 const _config = module.exports = {
@@ -69,8 +79,8 @@ const _config = module.exports = {
     alphatBot: {
         authToken: process.env.LINE_ALPHAT_AUTHTOKEN,
         certificate: process.env.LINE_ALPHAT_CERTIFICATE,
-        email: "",
-        password: "",
+        email: process.env.LINE_ALPHAT_EMAIL,
+        password: process.env.LINE_ALPHAT_PASSWORD,
         botId: process.env.LINE_ALPHAT_BOTID,
         jsonKey: process.env.LINE_ALPHAT_JSONKEY
     },
@@ -128,37 +138,30 @@ const _config = module.exports = {
                 _config.hostIP = address;
             });
         }, 1);
-
-        // 加密
-        // let key = _config.alphatBot.jsonKey;
-        // function aesEncrypt(data) {
-        //     let cipher = require('crypto').createCipher('aes192', key)
-        //     let crypted = cipher.update(data, 'utf8', 'hex')
-        //     crypted += cipher.final('hex');
-        //     return crypted;
-        // }
-        // let alphatBot = {
-        //     authToken: aesEncrypt(_config.alphatBot.authToken),
-        //     certificate: aesEncrypt(_config.alphatBot.certificate),
-        // }
-        // require("./dbox.js").fileUpload("AlphatBot.json", JSON.stringify(alphatBot));
-
+        await _config.loadConfigFromDbox();
+    },
+    async loadConfigFromDbox() {
         try {
-            let data = await require("./dbox.js").fileDownload("AlphatBot.json");
+            let rawData = await require("./dbox.js").fileDownload("AlphatBot.json");
+            let data = Buffer.from(rawData, "binary");
+
             let obj;
-            try { obj = JSON.parse(data); }
-            catch (e) { obj = eval("(" + data + ")"); }
+            try { obj = JSON.parse(data); } catch (e) { obj = eval("(" + data + ")"); }
 
             // 解码
             let key = _config.alphatBot.jsonKey;
-            function aesDecrypt(encrypt) {
+
+            function aesDecrypt(dara) {
+                if (!data) return null;
                 let decipher = require('crypto').createDecipher('aes192', key);
-                let decrypted = decipher.update(encrypt, 'hex', 'utf8');
+                let decrypted = decipher.update(dara, 'hex', 'utf8');
                 decrypted += decipher.final('utf8');
                 return decrypted;
             }
             obj.authToken = aesDecrypt(obj.authToken);
             obj.certificate = aesDecrypt(obj.certificate);
+            obj.email = aesDecrypt(obj.email);
+            obj.password = aesDecrypt(obj.password);
 
             if (!!obj.authToken && !!obj.certificate) {
                 console.log("Update auth token from dropbox");
@@ -168,6 +171,28 @@ const _config = module.exports = {
             // error
             console.log(e);
         }
+
+    },
+    async saveConfigToDbox(raw) {
+
+        // 加密 to dropbox
+        let key = _config.alphatBot.jsonKey;
+
+        function aesEncrypt(data) {
+            if (!data) return null;
+            let cipher = require('crypto').createCipher('aes192', key)
+            let crypted = cipher.update(data, 'utf8', 'hex')
+            crypted += cipher.final('hex');
+            return crypted;
+        }
+        let alphatBot = {
+            authToken: aesEncrypt(raw.authToken),
+            certificate: aesEncrypt(raw.certificate),
+            email: aesEncrypt(raw.email),
+            password: aesEncrypt(raw.password),
+        }
+        require("./dbox.js").fileUpload("AlphatBot.json", JSON.stringify(alphatBot));
+
     }
 };
 
@@ -199,9 +224,9 @@ const urlEncode = function (str_utf8, codePage) {
     }
     return str.toUpperCase();
 }
-global. urlEncodeJP = function (str_utf8) { return urlEncode(str_utf8, "EUC-JP"); }
-global. urlEncodeBIG5 = function (str_utf8) { return urlEncode(str_utf8, "BIG5"); }
-global. urlEncodeUTF8 = function (str_utf8) { return urlEncode(str_utf8, "UTF-8"); }
+global.urlEncodeJP = function (str_utf8) { return urlEncode(str_utf8, "EUC-JP"); }
+global.urlEncodeBIG5 = function (str_utf8) { return urlEncode(str_utf8, "BIG5"); }
+global.urlEncodeUTF8 = function (str_utf8) { return urlEncode(str_utf8, "UTF-8"); }
 global.encodeURI_JP = function (url) {
     let result = "";
 
