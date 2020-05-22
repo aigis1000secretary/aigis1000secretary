@@ -24,11 +24,14 @@
     NEW command Upgrade
     anna.js autotest doen
     abot login method fixed
+
+    0.8.7.1
+    deprecated crypto.createCipher 
 */
 
 const crypto = require("./crypto.js");
 const _config = module.exports = {
-    _version: "0.8.7.0",
+    _version: "0.8.7.1",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
@@ -155,7 +158,7 @@ const _config = module.exports = {
             obj.email = crypto.decrypt(obj.email, key);
             obj.password = crypto.decrypt(obj.password, key);
 
-            if (!!obj.authToken && !!obj.certificate) {
+            if (!!obj.authToken) {
                 console.log("Update auth token from dropbox, EMail: " + obj.email);
                 Object.assign(_config.alphatBot, obj);
             }
