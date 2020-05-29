@@ -206,8 +206,9 @@ const discordBotOn = function () {
             return;
         };
 
-        let target = anna.getFullnameByNick(dMsg.content);
         let msg = dMsg.content;
+        let target = anna.getFullnameByNick(dMsg.content);
+        if (dMsg.content != target) target = false;
 
         // in user chat
         let callAnna = false;
