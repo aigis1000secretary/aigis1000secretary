@@ -2,15 +2,11 @@
 /*
     // todo
     database api input
-    character search method rebuild?
-    error msg push
     newimg error msg?
     class Database
 
     R18 switch
     
-    nickname to charname method for discord keyword
-
 */
 
 /*
@@ -40,11 +36,14 @@
 
     0.8.7.5
     disable discord nick stamp
+
+    0.8.7.6
+    hide discord url preview
 */
 
 const crypto = require("./crypto.js");
 const _config = module.exports = {
-    _version: "0.8.7.5",
+    _version: "0.8.7.6",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
