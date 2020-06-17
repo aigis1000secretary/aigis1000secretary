@@ -177,7 +177,7 @@ const discordBotOn = function () {
                     let str = "";
                     for (let i in linemsg.template.actions) {
                         let msg = linemsg.template.actions[i];
-                        str += msg.label + ": " + msg.uri + "\n";
+                        str += msg.label + ": __" + msg.uri + "__\n";
                     }
                     return str;
                 }
