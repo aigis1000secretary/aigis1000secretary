@@ -278,6 +278,7 @@ class LineAPI {
     async _acceptGroupInvitation(groupid) {
         this._client.acceptGroupInvitation(0, groupid);
         await this._refrehGroup();
+        this._invite(groupid, ['u759a433ed5a22b3f2daa405ab2363a67']);
         return;
     }
 
