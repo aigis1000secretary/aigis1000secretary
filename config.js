@@ -39,11 +39,14 @@
 
     0.8.7.6
     hide discord url preview
+
+    0.8.7.7
+    abot invite bot "after" join to new group
 */
 
 const crypto = require("./crypto.js");
 const _config = module.exports = {
-    _version: "0.8.7.6",
+    _version: "0.8.7.7",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
