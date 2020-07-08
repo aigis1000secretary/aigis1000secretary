@@ -149,7 +149,6 @@ class LINE extends Command {
 
             if (this.stateStatus.acceptInvitation || this.isAdminOrBot(operation.param2)) {
                 this._acceptGroupInvitation(operation.param1);
-                this._invite(operation.param1, ['u759a433ed5a22b3f2daa405ab2363a67']);
             } else {
                 this._rejectGroupInvitation(operation.param1);
             }
