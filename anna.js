@@ -426,15 +426,18 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
 
     } else if (_isAdmin && (command == "DELIMG")) {
         if (arg1 != "undefined") {
-            let tagList = msg1.substring(7);
-            let fileName = path.parse(tagList).base;
-            let imgArray = imgur.database.findImageData({ tagList, isGif: true });
+            let key = arg1;
+            let imgArray = /[\S]{32}/.test(key) ? imgur.database.findImageData({ md5: key, isGif: true }) :
+                !/\//.test(key) ? imgur.database.findImageData({ tag: key, isGif: true }) :
+                    imgur.database.findImageData({ tagList: key, isGif: true });
             if (imgArray.length != 1) {
-                console.log("刪除錯誤: 目標異常!");
+                console.log(`刪除錯誤: 目標異常! (${imgArray.length})`);
                 return "刪除錯誤: 目標異常!";
             }
 
             try {
+                let fileName = imgArray[0].fileName;
+                let tagList = imgArray[0].tagList;
                 await imgur.api.image.imageDeletion({ imageHash: imgArray[0].id });
                 await dbox.fileMove(tagList.substring(1), "DelImages/" + fileName);
             } catch (error) {
@@ -444,7 +447,7 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
             }
             return "刪除成功";
         }
-        return "刪除錯誤: 目標異常!";
+        return "刪除錯誤: 空目標!";
 
     } else if (_isAdmin && (command == "ABOTINIT")) {
         line.alphatbotInit();
