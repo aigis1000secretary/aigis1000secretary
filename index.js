@@ -306,6 +306,9 @@ const twitterBotOn = function () {
         }
     }
     twitter.stream.litsen("Aigis1000", "", callback);
+    let imgCrawler = function (tweet_data) { if (tweet_data.medias) { twitter.stream.getTweetImages(tweet_data); } }
+    twitter.stream.litsen("yomerinne", "", imgCrawler);
+    twitter.stream.litsen("nemui_", "", imgCrawler);
 }
 
 const timerBotOn = function () {
