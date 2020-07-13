@@ -25,8 +25,8 @@ let _imgur = module.exports = {
         _imgur.database.images = [];
         _imgur.database.albums = [];
 
-        await _imgur.api.account.getAllAlbums().catch(function (error) { console.log("Imgur albums load error!\n" + error) });
-        await _imgur.api.account.getAllImages().catch(function (error) { console.log("Imgur images load error!\n" + error) });
+        await _imgur.api.account.getAllAlbums((a) => /f663feP|mOa2UfF/.test(a)).catch(function (error) { console.log("Imgur albums load error!\n" + error) });
+        // await _imgur.api.account.getAllImages().catch(function (error) { console.log("Imgur images load error!\n" + error) });
 
         if (config.isLocalHost) _imgur.database.saveDatabase();
         return;
@@ -206,7 +206,7 @@ let _imgur = module.exports = {
                 }
             },
             // GET Album IDs
-            async albumsIds({ page }) {
+            async albumsIds({ page, filter }) {
                 try {
                     // console.log("GET Album IDs page " + page);
                     // Configure the request
@@ -216,7 +216,7 @@ let _imgur = module.exports = {
                     };
                     let data = (await _imgur._apiRequest(options)).data
 
-                    let hashList = Object.assign([], data);
+                    let hashList = Object.assign([], data).filter(filter);
                     while (hashList.length > 0) {
                         let pArray = [];
                         // 3 thread
@@ -249,11 +249,11 @@ let _imgur = module.exports = {
                 }
             },
             // load all albums data
-            async getAllAlbums() {
+            async getAllAlbums(filter) {
                 console.log("GET All Albums");
                 let pages = parseInt(await this.albumsCount() / 50);
                 for (let page = 0; page <= pages; page++) {
-                    await this.albumsIds({ page });
+                    await this.albumsIds({ page, filter });
                 }
                 console.log("Imgur account albums load complete (" + _imgur.database.albums.length + " albums)!");
             }
