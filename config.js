@@ -46,11 +46,14 @@
     0.8.7.8
     DELIMG cmd now can del image by md5
     album filter
+
+    0.8.7.9
+    imgur upload api fixed
 */
 
 const crypto = require("./crypto.js");
 const _config = module.exports = {
-    _version: "0.8.7.8",
+    _version: "0.8.7.9",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
