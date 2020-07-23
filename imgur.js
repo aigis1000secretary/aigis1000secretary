@@ -26,6 +26,7 @@ let _imgur = module.exports = {
         _imgur.database.albums = [];
 
         await _imgur.api.account.getAllAlbums((a) => /f663feP|mOa2UfF/.test(a)).catch(function (error) { console.log("Imgur albums load error!\n" + error) });
+        // await _imgur.api.account.getAllAlbums().catch(function (error) { console.log("Imgur albums load error!\n" + error) });
         // await _imgur.api.account.getAllImages().catch(function (error) { console.log("Imgur images load error!\n" + error) });
 
         if (config.isLocalHost) _imgur.database.saveDatabase();
@@ -46,8 +47,7 @@ let _imgur = module.exports = {
                         try {
                             body = eval("(" + body + ")");
                         } catch (e) {
-                            console.log(body);
-                            reject(e);
+                            reject(body);
                         }
                     }
                 }
@@ -206,7 +206,7 @@ let _imgur = module.exports = {
                 }
             },
             // GET Album IDs
-            async albumsIds({ page, filter }) {
+            async albumsIds({ page, filter = (() => true) }) {
                 try {
                     // console.log("GET Album IDs page " + page);
                     // Configure the request
@@ -251,7 +251,7 @@ let _imgur = module.exports = {
             // load all albums data
             async getAllAlbums(filter) {
                 console.log("GET All Albums");
-                let pages = parseInt(await this.albumsCount() / 50);
+                let pages = Math.floor(await this.albumsCount() / 50);
                 for (let page = 0; page <= pages; page++) {
                     await this.albumsIds({ page, filter });
                 }
@@ -286,7 +286,8 @@ let _imgur = module.exports = {
                     console.log("    " + (tagList ? (" <" + tagList + ">") : ""))
                     // Configure the request
                     let options = {
-                        url: _imgur.IMGUR_API_URL + "upload",
+                        // url: _imgur.IMGUR_API_URL + "upload",
+                        url: _imgur.IMGUR_API_URL + "image",
                         method: "POST",
                         // Set the POST body
                         formData: {
@@ -297,10 +298,11 @@ let _imgur = module.exports = {
                             description: (md5 ? md5 : md5f(imageBinary))
                         }
                     };
-                    // let data = (await imgurCore._apiRequest(options)).data;
+
+                    let data = (await _imgur._apiRequest(options)).data;
+                    console.log("    done!");
                     // imgurCore.database.newImageData(data);
-                    // return data;
-                    return (await _imgur._apiRequest(options)).data;
+                    return data;
 
                 } catch (error) {
                     console.log(error);
