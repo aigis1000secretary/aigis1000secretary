@@ -15,12 +15,12 @@ const main = async function () {
     // // // for (let i in imgur.database.images) { await imgur.image.ImageDeletion(imgur.database.images[i].id); }
 
     // save database
-    console.log("== imgUploader.js ==");
+    console.log("== imgUploaderLocal.js ==");
 
     // get dropbox image list
     let pathArray = [];
 
-    let loaclPath = "C:/Users/Mirror/Dropbox/應用程式/aigis1000secretary";
+    let loaclPath = "C:/Users/HUANG/Dropbox/應用程式/aigis1000secretary";
 
     // check album
     let albumList = ["AutoResponse", "Images"];
@@ -28,7 +28,9 @@ const main = async function () {
         let albumName = albumList[i];
         let albums = imgur.database.findAlbumData({ title: albumName });
         if (albums.length == 0) {
-            await imgur.api.album.albumCreation({ title: albumName, cover: "vtHXE4B" });
+            // await imgur.api.album.albumCreation({ title: albumName, cover: "vtHXE4B" });
+            console.log("albums.length == 0");
+            return;
         }
         // get filelist
         pathArray = pathArray.concat(await getFileList(loaclPath + "/" + albumList[i]));
@@ -51,7 +53,8 @@ const main = async function () {
         if (albums.length != 0) { albumHash = albums[0].id; }
 
         // get image data
-        let resultImage = imgur.database.findImageData({ fileName, isGif: true });
+        let resultImage = imgur.database.findImageData({ md5, isGif: true });
+        //  console.log("[", i, "/", pathArray.length, "]");
 
         //
         if (resultImage.length == 1) {
@@ -72,9 +75,7 @@ const main = async function () {
         } else {
             console.log("[", i, "/", pathArray.length, "] result.length > 1");
             for (let j in resultImage) {
-                if (resultImage[j].md5 != md5) {
-                    await imgur.api.image.imageDeletion({ imageHash: resultImage[j].id })
-                }
+                await imgur.api.image.imageDeletion({ imageHash: resultImage[j].id })
             }
             await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
 
@@ -85,6 +86,7 @@ const main = async function () {
 
     // annaWebHook("status");
     anna.replyAI("status");
+    checkImages();
     console.log("done!")
     return;
 };
@@ -103,6 +105,46 @@ let getFileList = function (dirPath) {
     return result;
 };
 
+// check dbox img status
+const checkImages = async function () {
+    await imgur.init();
+
+    // get dropbox image list
+    let pathArray = [];
+
+    // check album
+    let albumList = ["AutoResponse", "Images"];
+    for (let albumName of albumList) {
+        // get filelist
+        pathArray = pathArray.concat(await getFileList(albumName));
+    }
+
+    for (let img of imgur.database.images) {
+        let path = img.tagList;
+        let filename = img.imageLink.replace(`https://i.imgur.com/`, "");
+        let pathInDbox = pathArray.find((p) => path.equali(p));
+        if (!pathInDbox) {
+            console.log(`${path} not exist in dropbox`);
+            // await dbox.fileUpload(`DelImages/${filename}`, body);
+
+            await new Promise((resolve, reject) => {
+                require("request").get(img.imageLink)
+                    .pipe(fs.createWriteStream("./" + filename))
+                    .on("error", (e) => { console.log("pipe error", e) })
+                    .on("close", async () => {
+                        let body = fs.readFileSync("./" + filename);
+                        await dbox.fileUpload("DelImages/" + filename, body);
+                        fs.unlinkSync("./" + filename);
+                        await imgur.api.image.imageDeletion({ imageHash: img.id });
+                        resolve();
+                    });
+            });
+        }
+    }
+
+    console.log("done!")
+}
+
 module.exports = {
-    upload: main,
+    upload: main
 };
