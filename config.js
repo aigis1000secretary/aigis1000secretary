@@ -54,11 +54,14 @@
     "new" command now can search other user's twitter
     disable wiki crawler
     class db upgrade
+
+    0.8.7.11
+    stamp by index
 */
 
 const crypto = require("./crypto.js");
 const _config = module.exports = {
-    _version: "0.8.7.10",
+    _version: "0.8.7.11",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
