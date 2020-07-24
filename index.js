@@ -266,8 +266,7 @@ const twitterBotOn = function () {
 
     let callback = async function (tweet_data) {
         let aIDs = await line.abot._getGroupsJoined();
-        for (let i in aIDs) {
-            let aid = aIDs[i];
+        for (let aid of aIDs) {
 
             // if (!groupDatabase.data[i].alarm) continue;
             // // 14 days no ant msg idle group	3 * 24 * 60 * 60 * 1000
