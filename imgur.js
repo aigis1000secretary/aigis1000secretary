@@ -261,7 +261,7 @@ let _imgur = module.exports = {
 
         // Image API
         image: {
-            // GET Image
+            // GET Image Information
             async image({ imageHash }) {
                 try {
                     console.log("GET Image " + imageHash);
@@ -282,8 +282,12 @@ let _imgur = module.exports = {
             // POST Image Upload
             async imageUpload({ imageBinary, fileName = null, md5 = null, albumHash = "", tagList = "" }) {
                 try {
-                    console.log("POST Image Upload(" + fileName + ")" + (md5 ? (" <" + md5 + ">") : "") + (albumHash ? (" <" + albumHash + ">") : ""));
-                    console.log("    " + (tagList ? (" <" + tagList + ">") : ""))
+                    console.log(`POST Image Upload( ${fileName} )` +
+                        (albumHash ? `\n    albumHash: ${albumHash}` : "") +
+                        (md5 ? `\n    md5: ${md5}` : "") +
+                        (tagList ? `\n    tagList: ${tagList}` : "")
+                    );
+
                     // Configure the request
                     let options = {
                         // url: _imgur.IMGUR_API_URL + "upload",
@@ -300,8 +304,10 @@ let _imgur = module.exports = {
                     };
 
                     let data = (await _imgur._apiRequest(options)).data;
-                    console.log("    done!");
-                    // imgurCore.database.newImageData(data);
+                    console.log("    Upload complete!");
+                    // console.log(data);
+                    // _imgur.database.newImageData(data);
+
                     return data;
 
                 } catch (error) {
@@ -312,13 +318,20 @@ let _imgur = module.exports = {
             // DEL Image Deletion
             async imageDeletion({ imageHash }) {
                 try {
-                    console.log("DEL Image Deletion " + imageHash);
+                    console.log(`DEL Image Delete( ${imageHash} )`);
+
                     // Configure the request
                     let options = {
                         url: _imgur.IMGUR_API_URL + "image/" + imageHash,
                         method: "DELETE",
                     };
-                    return (await _imgur._apiRequest(options));//.data;
+
+                    let data = (await _imgur._apiRequest(options));
+                    console.log("    Delete complete!");
+                    console.log(data);
+                    _imgur.database.deleteImageData({ id: imageHash });
+
+                    return data;
 
                 } catch (error) {
                     console.log(error);
@@ -328,8 +341,11 @@ let _imgur = module.exports = {
             // POST Update Image Information
             async updateImage({ imageHash, tagList, md5 }) {
                 try {
-                    console.log("POST Image Update(" + imageHash + ")" + (md5 ? (" <" + md5 + ">") : ""));
-                    console.log("    " + (tagList ? (" <" + tagList + ">") : ""))
+                    console.log(`POST Image Update( ${imageHash} )` +
+                        (md5 ? `\n    md5: ${md5}` : "") +
+                        (tagList ? `\n    tagList: ${tagList}` : "")
+                    );
+
                     // Set the POST body
                     let postBody = {};
                     if (md5) postBody.description = md5;
@@ -340,10 +356,13 @@ let _imgur = module.exports = {
                         method: "POST",
                         formData: postBody
                     };
-                    // let data = (await imgurCore._apiRequest(options)).data;
-                    // imgurCore.database.newImageData(data);
-                    // return data;
-                    return (await _imgur._apiRequest(options)).data;
+
+                    let data = (await _imgur._apiRequest(options));
+                    console.log("    Update complete!");
+                    console.log(data);
+                    _imgur.database.updateImageData({ id: imageHash, md5, tagList });
+
+                    return data;
 
                 } catch (error) {
                     console.log(error);
@@ -591,6 +610,11 @@ let _imgur = module.exports = {
                 }
                 return !result;
             });
+        },
+        updateImageData({ id, md5, tagList }) {
+            let img = _imgur.database.images.find((img) => img.id == id);
+            md5 ? img.md5 = md5 : {};
+            tagList ? img.tagList = tagList : {};
         },
 
         albums: [],
