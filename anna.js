@@ -588,21 +588,11 @@ const generateCharaData = function (charaName) {
 const replyStamp = _anna.replyStamp = function (msg, isGif = false) {
     debugLog()("replyStamp(" + msg + ")");
     let replyMsg = [];
-
-    // by tag
-    let imgArray = imgur.database.findImageData({ tag: msg, isGif });
-    if (imgArray.length > 0) {
-        let i = Math.floor(Math.random() * imgArray.length);
-        replyMsg.push(line.createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
-        return replyMsg;
-    }
-
-    // by filename or md5
-    imgArray = imgArray.concat(imgur.database.findImageData({ fileName: msg, isGif }));
-    imgArray = imgArray.concat(imgur.database.findImageData({ md5: msg, isGif }));
-    if (imgArray.length > 0) {
-        replyMsg.push(line.createImageMsg(imgArray[0].imageLink, imgArray[0].thumbnailLink));
-        return replyMsg;
+    let forceIndex;
+    if (/ #\d+/.test(msg)) {
+        let index = / #\d+/.exec(msg).toString();
+        msg = msg.replace(index, "");
+        forceIndex = parseInt(index.replace(" #", ""));
     }
 
     // Rush!!
@@ -620,6 +610,23 @@ const replyStamp = _anna.replyStamp = function (msg, isGif = false) {
             replyMsg.push(line.createImageMsg(imgArray[k].imageLink, imgArray[k].thumbnailLink));
             return replyMsg;
         }
+    }
+
+    // by tag
+    let imgArray = imgur.database.findImageData({ tag: msg, isGif });
+    // by filename or md5
+    if (imgArray.length < 1) {
+        imgArray = imgArray.concat(imgur.database.findImageData({ fileName: msg, isGif }));
+        imgArray = imgArray.concat(imgur.database.findImageData({ md5: msg, isGif }));
+    }
+
+    if (imgArray.length > 0) {
+        let i = (imgArray.length == 1 ? 0 :
+            forceIndex < imgArray.length ? forceIndex :
+                Math.floor(Math.random() * imgArray.length));
+
+        replyMsg.push(line.createImageMsg(imgArray[i].imageLink, imgArray[i].thumbnailLink));
+        return replyMsg;
     }
 
     return false;
