@@ -12,7 +12,7 @@ class Database {
         this.backup = backup;
 
         this.uploadCount = (28 * 60);
-        this.sordMethod = function (A, B) { return A.name.localeCompare(B.name) };
+        this.sortMethod = function (A, B) { return A.name.localeCompare(B.name) };
     };
 
     newData() { };
@@ -34,7 +34,7 @@ class Database {
         console.log(this.name + " saving...");
 
         // sort
-        this.data.sort(this.sordMethod);
+        this.data.sort(this.sortMethod);
 
         // object to json
         let json = config.isLocalHost ?
@@ -166,12 +166,13 @@ class Database {
 class CharaDatabase extends Database {
     constructor(dbName, backup) {
         super(dbName, backup);
-        this.sordMethod = function (A, B) { return (A.rarity == B.rarity) ? A.name.localeCompare(B.name) : A.rarity.localeCompare(B.rarity) };
+        this.sortMethod = function (A, B) { return (A.rarity == B.rarity) ? A.name.localeCompare(B.name) : A.rarity.localeCompare(B.rarity) };
     };
 
     newData() {
         let data = {};
         data.name = "";
+        data.subName = "";
         data.ability = "";
         data.ability_aw = "";
         data.skill = "";
@@ -279,6 +280,11 @@ class NickDatabase extends Database {
 
 // Class Database
 class ClassDatabase extends Database {
+    constructor(dbName, backup) {
+        super(dbName, backup);
+        this.sortMethod = function (A, B) { return (A.type == B.type) ? A.name.localeCompare(B.name) : A.type.localeCompare(B.type) };
+    };
+
     newData() {
         let data = {};
         data.name = "";
@@ -301,6 +307,33 @@ class ClassDatabase extends Database {
             // console.log("Class <" + newClass.name + "> is existed!");
             return "";
         }
+    };
+
+    async init() {
+        try {
+            await this.downloadDB();
+            await this.loadDB();
+        } catch (error) {
+            console.log(this.name + " init error...");
+            throw error;
+        }
+
+        let classList = [];
+        charaDatabase.data.forEach((chara) => {
+            let _class = chara.class;
+            if (classList.indexOf(_class) == -1) classList.push(_class);
+        })
+
+        for (let _class of classList) {
+            if (!!this.data.find((data) => data.name == _class)) continue
+
+            let newData = this.newData();
+            newData.name = _class;
+            newData.index = [_class];
+            this.data.push(newData);
+        }
+
+        return true;
     };
 }
 

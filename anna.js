@@ -224,14 +224,14 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
 
         // 異步執行
         try {
-            await charaDatabase.saveDB()
-            await charaDatabase.uploadDB()
+            await charaDatabase.saveDB();
+            await charaDatabase.uploadDB();
 
-            await nickDatabase.saveDB()
-            await nickDatabase.uploadDB()
+            await nickDatabase.saveDB();
+            await nickDatabase.uploadDB();
 
-            await classDatabase.saveDB()
-            await classDatabase.uploadDB()
+            await classDatabase.saveDB();
+            await classDatabase.uploadDB();
 
         } catch (error) {
             return "上傳異常!\n" + error;
@@ -240,8 +240,12 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
         return "上傳完成!";
 
     } else if (command == "更新" || command == "UPDATE") {
-        allCharaDataCrawler(sourceId);
-        classDataCrawler();
+        // allCharaDataCrawler(sourceId);
+        // classDataCrawler();
+
+        await charaDatabase.init().catch(console.log);
+        await classDatabase.init().catch(console.log);
+
         return "更新中...";
 
     } else if (_isAdmin && command == "忘記") {
@@ -344,11 +348,9 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
                 let img = imgArray[i];
 
                 // twitter image
-                const _regex1 = /^Aigis1000-\d{18,19}-\d{8}_\d{6}/;
-                if (_regex1.test(img.fileName)) {
+                if (/^[A-Za-z0-9_]{5,15}-\d{18,19}-\d{8}_\d{6}/.test(img.fileName)) {
                     // image from Aigis1000 twitter
-                    const _regex2 = /\d{18,19}/;
-                    let tweetId = _regex2.exec(img.fileName);
+                    let tweetId = /\d{18,19}/.exec(img.fileName).toString();
                     let data = await twitter.api.getTweet(tweetId);
                     let array = getFullnamesFromText(data.text);
 
@@ -458,10 +460,8 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
     } else if (command.indexOf("HTTP") == 0) {
         let url = command;
 
-        const _regex1 = /\/\d{18,19}\?/;
-        if (_regex1.test(url)) {
-            const _regex2 = /\d{18,19}/;
-            let tweetId = _regex2.exec(url);
+        if (/\/\d{18,19}(\?|\/|$)/.test(url)) {
+            let tweetId = /\d{18,19}/.exec(url);
             let tweet_data = await twitter.api.getTweet(tweetId);
             twitter.stream.getTweetImages(tweet_data);
 
@@ -770,6 +770,7 @@ const charaDataCrawler = function (urlPath, sourceId) {
         });
     });
 };
+
 // 爬所有角色
 let allCharaUrl = [];
 const allCharaDataCrawler = async function (sourceId) {
@@ -996,13 +997,15 @@ let charaDatabase = database.charaDatabase;
 const getFullnamesFromText = function (text) {
     debugLog()("getFullnamesFromText( text... )");
     let result = [];
+    let result2 = [];
     for (let charaIndex in charaDatabase.data) {
         let name = charaDatabase.data[charaIndex].name;
-        if (text.indexOf(name) != -1) {
-            result.push(name);
-        }
+        let subName = charaDatabase.data[charaIndex].subName;
+        if (text.indexOf(name) != -1) { result.push(name); }
+        if (subName != "" && text.indexOf(subName) != -1) { result2.push(name); }
     }
-    return result;
+
+    return result.length != 0 ? result : result2;
 }
 // 模糊搜尋 (非暱稱)
 const getFullnamesByIndex = function (key) {
