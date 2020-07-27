@@ -52,6 +52,11 @@ const main = async function () {
 
         // get image data
         let resultImage = imgur.database.findImageData({ fileName, isGif: true });
+        if (resultImage.length != 1) {
+            imageBinary = await dbox.fileDownload(tagList.substring(1));
+            md5 = md5f(imageBinary);  // get MD5 for check
+            resultImage = resultImage.concat(imgur.database.findImageData({ md5, isGif: true }));
+        }
         //  console.log("[", i, "/", pathArray.length, "]");
 
         //
@@ -64,8 +69,6 @@ const main = async function () {
             continue;
         }
 
-        imageBinary = await dbox.fileDownload(tagList.substring(1));
-        md5 = md5f(imageBinary);  // get MD5 for check
         if (resultImage.length == 0) {
             console.log("[", i, "/", pathArray.length, "] result.length == 0");
             await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
@@ -85,7 +88,7 @@ const main = async function () {
 
 
     // annaWebHook("status");
-    anna.replyAI("status");
+    // anna.replyAI("status");
     checkImages();
     console.log("done!")
     return;
