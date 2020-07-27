@@ -85,7 +85,7 @@ const main = async function () {
 
 
     // annaWebHook("status");
-    anna.replyAI("status");
+    // anna.replyAI("status");
     checkImages();
     console.log("done!")
     return;
