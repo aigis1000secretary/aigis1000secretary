@@ -25,8 +25,8 @@ let _imgur = module.exports = {
         _imgur.database.images = [];
         _imgur.database.albums = [];
 
-        await _imgur.api.account.getAllAlbums((a) => /f663feP|mOa2UfF/.test(a)).catch(function (error) { console.log("Imgur albums load error!\n" + error) });
-        // await _imgur.api.account.getAllAlbums().catch(function (error) { console.log("Imgur albums load error!\n" + error) });
+        // await _imgur.api.account.getAllAlbums((a) => /f663feP|mOa2UfF/.test(a)).catch(function (error) { console.log("Imgur albums load error!\n" + error) });
+        await _imgur.api.account.getAllAlbums().catch(function (error) { console.log("Imgur albums load error!\n" + error) });
         // await _imgur.api.account.getAllImages().catch(function (error) { console.log("Imgur images load error!\n" + error) });
 
         if (config.isLocalHost) _imgur.database.saveDatabase();
@@ -38,6 +38,30 @@ let _imgur = module.exports = {
     _request(options) {
         return new Promise(function (resolve, reject) {
             request(options, function (error, response, body) {
+                // console.log(`${JSON.stringify(error, null, 2)}`);
+                // console.log(`>>response: ${JSON.stringify(response, null, 2)}`);
+                // console.log(`${JSON.stringify(body, null, 2)}`);
+
+                if (response) {
+                    if (response.statusCode == 200) {
+                        let result;
+                        try { result = JSON.parse(response.body); }
+                        catch (e) { result = eval("(" + response.body + ")"); }
+                        resolve(result);
+                    } else {
+                        reject(response);
+                    }
+                }
+
+                if (error) {
+                    // console.log(`>>error: ${JSON.stringify(error, null, 2)}`);
+                    reject(error);
+                }
+
+                // console.log(`>>body: ${JSON.stringify(body, null, 2)}`);
+                reject(body);
+
+                /* 
                 // console.log(error + ", " + response + ", " + body);
                 if (typeof body === 'string') {
                     // console.log(body)
@@ -63,7 +87,8 @@ let _imgur = module.exports = {
                                 "No body data response"
                         } :
                             response);
-                }
+                }*/
+
             });
         });
     },
@@ -306,7 +331,7 @@ let _imgur = module.exports = {
                     let data = (await _imgur._apiRequest(options)).data;
                     console.log("    Upload complete!");
                     // console.log(data);
-                    // _imgur.database.newImageData(data);
+                    _imgur.api.image.image({ imageHash: data.id });
 
                     return data;
 
@@ -328,7 +353,7 @@ let _imgur = module.exports = {
 
                     let data = (await _imgur._apiRequest(options));
                     console.log("    Delete complete!");
-                    console.log(data);
+                    // console.log(data);
                     _imgur.database.deleteImageData({ id: imageHash });
 
                     return data;
@@ -359,7 +384,7 @@ let _imgur = module.exports = {
 
                     let data = (await _imgur._apiRequest(options));
                     console.log("    Update complete!");
-                    console.log(data);
+                    // console.log(data);
                     _imgur.database.updateImageData({ id: imageHash, md5, tagList });
 
                     return data;
