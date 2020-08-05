@@ -155,16 +155,17 @@ const checkImages = async function () {
             // await dbox.fileUpload(`DelImages/${filename}`, body);
 
             await new Promise((resolve, reject) => {
-                require("request").get(img.imageLink)
-                    .pipe(fs.createWriteStream("./" + filename))
-                    .on("error", (e) => { console.log("pipe error", e) })
-                    .on("close", async () => {
-                        let body = fs.readFileSync("./" + filename);
+                require("request").get(img.imageLink, { encoding: 'binary' }, async (error, response, body) => {
+                    if (body) {
+                        fs.writeFileSync("./" + filename, body, { encoding: 'binary' });
+                        body = fs.readFileSync("./" + filename);
                         await dbox.fileUpload("DelImages/" + filename, body);
                         fs.unlinkSync("./" + filename);
                         await imgur.api.image.imageDeletion({ imageHash: img.id });
                         resolve();
-                    });
+                    }
+                    // if (error || !body) { return console.log(error); }
+                });
             });
         }
     }

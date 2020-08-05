@@ -165,14 +165,8 @@ module.exports = {
     // 
     logToFile(base, name, data) {
         let dateNow = new Date(Date.now());
-        let path = (dateNow.getMonth() + 1).toString().padStart(2, "0") + "/" + name + "_" +
-            dateNow.getFullYear().toString().padStart(4, "0") + "-" +
-            (dateNow.getMonth() + 1).toString().padStart(2, "0") + "-" +
-            dateNow.getDate().toString().padStart(2, "0") + "-" +
-            dateNow.getHours().toString().padStart(2, "0") +
-            dateNow.getMinutes().toString().padStart(2, "0") +
-            dateNow.getSeconds().toString().padStart(2, "0") +
-            dateNow.getMilliseconds().toString().padStart(4, "0");
+        let timeString = dateNow.toISOString().replace(/:|Z/g, "").replace(/T|\./, "-");
+        let path = (dateNow.getMonth() + 1).toString().padStart(2, "0") + "/" + name + "_" + timeString;
 
         let binary = Buffer.from(JSON.stringify(data, null, 4))
         module.exports.fileUpload("Logs/" + base + path + ".json", binary, "add").catch((error) => {
