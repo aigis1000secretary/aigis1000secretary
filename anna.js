@@ -351,8 +351,8 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
                 if (/^[A-Za-z0-9_]{5,15}-\d{18,19}-\d{8}_\d{6}/.test(img.fileName)) {
                     // image from Aigis1000 twitter
                     let tweetId = /\d{18,19}/.exec(img.fileName).toString();
-                    let data = await twitter.api.getTweet(tweetId);
-                    let array = getFullnamesFromText(data.text);
+                    let tweet_data = await twitter.api.getTweet(tweetId);
+                    let array = getFullnamesFromText(tweet_data.text);
 
                     if (array.length > 0) {
                         replyMsg.push(line.createImageMsg(img.imageLink, img.thumbnailLink));
@@ -461,8 +461,10 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
         let url = command;
 
         if (/\/\d{18,19}(\?|\/|$)/.test(url)) {
-            let tweetId = /\d{18,19}/.exec(url);
+            let tweetId = /\d{18,19}/.exec(url).toString();
             let tweet_data = await twitter.api.getTweet(tweetId);
+
+            // image to dropbox
             twitter.stream.getTweetImages(tweet_data);
 
             let replyMsg = [];
@@ -934,7 +936,7 @@ String.prototype.tableToArray = function () {
 
     if (tbody.test(html)) {
         // get tbody
-        html = tbody.exec(html)[0];
+        html = tbody.exec(html).toString();
         // init table array data
         i = -1;
         while ((i = html.indexOf("<tr>", i + 1)) != -1) {
@@ -945,7 +947,7 @@ String.prototype.tableToArray = function () {
         let col = 0;
         while (tr.test(html)) {
             // get single Column body
-            let columnBody = tr.exec(html)[0];
+            let columnBody = tr.exec(html).toString();
             html = html.replace(tr, "");
 
             // get all Row body
@@ -953,8 +955,8 @@ String.prototype.tableToArray = function () {
             while (td.test(columnBody)) {
                 while (result[col][row] == "@") { row++; }
                 // split single Cell body
-                let cellBody = td.exec(columnBody)[0];
-                let cellStyle = /<t[dh][\s\S]*?>/.exec(cellBody)[0]
+                let cellBody = td.exec(columnBody).toString();
+                let cellStyle = /<t[dh][\s\S]*?>/.exec(cellBody).toString();
                 // let cellText = cellBody.replace(/<t[dh][\s\S]*?>/, "").replace(/<\/t[dh]>/, "");
                 let cellText = cellBody.replace(/<[\s\S]*?>/g, "");
                 columnBody = columnBody.replace(td, "");
@@ -965,13 +967,13 @@ String.prototype.tableToArray = function () {
                 let style = cellStyle.split(" ");
                 for (let l in style) {
                     if (style[l].indexOf("rowspan") != -1) {
-                        let rowspan = parseInt(/\d+/.exec(style[l]));
+                        let rowspan = parseInt(/\d+/.exec(style[l]).toString());
                         for (let span = 1; span < rowspan; span++) {
                             result[col + span][row] = "@";
                         }
                     }
                     if (style[l].indexOf("colspan") != -1) {
-                        let colspan = parseInt(/\d+/.exec(style[l]));
+                        let colspan = parseInt(/\d+/.exec(style[l]).toString());
                         for (let span = 1; span < colspan; span++) {
                             row++;
                             result[col][row] = cellText.trim();
