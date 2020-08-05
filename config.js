@@ -66,11 +66,17 @@
 
     0.8.7.14
     imgur api upload add img data
+
+    0.8.7.15
+    twitter api cant get media data bug fix
+    regexp exec to string
+    date format method upgrade
+    deprecated file stream pipe
 */
 
 const crypto = require("./crypto.js");
 const _config = module.exports = {
-    _version: "0.8.7.14",
+    _version: "0.8.7.15",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
