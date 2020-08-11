@@ -44,7 +44,7 @@ const _twitter = module.exports = {
 
         // get target IDs
         let response = await _twitter.api.getFriendsID("Aigis1000anna");
-        _twitter.api.getStreamByIDs(response.ids, (tweet) => {
+        _twitter.api.getStreamByIDs(response.ids, async (tweet) => {
             // check then callback
 
             // RT除外
@@ -71,12 +71,12 @@ const _twitter = module.exports = {
         getTweetImages(tweet_data) {
             // image to dropbox
             for (let i in tweet_data.includes.media) {
-                let media = tweet_data.medias[i];
+                let media = tweet_data.includes.media[i];
 
                 if (media.type == "photo") {
                     let tweetTime = new Date(Date.parse(tweet_data.data.created_at));
                     let timeString = tweetTime.toISOString().replace(/-|:|\.\d+Z/g, "").replace("T", "_");
-                    let filename = `${tweet_data.includes.users.username}-${tweet_data.data.id}-${timeString}-img${parseInt(i) + 1}${path.parse(media.url).ext}`
+                    let filename = `${tweet_data.includes.users[0].username}-${tweet_data.data.id}-${timeString}-img${parseInt(i) + 1}${path.parse(media.url).ext}`
 
                     request.get(media.url, { encoding: 'binary' }, async (error, response, body) => {
                         if (body) {
@@ -93,7 +93,7 @@ const _twitter = module.exports = {
     },
 
     api: {
-        getTweet(id) {
+        async getTweet(id) {
             const endpointURL = new URL('https://api.twitter.com/labs/2/tweets/' + id);
             const params = {
                 'expansions': 'attachments.media_keys,author_id',
@@ -101,7 +101,7 @@ const _twitter = module.exports = {
                 'tweet.fields': 'created_at'
             };
 
-            const req = await get({ url: endpointURL, oauth: oAuthConfig, qs: params, json: true });
+            const req = await get({ url: endpointURL, oauth: _twitter.oAuthConfig, qs: params, json: true });
 
             if (req.body) {
                 return req.body;
@@ -111,33 +111,33 @@ const _twitter = module.exports = {
                 return null;
             }
         },
-        getUserID(userName) {
+        async getUserID(userName) {
             const endpointURL = new URL('https://api.twitter.com/1.1/statuses/user_timeline.json');
             const params = {
                 screen_name: userName,
                 count: 1
             };
 
-        const req = await get({ url: endpointURL, oauth: oAuthConfig, qs: params, json: true });
+            const req = await get({ url: endpointURL, oauth: _twitter.oAuthConfig, qs: params, json: true });
 
-        if (req.body) {
-            return req.body;
-        } else {
-            throw new Error(`Cannot get user <${userName}> ID`);
-        }
-    },
-    getFriendsID(screen_name) {
-        const endpointURL = new URL('https://api.twitter.com/1.1/friends/ids.json');
-        const params = { screen_name };
+            if (req.body) {
+                return req.body;
+            } else {
+                throw new Error(`Cannot get user <${userName}> ID`);
+            }
+        },
+        async getFriendsID(screen_name) {
+            const endpointURL = new URL('https://api.twitter.com/1.1/friends/ids.json');
+            const params = { screen_name };
 
-        const req = await get({ url: endpointURL, oauth: oAuthConfig, qs: params, json: true });
+            const req = await get({ url: endpointURL, oauth: _twitter.oAuthConfig, qs: params, json: true });
 
-        if (req.body) {
-            return req.body;
-        } else {
-            throw new Error(`Cannot get user <${screen_name}>'s friends ID`);
-        }
-    },
+            if (req.body) {
+                return req.body;
+            } else {
+                throw new Error(`Cannot get user <${screen_name}>'s friends ID`);
+            }
+        },
 
         getStreamByIDs(ids, callback) {
             const params = { follow: ids.join(',') };
