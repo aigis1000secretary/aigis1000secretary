@@ -3,126 +3,82 @@
 // ライブラリ読み込み
 const fs = require('fs');
 const path = require('path');
+
 const Twitter = require('twitter');
 const request = require("request");
+const util = require('util');
+const get = util.promisify(request.get);
+const post = util.promisify(request.post);
+
 // const crypto = require('crypto');
 const config = require("./config.js");
 const dbox = require("./dbox.js");
 
+
+
+
 const _twitter = module.exports = {
     bot: null,
+    stream: null,
+    oAuthConfig: null,
     init() {
         // oauth認証に使う値
-        const twitter_oauth = {
+        _twitter.oAuthConfig = {
             consumer_key: config.twitterCfg.TWITTER_CONSUMER_KEY.trim(),
             consumer_secret: config.twitterCfg.TWITTER_CONSUMER_SECRET.trim(),
-            access_token_key: config.twitterCfg.TWITTER_ACCESS_TOKEN.trim(),
-            access_token_secret: config.twitterCfg.TWITTER_ACCESS_TOKEN_SECRET.trim()
+            token: config.twitterCfg.TWITTER_ACCESS_TOKEN.trim(),
+            token_secret: config.twitterCfg.TWITTER_ACCESS_TOKEN_SECRET.trim()
+        };
+        // Twitterオブジェクトの作成
+        let twitter_oauth = {
+            consumer_key: _twitter.oAuthConfig.consumer_key,
+            consumer_secret: _twitter.oAuthConfig.consumer_secret,
+            access_token_key: _twitter.oAuthConfig.token,
+            access_token_secret: _twitter.oAuthConfig.token_secret
         }
         _twitter.bot = new Twitter(twitter_oauth);
-        // Twitterオブジェクトの作成
+        if (_twitter.stream != null) { _twitter.stream.destroy(); }
     },
 
-    stream: {
-        getUserId(target) {
-            return new Promise(function (resolve, reject) {
-                // 監視するユーザのツイートを取得
-                _twitter.bot.get('statuses/user_timeline', { screen_name: target },
-                    function (error, tweets, response) {
-                        if (!error) {
-                            // 取得したtweet情報よりユーザ固有IDを文字列形式で取得
-                            let user_id = tweets[0].user.id_str;
-                            // 取得したユーザIDよりストリーミングで使用するオプションを定義
-                            resolve(user_id);
-                        } else {
-                            console.log(error);
-                            //reject(error);
-                            resolve("");
-                        }
-                    });
-            });
-        },
+    async listen(callback) {
 
-        async litsen(target, user_id, callback) {
-            if (user_id == "") {
-                user_id = await _twitter.stream.getUserId(target);
-            }
+        // get target IDs
+        let response = await _twitter.api.getFriendsID("Aigis1000anna");
+        _twitter.api.getStreamByIDs(response.ids, async (tweet) => {
+            // check then callback
 
-            console.log(target + 'のツイートを取得します。');
-
-            // ストリーミングでユーザのタイムラインを監視
-            _twitter.bot.stream('statuses/filter', { follow: user_id }, function (stream) {
-                // Streamingの開始と受取
-                stream.on('data', function (tweet) {
-                    // console.log("stream.on = data")
-
-                    _twitter.stream.getStreamData(tweet, target, callback);
-                });
-
-                // エラー時は再接続を試みた方がいいかもしれません(未検証)
-                stream.on('error', function (rawData) {
-                    console.log("stream.on = error\ngetTweetData: \n" + JSON.stringify(rawData, null, 4));
-
-                    let tweet = rawData.source;
-                    _twitter.stream.getStreamData(tweet, target, callback);
-                });
-
-                // 接続が切れた際の再接続
-                stream.on('end', function (tweet) {
-                    stream.destroy();
-                    console.log(target + 'のツイートを取得終了。');
-
-                    setTimeout(function () {
-                        _twitter.stream.litsen(target, user_id, callback);
-                    }, 60 * 1000);
-                });
-
-                // // 接続開始時にはフォロワー情報が流れます
-                // stream.on('friends', function (tweet) { console.log(JSON.stringify(tweet)); });
-                // // つい消しの場合                    
-                // stream.on('delete', function (tweet) { console.log(JSON.stringify(tweet)); });
-                // // 位置情報の削除やふぁぼられといったeventはここに流れます
-                // stream.on('event', function (tweet) { console.log(JSON.stringify(tweet)); });
-
-            });
-        },
-
-        async getStreamData(tweet, target, callback) {
-            // RTと自分のツイートは除外
+            // RT除外
             if (!tweet || !tweet.user || tweet.retweeted_status) { return; }
 
-            // 送信する情報を定義
-            let tweet_data = await _twitter.stream.getTweetData(tweet);
-            if (tweet_data.screen_name != target || tweet_data.screen_name == "ERROR") { return; }
-
             // log
-            if (config.switchVar.logStreamToFile && tweet) {
-                dbox.logToFile("twitter/", "stream", tweet);
+            if (config.switchVar.logStreamToFile) {
+                dbox.logToFile("twitter/", "litsen", tweet);
             }
 
-            // 送信
-            if (tweet_data.text) {
-                callback(tweet_data);
+            // 送信する情報を定義
+            try {
+                let tweet_data = await _twitter.api.getTweet(tweet.id_str);
+                if (tweet_data) { callback(tweet_data) };
+
+            } catch (e) {   // http error
+                console.log(JSON.stringify(e, null, 2));
+                return;
             }
+        });
+    },
 
-            // image to dropbox
-            if (tweet_data.medias) {
-                _twitter.stream.getTweetImages(tweet_data);
-            }
-
-        },
-
+    data: {
         getTweetImages(tweet_data) {
             // image to dropbox
-            for (let i in tweet_data.medias) {
-                let media = tweet_data.medias[i];
+            for (let i in tweet_data.includes.media) {
+                let media = tweet_data.includes.media[i];
 
                 if (media.type == "photo") {
-                    let tweetTime = new Date(parseInt(tweet_data.timestamp_ms));
+                    let tweetTime = new Date(Date.parse(tweet_data.data.created_at));
                     let timeString = tweetTime.toISOString().replace(/-|:|\.\d+Z/g, "").replace("T", "_");
-                    let filename = `${tweet_data.screen_name}-${tweet_data.id_str}-${timeString}-img${parseInt(i) + 1}${path.parse(media.link).ext}`
+                    let filename = `${tweet_data.includes.users[0].username}-${tweet_data.data.id}-${timeString}-img${parseInt(i) + 1}${path.parse(media.url).ext}`
 
-                    request.get(media.link, { encoding: 'binary' }, async (error, response, body) => {
+                    request.get(media.url, { encoding: 'binary' }, async (error, response, body) => {
                         if (body) {
                             fs.writeFileSync("./" + filename, body, { encoding: 'binary' });
                             body = fs.readFileSync("./" + filename);
@@ -133,97 +89,98 @@ const _twitter = module.exports = {
                     });
                 }
             }
-        },
-
-        async getTweetData(raw) {
-            let tweet_data = { medias: [] };
-
-            if (raw.extended_tweet) {
-                raw = Object.assign(raw, raw.extended_tweet);
-            }
-            if (!raw.entities) raw.entities = {};
-            if (!raw.extended_entities) raw.extended_entities = {};
-            raw.entities = Object.assign(raw.entities, raw.extended_entities);
-
-            // get tweet data
-            tweet_data.id_str = raw.id_str;
-            tweet_data.name = (raw.user ? raw.user.name : "ERROR");
-            tweet_data.screen_name = (raw.user ? raw.user.screen_name : "ERROR");
-            tweet_data.created_at = raw.created_at;
-            tweet_data.timestamp_ms = raw.timestamp_ms || Date.parse(raw.created_at);
-
-            // tweet text
-            tweet_data.text = raw.full_text || raw.text;
-
-            // tweet media
-            if (raw.entities.media && Array.isArray(raw.entities.media)) {
-                for (let media of raw.entities.media) {
-
-                    if (media.type == "photo") {
-                        tweet_data.medias.push({
-                            type: media.type,
-                            link: media.media_url_https,
-                            url: media.url  // same with tweet link text, useless?
-                        });
-                    }
-                }
-            }
-
-            // api bug?
-            // https://developer.twitter.com/en/docs/labs/tweets-and-users/api-reference/get-tweets-id
-            if (tweet_data.medias.length == 0) {
-                // get image data form new api
-                let medias = await new Promise((resolve, reject) => {
-                    request.get({
-                        url: 'https://api.twitter.com/labs/2/tweets',
-                        oauth: {
-                            consumer_key: config.twitterCfg.TWITTER_CONSUMER_KEY.trim(),
-                            consumer_secret: config.twitterCfg.TWITTER_CONSUMER_SECRET.trim(),
-                            token: config.twitterCfg.TWITTER_ACCESS_TOKEN.trim(),
-                            token_secret: config.twitterCfg.TWITTER_ACCESS_TOKEN_SECRET.trim()
-                        },
-                        qs: {
-                            ids: raw.id_str,
-                            'expansions': 'attachments.media_keys',
-                            'media.fields': 'type,url'
-                        },
-                        json: true
-                    }, (error, req) => {
-                        // console.log(JSON.stringify(req.body, null, 2));
-                        if (req.body.includes && req.body.includes.media) {
-                            resolve(req.body.includes.media);
-                        }
-                        resolve([]);
-                    })
-                });
-
-                for (let media of medias) {
-                    if (media.type == "photo") {
-                        tweet_data.medias.push({
-                            type: media.type,
-                            link: media.url,
-                            url: media.url  // same with tweet link text, useless?
-                        });
-                    }
-                }
-            }
-            return tweet_data;
-        },
+        }
     },
 
     api: {
-        getTweet(id) {
-            return new Promise((resolve, reject) => {
-                _twitter.bot.get('statuses/show/' + id, { include_entities: true, include_ext_alt_text: true }, async (error, tweet, response) => {
-                    // error ? console.log("error", JSON.stringify(error, null, 4)) : {};
-                    // tweet ? console.log("tweet", JSON.stringify(tweet, null, 4)) : {};
-                    // response ? console.log("response", JSON.stringify(response, null, 4)) : {};
-                    // twitterCore.stream.getStreamData(tweet[0], "Aigis1000", (obj) => console.log(JSON.stringify(obj, null, 4)));
-                    resolve(await _twitter.stream.getTweetData(tweet));
-                });
+        async getTweet(id) {
+            const endpointURL = new URL('https://api.twitter.com/labs/2/tweets/' + id);
+            const params = {
+                'expansions': 'attachments.media_keys,author_id',
+                'media.fields': 'url',
+                'tweet.fields': 'created_at'
+            };
+
+            const req = await get({ url: endpointURL, oauth: _twitter.oAuthConfig, qs: params, json: true });
+
+            if (req.body) {
+                return req.body;
+            } else {
+                // throw new Error(`Cannot get tweet <${id}>`);
+                console.log(`Cannot get tweet <${id}>`);
+                return null;
+            }
+        },
+        async getUserID(userName) {
+            const endpointURL = new URL('https://api.twitter.com/1.1/statuses/user_timeline.json');
+            const params = {
+                screen_name: userName,
+                count: 1
+            };
+
+            const req = await get({ url: endpointURL, oauth: _twitter.oAuthConfig, qs: params, json: true });
+
+            if (req.body) {
+                return req.body;
+            } else {
+                throw new Error(`Cannot get user <${userName}> ID`);
+            }
+        },
+        async getFriendsID(screen_name) {
+            const endpointURL = new URL('https://api.twitter.com/1.1/friends/ids.json');
+            const params = { screen_name };
+
+            const req = await get({ url: endpointURL, oauth: _twitter.oAuthConfig, qs: params, json: true });
+
+            if (req.body) {
+                return req.body;
+            } else {
+                throw new Error(`Cannot get user <${screen_name}>'s friends ID`);
+            }
+        },
+
+        getStreamByIDs(ids, callback) {
+            const params = { follow: ids.join(',') };
+
+            if (_twitter.stream != null) { _twitter.stream.destroy(); }
+
+            console.log(`[twitter] ツイートを取得します。`);
+            let stream = _twitter.bot.stream('statuses/filter', params);
+
+            // Streamingの開始と受取
+            stream.on('data', (tweet) => {
+                // console.log(`[data] tweet: ${tweet.id_str}`);
+                // console.log(`       name : ${tweet.user.screen_name}`);
+                callback(tweet);
             });
+
+            // エラー時は再接続を試みた方がいいかもしれません(未検証)
+            stream.on('error', (error) => {
+                console.log(`[twitter] error: ${error}`);
+                if (error.source) callback(error.source);
+            });
+
+            // 接続が切れた際の再接続
+            stream.on('end', () => {
+                console.log(`[twitter] ツイートを取得終了。`);
+                stream.destroy();
+
+                setTimeout(() => {
+                    _twitter.api.getStreamByIDs(ids, callback);
+                }, 60 * 1000);
+            });
+
+            // // 接続開始時にはフォロワー情報が流れます
+            // stream.on('friends', function (tweet) { console.log(JSON.stringify(tweet)); });
+            // // つい消しの場合                    
+            // stream.on('delete', function (tweet) { console.log(JSON.stringify(tweet)); });
+            // // 位置情報の削除やふぁぼられといったeventはここに流れます
+            // stream.on('event', function (tweet) { console.log(JSON.stringify(tweet)); });
+
+            _twitter.stream = stream;
         }
     },
+
 
     /*
     // webhook crc
@@ -399,109 +356,6 @@ const _twitter = module.exports = {
         twitterCore.stream.litsen("Aigis1000", "", console.log);
     }//*/
 };
-
-
-
-/*
-let count = 0;
-searchTweet('(from:Aigis1000)');
-function searchTweet(queryArg, nextResultsMaxIdArg = null) {
-    bot.get('search/tweets', { q: queryArg, count: 10000, max_id: nextResultsMaxIdArg }, (error, searchData, response) => {
-        for (item in searchData.statuses) {
-            let tweet = searchData.statuses[item];
-            // console.log('@' + tweet.user.screen_name + ' : ' + tweet.text); //実際に使う場合はここでファイルへ書き出しなどといった処理を行うことになると思います
-
-            // if (!tweet.retweeted_status) {
-            if (tweet.user.screen_name == "Aigis1000") {
-                // console.log('@' + tweet.user.screen_name + '\n >>' + tweet.text); //実際に使う場合はここでファイルへ書き出しなどといった処理を行うことになると思います
-                console.log('@' + tweet.user.screen_name + ' >> ' + tweet.created_at + ' >> ' + tweet.id + ' >> ' + (++count)); //実際に使う場合はここでファイルへ書き出しなどといった処理を行うことになると思います
-                // console.log(JSON.stringify(tweet, null, 4));
-            }
-        }
-
-        if (searchData.search_metadata == undefined) {
-            console.log('---- Complete (no metadata) ----');
-            return 0;
-        }
-        else if (searchData.search_metadata.next_results) {
-            let maxId = searchData.search_metadata.next_results.match(/\?max_id=(\d*)/);
-
-            if (maxId[1] == null) {
-                return 0;
-            }
-
-            console.log('---- next:' + maxId[1] + ' ----');
-            searchTweet(queryArg, maxId[1]);
-        }
-        else {
-            console.log('---- Complete ----');
-            return 0;
-        }
-    });
-}//*/
-
-/* showTweet("651955440129978368");
-function showTweet(id) {
-    bot.get('statuses/lookup', { id, include_entities: true, include_ext_alt_text: true }, (error, tweet, response) => {
-        // bot.get('statuses/show/' + id, { include_entities: true, include_ext_alt_text: true }, (error, tweet, response) => {
-        // error ? console.log("error", JSON.stringify(error, null, 4)) : {};
-        tweet ? console.log("tweet", JSON.stringify(tweet, null, 4)) : {};
-        // response ? console.log("response", JSON.stringify(response, null, 4)) : {};
-        twitterCore.stream.getStreamData(tweet[0], "Aigis1000", (obj) => console.log(JSON.stringify(obj, null, 4)));
-    });
-}//*/
-
-/*
-const httpTwitterAPI = function () {
-
-    let srcUrl = "https://mobile.twitter.com/aigis1000";
-
-    // callback
-    let requestCallBack = function (error, response, body) {
-        if (error || !body) {
-            console.log(error);
-            return null;
-        }
-
-        let html = iconv.decode(Buffer.from(body, "binary"), "UTF-8"); // EUC-JP to utf8 // Shift_JIS EUC-JP
-        let $ = cheerio.load(html, { decodeEntities: false }); // 載入 body
-
-        // remove all hashtag
-        $(".dir-ltr").each(async function (i, iElem) {
-            if ($(this).attr("class") != "twitter_external_link dir-ltr tco-link has-expanded-path") {
-                if ($(this).attr("class") != "dir-ltr") {
-                    $(this).remove();
-                } else if (!($(this).parent().parent().parent().parent().parent(".tweet  ").attr("href"))) {
-                    $(this).remove();
-                }
-            }
-        });
-
-
-        $(".dir-ltr").each(async function (i, iElem) {
-            if ($(this).attr("class") == "twitter_external_link dir-ltr tco-link has-expanded-path") {
-                return;
-            }
-            console.log("");
-
-            let postId = $(this).parent().parent().parent().parent().parent(".tweet  ").attr("href");
-            postId = postId.substring(postId.lastIndexOf("\/") + 1, postId.lastIndexOf("?"));
-            console.log("@@@@" + postId + "");
-
-            let postText = $(this).text().toString().trim()
-            console.log(">>" + postText + "<<");
-
-            if (postText.indexOf("pic.twitter.com") != -1) {
-
-            }
-        });
-
-
-        //;
-    }
-    //request.get(srcUrl, { encoding: "binary" }, requestCallBack);
-}//*/
-
 
 
 

@@ -59,7 +59,7 @@ const main = async function () {
         //
         if (resultImage.length == 1) {
             if (!resultImage[0].tagList.equali(tagList)) {
-                console.log("[", i, "/", pathArray.length, "] result.length == 1");
+                console.log("\n[", i, "/", pathArray.length, "] result.length == 1");
                 await imgur.api.image.updateImage({ imageHash: resultImage[0].id, tagList, md5 });
             }
 
@@ -67,13 +67,13 @@ const main = async function () {
         }
 
         if (resultImage.length == 0) {
-            console.log("[", i, "/", pathArray.length, "] result.length == 0");
+            console.log("\n[", i, "/", pathArray.length, "] result.length == 0");
             await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
             await sleep(20 * 1000);
 
             continue;
         } else {
-            console.log("[", i, "/", pathArray.length, "] result.length > 1");
+            console.log("\n[", i, "/", pathArray.length, "] result.length > 1");
             for (let j in resultImage) {
                 await imgur.api.image.imageDeletion({ imageHash: resultImage[j].id })
             }

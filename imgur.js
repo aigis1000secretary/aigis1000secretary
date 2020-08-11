@@ -25,8 +25,8 @@ let _imgur = module.exports = {
         _imgur.database.images = [];
         _imgur.database.albums = [];
 
-        // await _imgur.api.account.getAllAlbums((a) => /f663feP|mOa2UfF/.test(a)).catch(function (error) { console.log("Imgur albums load error!\n" + error) });
-        await _imgur.api.account.getAllAlbums().catch(function (error) { console.log("Imgur albums load error!\n" + error) });
+        await _imgur.api.account.getAllAlbums((a) => /f663feP|mOa2UfF/.test(a)).catch(function (error) { console.log("Imgur albums load error!\n" + error) });
+        // await _imgur.api.account.getAllAlbums().catch(function (error) { console.log("Imgur albums load error!\n" + error) });
         // await _imgur.api.account.getAllImages().catch(function (error) { console.log("Imgur images load error!\n" + error) });
 
         if (config.isLocalHost) _imgur.database.saveDatabase();
