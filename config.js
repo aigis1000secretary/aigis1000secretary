@@ -11,67 +11,6 @@
 
 /*
     // commit 
-    >> feature/0.8.6/searchSystem
-    new search method
-    raw text read method update
-    learn method update
-    main search Upgrade
-    tools menu update
-    NEW command Upgrade
-    anna.js autotest doen
-    abot login method fixed
-
-    0.8.7.1
-    deprecated crypto.createCipher 
-
-    0.8.7.2
-    character text nickname tag char
-    discord character stamp
-
-    0.8.7.3
-    auto push abot login Pincode
-
-    0.8.7.4
-    getFullnamesFromText bug fixed
-
-    0.8.7.5
-    disable discord nick stamp
-
-    0.8.7.6
-    hide discord url preview
-
-    0.8.7.7
-    abot invite bot "after" join to new group
-
-    0.8.7.8
-    DELIMG cmd now can del image by md5
-    album filter
-
-    0.8.7.9
-    imgur upload api fixed
-
-    0.8.7.10
-    "new" command now can search other user's twitter
-    disable wiki crawler
-    class db upgrade
-
-    0.8.7.11
-    stamp by index
-
-    0.8.7.12
-    imgur api upgrade
-
-    0.8.7.13
-    imgur api filename length limitation
-
-    0.8.7.14
-    imgur api upload add img data
-
-    0.8.7.15
-    twitter api cant get media data bug fix
-    regexp exec to string
-    date format method upgrade
-    deprecated file stream pipe
 */
 
 const crypto = require("./crypto.js");
