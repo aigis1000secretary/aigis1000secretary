@@ -75,13 +75,6 @@ const lineBotOn = function () {
 
                     // reply media
                     replyFunc(medias);
-                    // if (medias.length <= 3) {
-                    //     replyFunc(medias);
-                    // } else if (msg != key) {
-                    //     replyFunc(medias.slice(0, 3));
-                    // } else {
-                    //     replyFunc(medias.slice(3));
-                    // }
                     return;
                 }
             }
@@ -259,52 +252,51 @@ const discordBotOn = function () {
     });
 
 }
-// twitter bot 監聽
+// twitter bot 監聽 Aigis1000
 const twitterBotOn = function () {
 
     if (config.isLocalHost) { return; }
 
     let callback = async function (tweet_data) {
-        let aIDs = await line.abot._getGroupsJoined();
-        for (let aid of aIDs) {
+        // get tweet text & media keyword
+        let text = tweet_data.data.text;
+        let mediaKey = "";
 
-            // if (!groupDatabase.data[i].alarm) continue;
-            // // 14 days no ant msg idle group	3 * 24 * 60 * 60 * 1000
-            // if (Date.now() - groupDatabase.data[i].timestamp > 259200000) {
-            //     groupDatabase.data[i].alarm = false;
-            //     groupDatabase.uploadTask();
-            //     continue;
-            // }
+        // push image data to tweetMediaCache
+        if (tweet_data.includes.media.length > 0) {
+            // check keyword in text
+            mediaKey = text.split('/t.co/').splice(-1);
 
-            let text = tweet_data.text;
-            let mediaUrl = "";
-
-            // push image data
-            if (tweet_data.medias.length > 0) {
-                // check keyword in text
-                mediaUrl = tweet_data.medias[0].url.split('/t.co/').splice(-1);
-
-                if (mediaUrl && text.indexOf(mediaUrl) == -1) {
-                    text += "\n" + mediaUrl;
-                }
-
-                // map keyword => media.link
-                tweetMediaCache[mediaUrl] = [];
-                for (let j in tweet_data.medias) {
-                    let media = tweet_data.medias[j];
-                    if (media.type == "photo") {
-                        tweetMediaCache[mediaUrl].push(media.link);
-                    }
+            // map keyword => media.url
+            tweetMediaCache[mediaKey] = [];
+            for (let media of tweet_data.includes.media) {
+                if (media.type == "photo") {
+                    tweetMediaCache[mediaKey].push(media.url);
                 }
             }
 
-            line.abot.push(aid, text);
-            // if (tweetMediaCache[mediaUrl] && tweetMediaCache[mediaUrl].length > 3) {
-            //     line.abot.push(aid, mediaUrl);
-            // }
+            abotPushLog(`https://twitter.com/${tweet_data.includes.users.username}/status/${tweet_data.data.id}`)
+        }
+
+        // get all announce target if source is Aigis1000
+        if (tweet_data.includes.users.username == "Aigis1000") {
+            let aIDs = await line.abot._getGroupsJoined();
+            for (let aid of aIDs) {
+
+                // // check announce switch
+                // if (!groupDatabase.data[i].alarm) continue;
+                // // 14 days no ant msg idle group	3 * 24 * 60 * 60 * 1000
+                // if (Date.now() - groupDatabase.data[i].timestamp > 259200000) {
+                //     groupDatabase.data[i].alarm = false;
+                //     groupDatabase.uploadTask();
+                //     continue;
+                // }
+
+                line.abot.push(aid, text);
+            }
         }
     }
-    twitter.stream.litsen("Aigis1000", "", callback);
+    twitter.listen(callback);
 }
 
 const timerBotOn = function () {

@@ -11,6 +11,10 @@
 
 /*
     // commit 
+    >> feature/0.8.7/twitterApiRebuild
+    new twitter api
+    new method for new api
+    new stream listener
 */
 
 const crypto = require("./crypto.js");
