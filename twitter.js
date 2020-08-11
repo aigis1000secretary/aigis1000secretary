@@ -40,94 +40,32 @@ const _twitter = module.exports = {
         if (_twitter.stream != null) { _twitter.stream.destroy(); }
     },
 
-    stream: {
-        getUserId(target) {
-            return new Promise(function (resolve, reject) {
-                // 監視するユーザのツイートを取得
-                _twitter.bot.get('statuses/user_timeline', { screen_name: target },
-                    function (error, tweets, response) {
-                        if (!error) {
-                            // 取得したtweet情報よりユーザ固有IDを文字列形式で取得
-                            let user_id = tweets[0].user.id_str;
-                            // 取得したユーザIDよりストリーミングで使用するオプションを定義
-                            resolve(user_id);
-                        } else {
-                            console.log(error);
-                            //reject(error);
-                            resolve("");
-                        }
-                    });
-            });
-        },
+    async listen(callback) {
 
-        async litsen(target, user_id, callback) {
-            if (user_id == "") {
-                user_id = await _twitter.stream.getUserId(target);
-            }
+        // get target IDs
+        let response = await _twitter.api.getFriendsID("Aigis1000anna");
+        _twitter.api.getStreamByIDs(response.ids, (tweet) => {
+            // check then callback
 
-            console.log(target + 'のツイートを取得します。');
-
-            // ストリーミングでユーザのタイムラインを監視
-            _twitter.bot.stream('statuses/filter', { follow: user_id }, function (stream) {
-                // Streamingの開始と受取
-                stream.on('data', function (tweet) {
-                    // console.log("stream.on = data")
-
-                    _twitter.stream.getStreamData(tweet, target, callback);
-                });
-
-                // エラー時は再接続を試みた方がいいかもしれません(未検証)
-                stream.on('error', function (rawData) {
-                    console.log("stream.on = error\ngetTweetData: \n" + JSON.stringify(rawData, null, 4));
-
-                    let tweet = rawData.source;
-                    _twitter.stream.getStreamData(tweet, target, callback);
-                });
-
-                // 接続が切れた際の再接続
-                stream.on('end', function (tweet) {
-                    stream.destroy();
-                    console.log(target + 'のツイートを取得終了。');
-
-                    setTimeout(function () {
-                        _twitter.stream.litsen(target, user_id, callback);
-                    }, 60 * 1000);
-                });
-
-                // // 接続開始時にはフォロワー情報が流れます
-                // stream.on('friends', function (tweet) { console.log(JSON.stringify(tweet)); });
-                // // つい消しの場合                    
-                // stream.on('delete', function (tweet) { console.log(JSON.stringify(tweet)); });
-                // // 位置情報の削除やふぁぼられといったeventはここに流れます
-                // stream.on('event', function (tweet) { console.log(JSON.stringify(tweet)); });
-
-            });
-        },
-
-        async getStreamData(tweet, target, callback) {
-            // RTと自分のツイートは除外
+            // RT除外
             if (!tweet || !tweet.user || tweet.retweeted_status) { return; }
 
-            // 送信する情報を定義
-            let tweet_data = await _twitter.stream.getTweetData(tweet);
-            if (tweet_data.screen_name != target || tweet_data.screen_name == "ERROR") { return; }
-
             // log
-            if (config.switchVar.logStreamToFile && tweet) {
-                dbox.logToFile("twitter/", "stream", tweet);
+            if (config.switchVar.logStreamToFile) {
+                dbox.logToFile("twitter/", "litsen", tweet);
             }
 
-            // 送信
-            if (tweet_data.text) {
-                callback(tweet_data);
-            }
+            // 送信する情報を定義
+            try {
+                let tweet_data = await _twitter.api.getTweet(tweet.id_str);
+                if (tweet_data) { callback(tweet_data) };
 
-            // image to dropbox
-            if (tweet_data.medias) {
-                _twitter.stream.getTweetImages(tweet_data);
+            } catch (e) {   // http error
+                console.log(JSON.stringify(e, null, 2));
+                return;
             }
-
-        },
+        });
+    },
 
     data: {
         getTweetImages(tweet_data) {
@@ -178,26 +116,26 @@ const _twitter = module.exports = {
                 count: 1
             };
 
-            const req = await get({ url: endpointURL, oauth: oAuthConfig, qs: params, json: true });
+        const req = await get({ url: endpointURL, oauth: oAuthConfig, qs: params, json: true });
 
-            if (req.body) {
-                return req.body;
-            } else {
-                throw new Error(`Cannot get user <${userName}> ID`);
-            }
-        },
-        getFriendsID(screen_name) {
-            const endpointURL = new URL('https://api.twitter.com/1.1/friends/ids.json');
-            const params = { screen_name };
+        if (req.body) {
+            return req.body;
+        } else {
+            throw new Error(`Cannot get user <${userName}> ID`);
+        }
+    },
+    getFriendsID(screen_name) {
+        const endpointURL = new URL('https://api.twitter.com/1.1/friends/ids.json');
+        const params = { screen_name };
 
-            const req = await get({ url: endpointURL, oauth: oAuthConfig, qs: params, json: true });
+        const req = await get({ url: endpointURL, oauth: oAuthConfig, qs: params, json: true });
 
-            if (req.body) {
-                return req.body;
-            } else {
-                throw new Error(`Cannot get user <${screen_name}>'s friends ID`);
-            }
-        },
+        if (req.body) {
+            return req.body;
+        } else {
+            throw new Error(`Cannot get user <${screen_name}>'s friends ID`);
+        }
+    },
 
         getStreamByIDs(ids, callback) {
             const params = { follow: ids.join(',') };
