@@ -106,7 +106,9 @@ const _twitter = module.exports = {
             if (req.body) {
                 return req.body;
             } else {
-                throw new Error(`Cannot get tweet <${id}>`);
+                // throw new Error(`Cannot get tweet <${id}>`);
+                console.log(`Cannot get tweet <${id}>`);
+                return null;
             }
         },
         getUserID(userName) {

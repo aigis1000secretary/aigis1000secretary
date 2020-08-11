@@ -352,7 +352,7 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
                 if (/^[A-Za-z0-9_]{5,15}-\d{18,19}-\d{8}_\d{6}/.test(img.fileName)) {
                     // image from Aigis1000 twitter
                     let tweetId = /\d{18,19}/.exec(img.fileName).toString();
-                    let tweet_data = await twitter.api.getTweet(tweetId);
+                    let tweet_data = await twitter.api.getTweet(tweetId) || { data: { text: "" } };
                     let array = getFullnamesFromText(tweet_data.data.text);
 
                     if (array.length > 0) {
@@ -464,6 +464,7 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
         if (/\/\d{18,19}(\?|\/|$)/.test(url)) {
             let tweetId = /\d{18,19}/.exec(url).toString();
             let tweet_data = await twitter.api.getTweet(tweetId);
+            if (!tweet_data) { return ""; }
 
             // image to dropbox
             twitter.data.getTweetImages(tweet_data);
@@ -1004,6 +1005,7 @@ String.prototype.tableToArray = function () {
 let charaDatabase = database.charaDatabase;
 // search from twitter text
 const getFullnamesFromText = function (text) {
+    if (!text) { return []; }
     debugLog()("getFullnamesFromText( text... )");
     let result = [];
     let result2 = [];
