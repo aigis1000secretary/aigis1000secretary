@@ -262,27 +262,29 @@ const twitterBotOn = function () {
         let text = tweet_data.data.text;
         let mediaKey = "";
 
-        // push image data to tweetMediaCache
-        if (tweet_data.includes.media.length > 0) {
-            // check keyword in text
-            mediaKey = text.split('/t.co/').splice(-1);
+        // if source is Aigis1000
+        if (tweet_data.includes.users[0].username == "Aigis1000") {
 
-            // map keyword => media.url
-            tweetMediaCache[mediaKey] = [];
-            for (let media of tweet_data.includes.media) {
-                if (media.type == "photo") {
-                    tweetMediaCache[mediaKey].push(media.url);
+            // push image data to tweetMediaCache if there are some media
+            if (tweet_data.includes &&
+                Array.isArray(tweet_data.includes.media) &&
+                tweet_data.includes.media.length > 0) {
+                // check keyword in text
+                mediaKey = text.split('/t.co/').splice(-1);
+
+                // map keyword => media.url
+                tweetMediaCache[mediaKey] = [];
+                for (let media of tweet_data.includes.media) {
+                    if (media.type == "photo") {
+                        tweetMediaCache[mediaKey].push(media.url);
+                    }
                 }
+
             }
 
-            abotPushLog(`https://twitter.com/${tweet_data.includes.users.username}/status/${tweet_data.data.id}`)
-        }
-
-        // get all announce target if source is Aigis1000
-        if (tweet_data.includes.users.username == "Aigis1000") {
+            // get all announce target
             let aIDs = await line.abot._getGroupsJoined();
             for (let aid of aIDs) {
-
                 // // check announce switch
                 // if (!groupDatabase.data[i].alarm) continue;
                 // // 14 days no ant msg idle group	3 * 24 * 60 * 60 * 1000
@@ -293,6 +295,14 @@ const twitterBotOn = function () {
                 // }
 
                 line.abot.push(aid, text);
+            }
+        }
+        else {
+            // send tweet with media to pushlog
+            if (tweet_data.includes &&
+                Array.isArray(tweet_data.includes.media) &&
+                tweet_data.includes.media.length > 0) {
+                abotPushLog(`https://twitter.com/${tweet_data.includes.users[0].username}/status/${tweet_data.data.id}`)
             }
         }
     }
