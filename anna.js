@@ -330,6 +330,7 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
         }
     } else if (_isAdmin && (command == "初始化" || command == "INIT")) {
         await init();
+        twitter.init();
         return "初始化完成!";
 
     } else if (_isAdmin && (command == "NEWIMG")) {
@@ -352,7 +353,7 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
                     // image from Aigis1000 twitter
                     let tweetId = /\d{18,19}/.exec(img.fileName).toString();
                     let tweet_data = await twitter.api.getTweet(tweetId);
-                    let array = getFullnamesFromText(tweet_data.text);
+                    let array = getFullnamesFromText(tweet_data.data.text);
 
                     if (array.length > 0) {
                         replyMsg.push(line.createImageMsg(img.imageLink, img.thumbnailLink));
@@ -465,13 +466,12 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
             let tweet_data = await twitter.api.getTweet(tweetId);
 
             // image to dropbox
-            twitter.stream.getTweetImages(tweet_data);
+            twitter.data.getTweetImages(tweet_data);
 
             let replyMsg = [];
-            for (let i in tweet_data.medias) {
-                let media = tweet_data.medias[i];
+            for (let media of tweet_data.includes.media) {
                 if (media.type == "photo") {
-                    replyMsg.push(line.createImageMsg(media.link, media.link));
+                    replyMsg.push(line.createImageMsg(media.url, media.url));
                 }
             }
             return replyMsg;
