@@ -15,11 +15,14 @@
     new twitter api
     new method for new api
     new stream listener
+
+    0.8.8.1
+    new twitter api online test bug fixed
 */
 
 const crypto = require("./crypto.js");
 const _config = module.exports = {
-    _version: "0.8.8.0",
+    _version: "0.8.8.1",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
