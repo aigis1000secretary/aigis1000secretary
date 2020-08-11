@@ -112,17 +112,18 @@ const _twitter = module.exports = {
 
         },
 
+    data: {
         getTweetImages(tweet_data) {
             // image to dropbox
-            for (let i in tweet_data.medias) {
+            for (let i in tweet_data.includes.media) {
                 let media = tweet_data.medias[i];
 
                 if (media.type == "photo") {
-                    let tweetTime = new Date(parseInt(tweet_data.timestamp_ms));
+                    let tweetTime = new Date(Date.parse(tweet_data.data.created_at));
                     let timeString = tweetTime.toISOString().replace(/-|:|\.\d+Z/g, "").replace("T", "_");
-                    let filename = `${tweet_data.screen_name}-${tweet_data.id_str}-${timeString}-img${parseInt(i) + 1}${path.parse(media.link).ext}`
+                    let filename = `${tweet_data.includes.users.username}-${tweet_data.data.id}-${timeString}-img${parseInt(i) + 1}${path.parse(media.url).ext}`
 
-                    request.get(media.link, { encoding: 'binary' }, async (error, response, body) => {
+                    request.get(media.url, { encoding: 'binary' }, async (error, response, body) => {
                         if (body) {
                             fs.writeFileSync("./" + filename, body, { encoding: 'binary' });
                             body = fs.readFileSync("./" + filename);
@@ -133,82 +134,7 @@ const _twitter = module.exports = {
                     });
                 }
             }
-        },
-
-        async getTweetData(raw) {
-            let tweet_data = { medias: [] };
-
-            if (raw.extended_tweet) {
-                raw = Object.assign(raw, raw.extended_tweet);
-            }
-            if (!raw.entities) raw.entities = {};
-            if (!raw.extended_entities) raw.extended_entities = {};
-            raw.entities = Object.assign(raw.entities, raw.extended_entities);
-
-            // get tweet data
-            tweet_data.id_str = raw.id_str;
-            tweet_data.name = (raw.user ? raw.user.name : "ERROR");
-            tweet_data.screen_name = (raw.user ? raw.user.screen_name : "ERROR");
-            tweet_data.created_at = raw.created_at;
-            tweet_data.timestamp_ms = raw.timestamp_ms || Date.parse(raw.created_at);
-
-            // tweet text
-            tweet_data.text = raw.full_text || raw.text;
-
-            // tweet media
-            if (raw.entities.media && Array.isArray(raw.entities.media)) {
-                for (let media of raw.entities.media) {
-
-                    if (media.type == "photo") {
-                        tweet_data.medias.push({
-                            type: media.type,
-                            link: media.media_url_https,
-                            url: media.url  // same with tweet link text, useless?
-                        });
-                    }
-                }
-            }
-
-            // api bug?
-            // https://developer.twitter.com/en/docs/labs/tweets-and-users/api-reference/get-tweets-id
-            if (tweet_data.medias.length == 0) {
-                // get image data form new api
-                let medias = await new Promise((resolve, reject) => {
-                    request.get({
-                        url: 'https://api.twitter.com/labs/2/tweets',
-                        oauth: {
-                            consumer_key: config.twitterCfg.TWITTER_CONSUMER_KEY.trim(),
-                            consumer_secret: config.twitterCfg.TWITTER_CONSUMER_SECRET.trim(),
-                            token: config.twitterCfg.TWITTER_ACCESS_TOKEN.trim(),
-                            token_secret: config.twitterCfg.TWITTER_ACCESS_TOKEN_SECRET.trim()
-                        },
-                        qs: {
-                            ids: raw.id_str,
-                            'expansions': 'attachments.media_keys',
-                            'media.fields': 'type,url'
-                        },
-                        json: true
-                    }, (error, req) => {
-                        // console.log(JSON.stringify(req.body, null, 2));
-                        if (req.body.includes && req.body.includes.media) {
-                            resolve(req.body.includes.media);
-                        }
-                        resolve([]);
-                    })
-                });
-
-                for (let media of medias) {
-                    if (media.type == "photo") {
-                        tweet_data.medias.push({
-                            type: media.type,
-                            link: media.url,
-                            url: media.url  // same with tweet link text, useless?
-                        });
-                    }
-                }
-            }
-            return tweet_data;
-        },
+        }
     },
 
     api: {
