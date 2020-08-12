@@ -31,7 +31,7 @@ const main = async function () {
             return;
         }
         // get filelist
-        pathArray = pathArray.concat(await getFileList(albumList[i]));
+        pathArray = pathArray.concat(await getFileList(albumList[i]).catch(console.log));
     }
 
     // loop
@@ -97,10 +97,10 @@ const main = async function () {
 // get dropbox file list
 const getFileList = async function (mainFolder) {
     let result = [];
-    let apiResult = await dbox.listDir(mainFolder).catch(console.log);
+    let apiResult = await dbox.listDir(mainFolder);
     // filter
-    let dirs = apiResult.filter((obj) => ("folder" == obj[".tag"]));
-    let files = apiResult.filter((obj) => ("file" == obj[".tag"]));
+    let dirs = apiResult.filter((obj) => (obj[".tag"] == "folder"));
+    let files = apiResult.filter((obj) => (obj[".tag"] == "file"));
 
     let listDirsTask = async function () {
         let pop;
@@ -108,22 +108,27 @@ const getFileList = async function (mainFolder) {
             pop = dirs.pop();
             let _folder = pop.path_display;
 
-            // console.log(_folder);
-            let _result = await dbox.listDir(_folder).catch(console.log);
+            // console.log(`${_folder} ${dirs.length}`);
+            let _result = await dbox.listDir(_folder).catch(() => { return false; });
+            if (!_result) { dirs.push(pop); await sleep(1000); continue; }   // list dir error, wait 1sec & retry
 
             let _dirs = _result.filter((obj) => ("folder" == obj[".tag"]));
             let _files = _result.filter((obj) => ("file" == obj[".tag"]));
 
             for (let obj in _dirs) { dirs.push(_dirs[obj]); }
             for (let obj in _files) { files.push(_files[obj]); }
+
+            for (let i = 0; i < 50; ++i) {
+                await sleep(100);
+                if (dirs.length > 0) { break; }
+            }
         }
-        // console.log("Thread done");
+        // console.log(`Thread done ${dirs.length}`);
     };
 
     let pArray = [];
     for (let i = 0; i < 10; ++i) {
         pArray.push(listDirsTask());
-        await sleep(500);
     }
     await Promise.all(pArray);
 
@@ -139,11 +144,16 @@ const checkImages = async function () {
     // get dropbox image list
     let pathArray = [];
 
-    // check album
-    let albumList = ["AutoResponse", "Images"];
-    for (let albumName of albumList) {
-        // get filelist
-        pathArray = pathArray.concat(await getFileList(albumName));
+    try {
+        // check album
+        let albumList = ["AutoResponse", "Images"];
+        for (let albumName of albumList) {
+            // get filelist
+            pathArray = pathArray.concat(await getFileList(albumName));
+        }
+    } catch (err) {
+        console.log(`checkImages error: ${err}`);
+        return;
     }
 
     for (let img of imgur.database.images) {

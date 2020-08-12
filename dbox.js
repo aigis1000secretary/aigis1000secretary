@@ -38,7 +38,6 @@ module.exports = {
 
             // more then
             while (response.has_more) {
-                module.exports.logToFile("dropbox/", "listDir", response);
                 let cursor = response.cursor;
                 response = await dbox.filesListFolderContinue({ cursor: cursor });
                 result = result.concat(response.entries);
@@ -52,8 +51,7 @@ module.exports = {
             return result;
         } catch (error) {
             console.log("listDir error... ");
-            console.log(error);
-            return [];
+            throw error;
         }
     },
 
@@ -104,7 +102,6 @@ module.exports = {
             return true;
         } catch (error) {
             console.log("fileUpload error... " + dirPath);
-            console.log(error);
             throw error;
         }
     },
