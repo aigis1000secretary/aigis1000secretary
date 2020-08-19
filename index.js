@@ -296,6 +296,9 @@ const twitterBotOn = function () {
 
                 line.abot.push(aid, text);
             }
+            
+            // image to dropbox
+            twitter.data.getTweetImages(tweet_data);
         }
         else {
             // send tweet with media to pushlog

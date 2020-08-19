@@ -21,11 +21,14 @@
     
     0.8.8.2
     dbox listdir api exception handling
+
+    0.8.8.3
+    twitter bot img to dbox
 */
 
 const crypto = require("./crypto.js");
 const _config = module.exports = {
-    _version: "0.8.8.2",
+    _version: "0.8.8.3",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
