@@ -45,11 +45,11 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
     // >> <command>     <arg1>          <arg2>
     // >> 學習          NNL:黑弓
     // >> 資料庫        CharaDatabase   NNL.ability_aw
-    let command = ("" + msgs[0]).toUpperCase().trim();
-    let arg1 = ("" + msgs[1]).trim();
-    let arg2 = ("" + msgs[2]).trim();
+    let command = (msgs[0] || "undefined").toUpperCase().trim();
+    let arg1 = (msgs[1] || "undefined").trim();
+    let arg2 = (msgs[2] || "undefined").trim();
     // <command>
-    if (command == "undefined") { return false; }
+    if (command.equali("undefined")) { return false; }
     debugLog()("Args: <" + command + "> <" + arg1 + "> <" + arg2 + ">");
 
     // reply    
@@ -316,7 +316,7 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
 
             return reply.trim();
         }
-        if (msg2 == "undefined" || msg2 == "") {
+        if (msg2 == "") {
             let replyMsg = [];
             replyMsg.push(line.createTextMsg("請換行輸入項目內容."));
             replyMsg.push(line.createTextMsg(targetDB.data[index][propertyStr]));
@@ -428,10 +428,12 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
         return false;
 
     } else if (_isAdmin && (command == "DELIMG")) {
-        if (arg1 != "undefined") {
-            let key = arg1;
-            let imgArray = /[\S]{32}/.test(key) ? imgur.database.findImageData({ md5: key, isGif: true }) :
-                !/\//.test(key) ? imgur.database.findImageData({ tag: key, isGif: true }) :
+        let key = (!arg1.equali("new") ? arg1 : arg2);
+        if (key != "undefined") {
+            let imgArray = /[\S]{32}/.test(key) ?
+                imgur.database.findImageData({ md5: key, isGif: true }) :
+                !/\//.test(key) ?
+                    imgur.database.findImageData({ tag: key, isGif: true }) :
                     imgur.database.findImageData({ tagList: key, isGif: true });
             if (imgArray.length != 1) {
                 console.log(`刪除錯誤: 目標異常! (${imgArray.length})`);

@@ -64,7 +64,7 @@ const _express = module.exports = {
                 responseBody = "";
                 for (let i in result) {
                     responseBody += '<blockquote class="imgur-embed-pub" lang="en" data-id="' + result[i].id + '"><a href="//imgur.com/' + result[i].id + '">' + result[i].tagList + '</a></blockquote><script async src="//s.imgur.com/min/embed.js" charset="utf-8"></script><br>'
-                    responseBody += '<a href="' + result[i].imageLink + '">DELIMG ' + result[i].tagList + '</a><br><br>';
+                    responseBody += '<a href="' + result[i].imageLink + '">' + result[i].tagList + '</a><br><br>';
                 }
             }
             response.send(responseBody);
