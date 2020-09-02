@@ -78,7 +78,7 @@ const _twitter = module.exports = {
                     let timeString = tweetTime.toISOString().replace(/-|:|\.\d+Z/g, "").replace("T", "_");
                     let filename = `${tweet_data.includes.users[0].username}-${tweet_data.data.id}-${timeString}-img${parseInt(i) + 1}${path.parse(media.url).ext}`
 
-                    request.get(media.url, { encoding: 'binary' }, async (error, response, body) => {
+                    request.get(media.url + ":orig", { encoding: 'binary' }, async (error, response, body) => {
                         if (body) {
                             fs.writeFileSync("./" + filename, body, { encoding: 'binary' });
                             body = fs.readFileSync("./" + filename);
