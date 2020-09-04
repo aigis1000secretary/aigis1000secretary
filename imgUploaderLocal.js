@@ -28,7 +28,7 @@ const main = async function () {
         let albumName = albumList[i];
         let albums = imgur.database.findAlbumData({ title: albumName });
         if (albums.length == 0) {
-            // await imgur.api.album.albumCreation({ title: albumName, cover: "Tsupr1Z" });
+            // await imgur.api.album.albumCreation({ title: albumName, cover: "vtHXE4B" });
             console.log("albums.length == 0");
             return;
         }

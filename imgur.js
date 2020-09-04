@@ -233,7 +233,7 @@ let _imgur = module.exports = {
             // GET Album IDs
             async albumsIds({ page, filter = (() => true) }) {
                 try {
-                    // console.log("GET Album IDs page " + page);
+                    console.log("GET Album IDs page " + page);
                     // Configure the request
                     let options = {
                         url: _imgur.IMGUR_API_URL + "account/me/albums/ids/" + page,
