@@ -111,6 +111,7 @@ const _twitter = module.exports = {
             } else {
                 // throw new Error(`Cannot get tweet <${id}>`);
                 console.log(`Cannot get tweet <${id}>`);
+                console.log(req.body.errors)
                 return null;
             }
         },
@@ -129,6 +130,7 @@ const _twitter = module.exports = {
                 // req.body[0].name
                 // req.body[0].id_str
             } else {
+                console.log(req.body.errors)
                 console.log(`Cannot get user <${{ userName, userID }}> ID`);
                 throw new Error(`Cannot get user <${{ userName, userID }}> ID`);
             }
@@ -142,6 +144,8 @@ const _twitter = module.exports = {
             if (req.body && !req.body.errors) {
                 return req.body;
             } else {
+                console.log(req.body.errors)
+                console.log(`Cannot get user <${screen_name}>'s friends ID`);
                 throw new Error(`Cannot get user <${screen_name}>'s friends ID`);
             }
         },
@@ -156,6 +160,8 @@ const _twitter = module.exports = {
                 for (let obj of req.body.users) { names.push(obj.screen_name); }
                 return { names: names };
             } else {
+                console.log(req.body.errors)
+                console.log(`Cannot get user <${screen_name}>'s friends Name`);
                 throw new Error(`Cannot get user <${screen_name}>'s friends Name`);
             }
         },
@@ -189,7 +195,7 @@ const _twitter = module.exports = {
                 stream.destroy();
 
                 setTimeout(() => {
-                    _twitter.api.getStreamByIDs(ids, callback);
+                    _twitter.api.getStream(params, callback);
                 }, 60 * 1000);
             });
 
