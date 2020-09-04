@@ -296,11 +296,10 @@ const twitterBotOn = function () {
 
                 line.abot.push(aid, text);
             }
-            
+
             // image to dropbox
             twitter.data.getTweetImages(tweet_data);
-        }
-        else {
+        } else {
             // send tweet with media to pushlog
             if (tweet_data.includes &&
                 Array.isArray(tweet_data.includes.media) &&

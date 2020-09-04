@@ -31,11 +31,15 @@
     0.8.8.5
     twitter api download origin image
     twitter update manual script
+
+    0.8.8.6
+    twitter api ids bug fix(change by screen name)
+    anna add dice command
 */
 
 const crypto = require("./crypto.js");
 const _config = module.exports = {
-    _version: "0.8.8.5",
+    _version: "0.8.8.6",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正

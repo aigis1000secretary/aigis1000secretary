@@ -480,6 +480,19 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
             return replyMsg;
         }
         return "";
+    } else if (/^(\s|\dD\d|\d|[\+\-\*\/\(\)])+$/i.test(msg1.trim())) {
+        let result = msg1.replace(/\s/g, "");
+        result = result.replace(/(\d+)(D)(\d+)/ig, (m, p1, p2, p3) => {
+            let nums = [];
+            for (let i = 0; i < p1; ++i) { nums.push(Math.ceil(Math.random() * p3)); }
+            return `(${nums.join('+')})`;
+        });
+        try {
+            return `${result} = \n${eval(result)}`;
+        } catch (e) {
+            console.log(e.message);
+            return false;
+        }
     }
 
     // 搜尋資料
