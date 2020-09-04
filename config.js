@@ -35,11 +35,16 @@
     0.8.8.6
     twitter api ids bug fix(change by screen name)
     anna add dice command
+
+    0.8.8.7
+    image uploader script upgrade
+    fix check image logic
+    local script deprecation
 */
 
 const crypto = require("./crypto.js");
 const _config = module.exports = {
-    _version: "0.8.8.6",
+    _version: "0.8.8.7",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
