@@ -483,9 +483,9 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
     } else if (/^(\s|\dD\d|\d|[\+\-\*\/\(\)])+$/i.test(msg1.trim())) {
         let result = msg1.replace(/\s/g, "");
         result = result.replace(/(\d+)(D)(\d+)/ig, (m, p1, p2, p3) => {
-            let r = 0;
-            for (let i = 0; i < p1; ++i) { r += Math.ceil(Math.random() * p3); }
-            return r;
+            let nums = [];
+            for (let i = 0; i < p1; ++i) { nums.push(Math.ceil(Math.random() * p3)); }
+            return `(${nums.join('+')})`;
         });
         try {
             return `${result} = \n${eval(result)}`;
