@@ -160,8 +160,8 @@ const _twitter = module.exports = {
             }
         },
 
-        async getStreamByIDs(ids, callback) { getStream({ follow: ids.join(',') }, callback); },
-        async getStreamByNames(names, callback) { getStream({ track: names.join(',') }, callback); },
+        async getStreamByIDs(ids, callback) { _twitter.api.getStream({ follow: ids.join(',') }, callback); },
+        async getStreamByNames(names, callback) { _twitter.api.getStream({ track: names.join(',') }, callback); },
 
         async getStream(params, callback) {
 
