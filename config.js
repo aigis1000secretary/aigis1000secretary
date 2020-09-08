@@ -40,11 +40,14 @@
     image uploader script upgrade
     fix check image logic
     local script deprecation
+
+    0.8.8.8
+    dbox upload api retry & show log
 */
 
 const crypto = require("./crypto.js");
 const _config = module.exports = {
-    _version: "0.8.8.7",
+    _version: "0.8.8.8",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
