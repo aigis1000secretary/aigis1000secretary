@@ -97,12 +97,16 @@ module.exports = {
             mute: true
         };
 
-        try {
-            await dbox.filesUpload(filesCommitInfo);
-            return true;
-        } catch (error) {
-            console.log("fileUpload error... " + dirPath);
-            throw error;
+        for (let retry = 0; ; ++retry) {
+            try {
+                await dbox.filesUpload(filesCommitInfo);
+                return true;
+            } catch (error) {
+                console.log("fileUpload error... " + dirPath);
+                console.log(error);
+                if (retry >= 1) { throw error; }
+            }
+            await sleep(1000);
         }
     },
 
