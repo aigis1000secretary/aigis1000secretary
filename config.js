@@ -43,11 +43,14 @@
 
     0.8.8.8
     dbox upload api retry & show log
+
+    0.8.8.9
+    config switch var fix
 */
 
 const crypto = require("./crypto.js");
 const _config = module.exports = {
-    _version: "0.8.8.8",
+    _version: "0.8.8.9",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
@@ -126,9 +129,9 @@ const _config = module.exports = {
     switchVar: {
         debug: false,
         debugPush: false,
-        logRequestToFile: false,
-        logStreamToFile: false,
-        logLineBotPush: true
+        logRequestToFile:  (process.env.LOG_REQUEST_TO_FILE == "true"),
+        logStreamToFile: (process.env.LOG_STREAM_TO_FILE == "true"),
+        logLineBotPush: (process.env.LOG_LINE_BOT_PUSH == "true")
     },
 
     // autoTest() {

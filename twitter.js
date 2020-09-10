@@ -166,6 +166,29 @@ const _twitter = module.exports = {
             }
         },
 
+        // async getUserTimeline(screen_name, max_id) {
+        //     const endpointURL = new URL('https://api.twitter.com/1.1/statuses/user_timeline.json');
+        //     const params = {
+        //         screen_name,
+        //         // since_id,
+        //         // count,
+        //         max_id,
+        //         trim_user: true,
+        //         // exclude_replies: true,
+        //         // include_rts: false
+        //     };
+
+        //     const req = await get({ url: endpointURL, oauth: _twitter.oAuthConfig, qs: params, json: true });
+
+        //     if (req.body && !req.body.errors) {
+        //         return req.body;
+        //     } else {
+        //         console.log(req.body.errors)
+        //         console.log(`Cannot get user <${screen_name}>'s timeline`);
+        //         throw new Error(`Cannot get user <${screen_name}>'s timeline`);
+        //     }
+        // },
+
         async getStreamByIDs(ids, callback) { _twitter.api.getStream({ follow: ids.join(',') }, callback); },
         async getStreamByNames(names, callback) { _twitter.api.getStream({ track: names.join(',') }, callback); },
 
