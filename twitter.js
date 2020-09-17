@@ -71,7 +71,7 @@ const _twitter = module.exports = {
     },
 
     data: {
-        getTweetImages(tweet_data) {
+        async getTweetImages(tweet_data) {
             // image to dropbox
             for (let i in tweet_data.includes.media) {
                 let media = tweet_data.includes.media[i];
@@ -81,15 +81,24 @@ const _twitter = module.exports = {
                     let timeString = tweetTime.toISOString().replace(/-|:|\.\d+Z/g, "").replace("T", "_");
                     let filename = `${tweet_data.includes.users[0].username}-${tweet_data.data.id}-${timeString}-img${parseInt(i) + 1}${path.parse(media.url).ext}`
 
-                    request.get(media.url + ":orig", { encoding: 'binary' }, async (error, response, body) => {
-                        if (body) {
-                            fs.writeFileSync("./" + filename, body, { encoding: 'binary' });
-                            body = fs.readFileSync("./" + filename);
-                            await dbox.fileUpload("Images/NewImages/" + filename, body);
-                            fs.unlinkSync("./" + filename);
-                        }
-                        // if (error || !body) { return console.log(error); }
-                    });
+
+                    // request.get(media.url + ":orig", { encoding: 'binary' }, async (error, response, body) => {
+                    //     if (body) {
+                    //         fs.writeFileSync("./" + filename, body, { encoding: 'binary' });
+                    //         body = fs.readFileSync("./" + filename);
+                    //         await dbox.fileUpload("Images/NewImages/" + filename, body);
+                    //         fs.unlinkSync("./" + filename);
+                    //     }
+                    //     // if (error || !body) { return console.log(error); }
+                    // });
+
+                    const req = await get({ url: media.url + ":orig", encoding: 'binary' });
+                    if (req.body) {
+                        fs.writeFileSync("./" + filename, req.body, { encoding: 'binary' });
+                        let img = fs.readFileSync("./" + filename);
+                        await dbox.fileUpload("Images/NewImages/" + filename, img);
+                        fs.unlinkSync("./" + filename);
+                    }
                 }
             }
         }
