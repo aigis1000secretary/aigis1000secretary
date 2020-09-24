@@ -252,7 +252,7 @@ class LineAPI {
 
     }
 
-    async _refrehGroup() {
+    async _refreshGroup() {
         await this._getGroupsInvited();
         await this._getGroupsJoined();
         return;
@@ -277,7 +277,7 @@ class LineAPI {
 
     async _acceptGroupInvitation(groupid) {
         this._client.acceptGroupInvitation(0, groupid);
-        await this._refrehGroup();
+        await this._refreshGroup();
         this._invite(groupid, ['u759a433ed5a22b3f2daa405ab2363a67']);
         return;
     }
@@ -319,7 +319,7 @@ class LineAPI {
     }
 
     async _acceptGroupInvitationByTicket(gid, ticketID) {
-        this._refrehGroup();
+        this._refreshGroup();
         return await this._client.acceptGroupInvitationByTicket(0, gid, ticketID);
     }
 
