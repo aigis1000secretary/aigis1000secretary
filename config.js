@@ -49,11 +49,14 @@
 
     0.8.8.10
     getTweetImages error 429 too_many_requests fix
+
+    0.8.8.11
+    abot code format
 */
 
 const crypto = require("./crypto.js");
 const _config = module.exports = {
-    _version: "0.8.8.10",
+    _version: "0.8.8.11",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
