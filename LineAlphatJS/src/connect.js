@@ -13,7 +13,7 @@ class LineConnect extends LineAPI {
             this.email = options.email;
             this.password = options.password;
             this.certificate = options.certificate;
-            this.config.Headers['X-Line-Access'] = (options.authToken ? options.authToken : "");
+            this.config.Headers['X-Line-Access'] = options.authToken || "";
         }
     }
 
@@ -52,61 +52,44 @@ class LineConnect extends LineAPI {
                 //     if (err) { console.log(err); }
                 // });
 
-                console.info(`=======BOT RUNNING======\n`);
                 resolve();
             });
         });
     }
 
     async startx() {
-        let res;
+        let res = null;
         if (this.authToken) {
-            try {
-                res = await this.authTokenLogin();
-                console.log("authTokenLogin");
-                let { mid } = await this._client.getProfile(); config.botmid = mid;
-                return res;
-            } catch (e) {
-                console.log("authToken Login fail");
-            }
-        }
-
-        if (this.password && this.email) {
-            try {
-                res = await this.emailLogin();
-                console.log("emailLogin");
-                let { mid } = await this._client.getProfile(); config.botmid = mid;
-                return res;
-            } catch (e) {
-                console.log("email Login fail");
-            }
-        }
-
-        try {
+            res = await this.authTokenLogin();
+        } else if (this.password && this.email) {
+            res = await this.emailLogin();
+        } else {
             res = await this.manualLogin();
-            console.log("manualLogin");
-            let { mid } = await this._client.getProfile(); config.botmid = mid;
-            return res;
-        } catch (e) {
-            console.log("manual Login fail");
         }
 
-        return;
+        if (res != null) {
+            let { mid } = await this._client.getProfile();
+            if (Array.isArray(config.botmid)) { config.botmid.push(mid); }
+            else { config.botmid = [mid]; }
+            console.info(`=======BOT RUNNING======\n`);
+        }
+        return res;
     }
 
     async authTokenLogin() {
+        console.log("authTokenLogin");
         return new Promise((resolve, reject) => {
             this._tokenLogin(this.authToken, this.certificate);
             this._chanConn();
             this._channel.issueChannelToken("1341209950", (err, result) => {
                 if (typeof (result) == "undefined") {
-                    reject();
+                    console.log("authToken Login fail");
+                    resolve(null);
                 } else {
                     config.chanToken = result.channelAccessToken;
                     this._client.getLastOpRevision((err, result) => {
                         let xrx = result.toString().split(" ");
                         this.revision = xrx[0].toString() - 1;
-                        console.info(`=======BOT RUNNING======\n`);
                         resolve(this.longpoll());
                     })
                 }
@@ -115,45 +98,54 @@ class LineConnect extends LineAPI {
     }
 
     async emailLogin() {
+        console.log("emailLogin");
         return new Promise((resolve, reject) => {
-            this._xlogin(this.email, this.password).then(() => {
-                this._chanConn();
-                console.info("Success Login!");
-                console.info(`\n[*] Token: ${config.tokenn}`);
-                this.config.Headers['X-Line-Access'] = config.tokenn;
-                this._channel.issueChannelToken("1341209950", (err, result) => {
-                    config.chanToken = result.channelAccessToken;
+            this._xlogin(this.email, this.password)
+                .then(() => {
+                    this._chanConn();
+                    console.info("Success Login!");
+                    console.info(`\n[*] Token: ${config.tokenn}`);
+                    this.config.Headers['X-Line-Access'] = config.tokenn;
+                    this._channel.issueChannelToken("1341209950", (err, result) => {
+                        config.chanToken = result.channelAccessToken;
+                        this._client.getLastOpRevision((err, result) => {
+                            let xrx = result.toString().split(" ");
+                            this.revision = xrx[0].toString() - 1;
+                            resolve(this.longpoll());
+                        })
+                    });
+
+                    // 加密 to dropbox
+                    let alphatBot = {
+                        authToken: config.tokenn,
+                        certificate: "undefined",
+                        email: this.email,
+                        password: this.password
+                    }
+                    require('../../config.js').saveConfigToDbox(alphatBot);
+
+                }).catch(() => {
+                    console.log("email Login fail");
+                    resolve(null);
+                });
+        });
+    }
+
+    async manualLogin() {
+        console.log("manualLogin");
+        return new Promise((resolve, reject) => {
+            this.getQrFirst()
+                .then(async (res) => {
                     this._client.getLastOpRevision((err, result) => {
                         let xrx = result.toString().split(" ");
                         this.revision = xrx[0].toString() - 1;
                         resolve(this.longpoll());
                     })
+
+                }).catch(() => {
+                    console.log("email Login fail");
+                    resolve(null);
                 });
-
-                // 加密 to dropbox
-                let alphatBot = {
-                    authToken: config.tokenn,
-                    certificate: "undefined",
-                    email: this.email,
-                    password: this.password
-                }
-                require('../../config.js').saveConfigToDbox(alphatBot);
-
-            }).catch(() => {
-                reject();
-            });
-        });
-    }
-
-    async manualLogin() {
-        return new Promise((resolve, reject) => {
-            this.getQrFirst().then(async (res) => {
-                this._client.getLastOpRevision((err, result) => {
-                    let xrx = result.toString().split(" ");
-                    this.revision = xrx[0].toString() - 1;
-                    resolve(this.longpoll());
-                })
-            });
         })
     }
 

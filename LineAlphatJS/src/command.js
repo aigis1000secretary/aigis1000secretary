@@ -1,4 +1,4 @@
-const LineAPI = require('./api');
+﻿const LineAPI = require('./api');
 const fs = require('fs');
 
 let exec = require('child_process').exec;
@@ -294,7 +294,6 @@ class Command extends LineAPI {
 
     async joinQr(url) {
         let payload = url || this.payload[0];
-
         const [ticketId] = payload.split('g/').splice(-1);
         let { id } = await this._findGroupByTicket(ticketId);
         await this._acceptGroupInvitationByTicket(id, ticketId);
