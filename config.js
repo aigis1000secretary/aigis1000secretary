@@ -11,6 +11,17 @@
 
 /*
     // commit 
+    >> feature/0.8.8/abotUpgrade
+    var/method name fix
+    command fix
+    bot status upgrade
+    new abot init
+    double abot init
+    change reply logic
+    run test
+    run test fix
+    update abot id
+
 */
 
 const crypto = require("./crypto.js");
@@ -34,7 +45,7 @@ const _config = module.exports = {
     // u33a9a527c6ac1b24e0e4e35dde60c79d
     // 小安娜傳聲筒
     // Ub211d6652fb860935febc6473d1f9ffc
-    // uf0073964d53b22f4f404a8fb8f7a9e3e
+    // ub926d3162aab1d3fbf975d2c56be69aa
     // 小安娜
     // 
     // u759a433ed5a22b3f2daa405ab2363a67
@@ -64,14 +75,7 @@ const _config = module.exports = {
         channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN
     },
 
-    alphatBot: {
-        authToken: process.env.LINE_ALPHAT_AUTHTOKEN,
-        certificate: process.env.LINE_ALPHAT_CERTIFICATE,
-        email: process.env.LINE_ALPHAT_EMAIL,
-        password: process.env.LINE_ALPHAT_PASSWORD,
-        botId: process.env.LINE_ALPHAT_BOTID,
-        jsonKey: process.env.LINE_ALPHAT_JSONKEY
-    },
+    alphatBot: {},
 
     // discord
     discordbot: {
@@ -94,7 +98,7 @@ const _config = module.exports = {
     switchVar: {
         debug: false,
         debugPush: false,
-        logRequestToFile:  (process.env.LOG_REQUEST_TO_FILE == "true"),
+        logRequestToFile: (process.env.LOG_REQUEST_TO_FILE == "true"),
         logStreamToFile: (process.env.LOG_STREAM_TO_FILE == "true"),
         logLineBotPush: (process.env.LOG_LINE_BOT_PUSH == "true")
     },
@@ -127,44 +131,40 @@ const _config = module.exports = {
             });
         }, 1);
         await _config.loadConfigFromDbox();
+        await _config.saveConfigToDbox();
     },
     async loadConfigFromDbox() {
         try {
-            let rawData = await require("./dbox.js").fileDownload("AlphatBot.json");
-            let data = Buffer.from(rawData, "binary");
-
-            let obj; try { obj = JSON.parse(data); } catch (e) { obj = eval("(" + data + ")"); }
-
+            let rawData = Buffer.from(await require("./dbox.js").fileDownload("AntiKick.json"), "binary").toString();
             // 解密
-            let key = _config.alphatBot.jsonKey;
-            obj.authToken = crypto.decrypt(obj.authToken, key);
-            obj.certificate = crypto.decrypt(obj.certificate, key);
-            obj.email = crypto.decrypt(obj.email, key);
-            obj.password = crypto.decrypt(obj.password, key);
+            let key = process.env.LINE_ALPHAT_JSONKEY;
+            let data = crypto.decrypt(rawData, key);
 
-            if (!!obj.authToken) {
-                console.log("Update auth token from dropbox, EMail: " + obj.email);
-                Object.assign(_config.alphatBot, obj);
-            }
+            // data = require('fs').readFileSync("AntiKickRaw.json").toString();
+
+            // encode
+            let obj;
+            try { obj = JSON.parse(data); } catch (e) { }
+
+            console.log("Update auth token from dropbox");
+            Object.assign(_config.alphatBot, obj);
         } catch (e) {
             // error
             console.log(e);
         }
-
     },
-    async saveConfigToDbox(raw) {
-
+    async saveConfigToDbox() {
         // 加密 to dropbox
-        let key = _config.alphatBot.jsonKey;
-        let alphatBot = {
-            authToken: crypto.encrypt(raw.authToken, key),
-            certificate: crypto.encrypt(raw.certificate, key),
-            email: crypto.encrypt(raw.email, key),
-            password: crypto.encrypt(raw.password, key),
-        }
-        console.log("Upload auth token to dropbox, EMail: " + alphatBot.email);
+        let key = process.env.LINE_ALPHAT_JSONKEY;
+        let data = crypto.encrypt(JSON.stringify(_config.alphatBot, null, 2), key);
 
-        require("./dbox.js").fileUpload("AlphatBot.json", JSON.stringify(alphatBot, null, 4));
+        console.log("Upload auth token to dropbox");
+        // console.log(key)
+        // console.log(data)
+
+        require("./dbox.js").fileUpload("AntiKick.json", data);
+
+        require('fs').writeFileSync("AntiKickRaw.json", JSON.stringify(_config.alphatBot, null, 2));
     }
 };
 
