@@ -458,7 +458,7 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
         line.alphatbotInit();
         return "";
     } else if (command.indexOf("://LINE.ME/R/") != -1) {
-        line.abot.joinQr(msgs[0].trim());
+        line.abot.LINE.joinQr(msgs[0].trim());
         return "";
     } else if (command.indexOf("HTTP") == 0) {
         let url = command;

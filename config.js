@@ -22,11 +22,14 @@
     run test fix
     update abot id
 
+    0.9.0.1
+    new abot devid
+    auto joinqr fix
 */
 
 const crypto = require("./crypto.js");
 const _config = module.exports = {
-    _version: "0.9.0.0",
+    _version: "0.9.0.1",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
@@ -36,7 +39,7 @@ const _config = module.exports = {
     isLocalHost: require("fs").existsSync("./debug.js"),
 
     adminstrator: "U9eefeba8c0e5f8ee369730c4f983346b",
-    admins: ["U9eefeba8c0e5f8ee369730c4f983346b", "Ub211d6652fb860935febc6473d1f9ffc"],
+    admins: ["U9eefeba8c0e5f8ee369730c4f983346b", "U29eb83d36306f3af14a088c3d43fa713"],
     botLogger: "U9eefeba8c0e5f8ee369730c4f983346b",
     abotLogger: "u33a9a527c6ac1b24e0e4e35dde60c79d",
 
@@ -44,7 +47,7 @@ const _config = module.exports = {
     // U9eefeba8c0e5f8ee369730c4f983346b
     // u33a9a527c6ac1b24e0e4e35dde60c79d
     // 小安娜傳聲筒
-    // Ub211d6652fb860935febc6473d1f9ffc
+    // U29eb83d36306f3af14a088c3d43fa713
     // ub926d3162aab1d3fbf975d2c56be69aa
     // 小安娜
     // 
