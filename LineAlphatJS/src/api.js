@@ -355,7 +355,7 @@ class LineAPI {
                 formatType = 'jpg';
                 break;
         }
-        let dir = __dirname + '/../download';
+        let dir =`${__dirname}/../download`;
         if (!fs.existsSync(dir)) {
             await fs.mkdirSync(dir);
         }
@@ -397,6 +397,8 @@ class LineAPI {
 
         const filepath = path.resolve(__dirname, filepaths)
         console.log('File Locate on', filepath);
+        if (!fs.existsSync(filepath)) { return; }
+
         fs.readFile(filepath, async (err, bufs) => {
             let imgID = await this._client.sendMessage(0, M);
             const data = {

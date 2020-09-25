@@ -63,8 +63,8 @@ class LINE extends Command {
             let message = new Message(operation.message);
             message.to = (operation.message.to === this.botmid) ? operation.message._from : operation.message.to;
             Object.assign(message, { ct: operation.createdTime.toString() });
-            if (this.isBot(operation.message._from)) this.textMessage(message);   // not from bot
-            return;
+            // if (!this.isBot(operation.message._from))   // not from bot
+            this.textMessage(message);
         }
 
         // 'NOTIFIED_UPDATE_GROUP' : 11,
@@ -77,7 +77,6 @@ class LINE extends Command {
                 this.messages.to = operation.param1;
                 this.qrOpenClose(); // disable QRcode
             }
-            return;
         }
 
         // 'NOTIFIED_KICKOUT_FROM_GROUP' : 19,
@@ -101,7 +100,6 @@ class LINE extends Command {
                     this._kickMember(operation.param1, [operation.param2]);
                 }
             }
-            return;
         }
 
         // 'NOTIFIED_READ_MESSAGE' : 55,
@@ -124,30 +122,30 @@ class LINE extends Command {
                     }
                 }
             }
-            return;
         }
 
         // 'NOTIFIED_INVITE_INTO_GROUP' : 13,
-        if (operation.type == OpType['NOTIFIED_INVITE_INTO_GROUP']) {
+        if (operation.type == OpType['NOTIFIED_INVITE_INTO_GROUP']) { // diinvite
+
+            /*
             // cancel invitation
-            if (this.stateStatus.cancelInvitation && !this.isAdminOrBot(operation.param2) && !this.isAdminOrBot(operation.param3)) {
+            if (this.botStatus.cancelInvitation && !this.isAdminOrBot(operation.param2) && !this.isAdminOrBot(operation.param3)) {
                 this._cancelInvitatio(operation.param1, [operation.param3]);
             }
+            */
 
             if (this.stateStatus.acceptInvitation || this.isAdminOrBot(operation.param2)) {
                 this._acceptGroupInvitation(operation.param1);
             } else {
                 this._rejectGroupInvitation(operation.param1);
             }
-            return;
         }
-
-        // anna.debugConsoleLog()("[* " + operation.type + ": " + this.getOprationType(operation) + " ] ");
+        // this.getOprationType(operation);
     }
 
     async command(msg, reply) {
         if (this.messages.text !== null) {
-            if (msg.equali(this.messages.text)) {
+            if (this.messages.text.toUpperCase().trim() == msg.toUpperCase().trim()) {
                 if (typeof reply === 'function') {
                     let result = await reply();
                     if (typeof result !== 'undefined') {    // need to check?
@@ -186,10 +184,10 @@ class LINE extends Command {
             this.command(`.creator`, this.creator.bind(this));
             this.command('.anna', this.botcontent.bind(this));
 
-            this.command(`cancelInvitation ${payload}`, this.OnOff.bind(this));
+            // this.command(`cancelInvitation ${payload}`, this.OnOff.bind(this));
             this.command(`acceptInvitation ${payload}`, this.OnOff.bind(this));
             this.command(`antikick ${payload}`, this.OnOff.bind(this));
-            this.command(`kick ${payload}`, this.OnOff.bind(this));
+            this.command(`autoKick ${payload}`, this.OnOff.bind(this));
             this.command(`disableQrcode ${payload}`, this.OnOff.bind(this));
 
             this.command(`.left ${payload}`, this.leftGroupByName.bind(this));

