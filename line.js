@@ -25,15 +25,15 @@ const _line = module.exports = {
         require("./express.js").app.post("/linebot/", _line.bot.parser());
     },
     async alphatbotInit() {
-        _line.abot = new linebotAlphat(config.alphatBot.auth['uf0073964d53b22f4f404a8fb8f7a9e3e']);
+        _line.abot = new linebotAlphat(config.alphatBot.auth['ub926d3162aab1d3fbf975d2c56be69aa']);
         _line.abot.LINE.groupStatus = config.alphatBot.groupStatus;
-        config.alphatBot.auth['u33a9a527c6ac1b24e0e4e35dde60c79d'].authToken = _line.abot.client.authToken;
+        config.alphatBot.auth['ub926d3162aab1d3fbf975d2c56be69aa'].authToken = _line.abot.client.authToken;
 
         // await sleep(1000);
 
         _line.bbot = new linebotAlphat2(config.alphatBot.auth['u33a9a527c6ac1b24e0e4e35dde60c79d']);
         _line.bbot.LINE.groupStatus = config.alphatBot.groupStatus;
-        config.alphatBot.auth['uf0073964d53b22f4f404a8fb8f7a9e3e'].authToken = _line.bbot.client.authToken;
+        config.alphatBot.auth['u33a9a527c6ac1b24e0e4e35dde60c79d'].authToken = _line.bbot.client.authToken;
 
         // check cfg
         const checkAbotConfig = async (oldcfg) => {
