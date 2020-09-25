@@ -70,6 +70,7 @@ class LineConnect extends LineAPI {
                     resolve(null);
                 } else {
                     config.chanToken = result.channelAccessToken;
+                    // this._client.getProfile().then(console.log);
                     this._client.getLastOpRevision((err, result) => {
                         let xrx = result.toString().split(" ");
                         this.revision = xrx[0].toString() - 1;

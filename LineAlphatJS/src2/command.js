@@ -18,8 +18,8 @@ class Command extends LineAPI {
     }
 
     async getProfile() {
-        let { displayName } = await this._myProfile();
-        return `${displayName}\n${this.botmid || "null"}`;
+        let { mid, displayName } = await this._myProfile();
+        return `${displayName}\n${mid || "null"}`;
     }
 
     async getGroups() {

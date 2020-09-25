@@ -35,7 +35,7 @@ class LINE extends Command {
     }
 
     get myBot() {
-        const bot = ['u33a9a527c6ac1b24e0e4e35dde60c79d', 'uf0073964d53b22f4f404a8fb8f7a9e3e'];
+        const bot = ['u33a9a527c6ac1b24e0e4e35dde60c79d', 'ub926d3162aab1d3fbf975d2c56be69aa'];
         return bot;
     }
     get myAdmin() {

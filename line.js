@@ -51,7 +51,7 @@ const _line = module.exports = {
     },
 
     botPush(userId, msg, type = "") {
-        if (!config.isLocalHost) {
+        if (!config.isLocalHost && userId != "") {
             _line.bot.push(userId, msg).then(function (result) {
                 if (config.switchVar.logLineBotPush) {
                     // log to dropbox
