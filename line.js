@@ -3,6 +3,7 @@
 const config = require("./config.js");
 const linebot = require("linebot");
 const linebotAlphat = require("./LineAlphatJS/src/bot.js");
+const linebotAlphat2 = require("./LineAlphatJS/srcs/bot.js");
 
 class LineMessage {
     constructor(rawData) {
@@ -13,6 +14,7 @@ class LineMessage {
 const _line = module.exports = {
     bot: null,
     abot: null,
+    bbot: null,
 
     init() {
         _line.devbotInit();
@@ -23,8 +25,11 @@ const _line = module.exports = {
         require("./express.js").app.post("/linebot/", _line.bot.parser());
     },
     alphatbotInit() {
-        // let auth = Object.assign({ authToken: '', certificate: '', email: '', password: '' }, config.alphatBot);
         _line.abot = linebotAlphat(config.alphatBot.auth['uf0073964d53b22f4f404a8fb8f7a9e3e']);
+        _line.bbot = linebotAlphat2(config.alphatBot.auth['u33a9a527c6ac1b24e0e4e35dde60c79d']);
+
+        _line.abot.LINE.groupStatus = config.alphatBot.groupStatus;
+        _line.bbot.LINE.groupStatus = config.alphatBot.groupStatus;
     },
 
     botPush(userId, msg, type = "") {
