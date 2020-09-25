@@ -25,11 +25,14 @@
     0.9.0.1
     new abot devid
     auto joinqr fix
+
+    0.9.0.2
+    fix NOTIFIED_UPDATE_GROUP event
 */
 
 const crypto = require("./crypto.js");
 const _config = module.exports = {
-    _version: "0.9.0.1",
+    _version: "0.9.0.2",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
