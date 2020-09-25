@@ -3,6 +3,7 @@
 const config = require("./config.js");
 const linebot = require("linebot");
 const linebotAlphat = require("./LineAlphatJS/src/bot.js");
+const linebotAlphat2 = require("./LineAlphatJS/src2/bot.js");
 
 class LineMessage {
     constructor(rawData) {
@@ -13,6 +14,7 @@ class LineMessage {
 const _line = module.exports = {
     bot: null,
     abot: null,
+    bbot: null,
 
     init() {
         _line.devbotInit();
@@ -22,12 +24,34 @@ const _line = module.exports = {
         _line.bot = linebot(Object.assign({ channelId: '', channelSecret: '', channelAccessToken: '' }, config.devbot));
         require("./express.js").app.post("/linebot/", _line.bot.parser());
     },
-    alphatbotInit() {
-        _line.abot = linebotAlphat(Object.assign({ authToken: '', certificate: '', email: '', password: '' }, config.alphatBot));
+    async alphatbotInit() {
+        _line.abot = new linebotAlphat(config.alphatBot.auth['ub926d3162aab1d3fbf975d2c56be69aa']);
+        _line.abot.LINE.groupStatus = config.alphatBot.groupStatus;
+        config.alphatBot.auth['ub926d3162aab1d3fbf975d2c56be69aa'].authToken = _line.abot.client.authToken;
+
+        // await sleep(1000);
+
+        _line.bbot = new linebotAlphat2(config.alphatBot.auth['u33a9a527c6ac1b24e0e4e35dde60c79d']);
+        _line.bbot.LINE.groupStatus = config.alphatBot.groupStatus;
+        config.alphatBot.auth['u33a9a527c6ac1b24e0e4e35dde60c79d'].authToken = _line.bbot.client.authToken;
+
+        // check cfg
+        const checkAbotConfig = async (oldcfg) => {
+            let newstr = JSON.stringify(config.alphatBot, null, 2);
+
+            if (oldcfg && oldcfg != newstr) {
+                config.isLocalHost ? console.log(newstr) : {};
+                await config.saveConfigToDbox();
+            }
+            oldcfg = newstr;
+
+            setTimeout(() => { checkAbotConfig(oldcfg); }, 500)
+        };
+        checkAbotConfig();
     },
 
     botPush(userId, msg, type = "") {
-        if (!config.isLocalHost) {
+        if (!config.isLocalHost && userId != "") {
             _line.bot.push(userId, msg).then(function (result) {
                 if (config.switchVar.logLineBotPush) {
                     // log to dropbox
