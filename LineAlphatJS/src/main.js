@@ -275,7 +275,7 @@ class LINE extends Command {
     }
 
     async pushall(msg) {
-        let groups = await line.abot._getGroupsJoined();;
+        let groups = await this._getGroupsJoined();;
         for (let i in groups) {
             let group = groups[i];
             let message = new Message();

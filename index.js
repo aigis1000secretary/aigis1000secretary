@@ -283,7 +283,7 @@ const twitterBotOn = function () {
             }
 
             // get all announce target
-            let aIDs = await line.abot._getGroupsJoined();
+            let aIDs = await line.abot.LINE._getGroupsJoined();
             for (let aid of aIDs) {
                 // // check announce switch
                 // if (!groupDatabase.data[i].alarm) continue;
@@ -294,7 +294,7 @@ const twitterBotOn = function () {
                 //     continue;
                 // }
 
-                line.abot.push(aid, text);
+                line.abot.LINE.push(aid, text);
             }
 
             // image to dropbox
