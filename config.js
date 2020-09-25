@@ -12,6 +12,16 @@
 /*
     // commit 
     >> feature/0.8.8/abotUpgrade
+    var/method name fix
+    command fix
+    bot status upgrade
+    new abot init
+    double abot init
+    change reply logic
+    run test
+    run test fix
+    update abot id
+
 */
 
 const crypto = require("./crypto.js");
