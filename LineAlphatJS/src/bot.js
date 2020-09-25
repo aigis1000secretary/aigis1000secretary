@@ -1,28 +1,34 @@
 const LineConnect = require('./connect');
-let line = require('./main.js');
-let LINE = new line();
+const line = require('./main.js');
 
-function createBot(auth) {
-    let client = new LineConnect(auth);
+class bot {
+    constructor(auth) {
+        this.LINE = new line();
+        this.client = new LineConnect(auth);
 
-    client.startx().then(async (res) => {
+        this.client.startx().then(async (res) => {
+
+            let { mid } = await this.client._client.getProfile();
+            console.log(mid);
+            this.LINE.botmid = mid;
 
         while (true) {
             try {
-                ops = await client.fetchOps(res.operation.revision);
-            } catch (error) {
-                console.log('error', error)
-            }
+                    let ops = await this.client.fetchOps(res.operation.revision);
             for (let op in ops) {
                 if (ops[op].revision.toString() != -1) {
                     res.operation.revision = ops[op].revision;
-                    LINE.poll(ops[op])
+                            // console.log(`\n`);
+                            // console.log(ops[op]);
+                            this.LINE.poll(ops[op])
                 }
             }
+                } catch (error) {
+                    console.log('error', error)
+                }
         }
     });
-
-    return LINE;
 }
-module.exports = createBot;
+}
 
+module.exports = bot;

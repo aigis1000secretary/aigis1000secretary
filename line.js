@@ -23,7 +23,8 @@ const _line = module.exports = {
         require("./express.js").app.post("/linebot/", _line.bot.parser());
     },
     alphatbotInit() {
-        _line.abot = linebotAlphat(Object.assign({ authToken: '', certificate: '', email: '', password: '' }, config.alphatBot));
+        // let auth = Object.assign({ authToken: '', certificate: '', email: '', password: '' }, config.alphatBot);
+        _line.abot = linebotAlphat(config.alphatBot.auth['uf0073964d53b22f4f404a8fb8f7a9e3e']);
     },
 
     botPush(userId, msg, type = "") {
