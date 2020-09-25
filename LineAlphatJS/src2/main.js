@@ -13,9 +13,9 @@ class LINE extends Command {
 
         this.groupStatus = {
             'null': {
-            antikick: 0,    // anti non-admin kick someone
-            autoKick: 0,        // kick kicker
-            disableQrcode: 0, // auto disable QRcode
+                antikick: 0,    // anti non-admin kick someone
+                autoKick: 0,        // kick kicker
+                disableQrcode: 0, // auto disable QRcode
             }
         };
         this.groupSetting = function (gid) {
@@ -102,7 +102,7 @@ class LINE extends Command {
 
                     if (this.groupSetting(group).autoKick) {
                         this._kickMember(group, [kicker]);
-                }
+                    }
                 }
             }
         }
@@ -175,10 +175,9 @@ class LINE extends Command {
         let receiver = messages.to;
         let sender = messages._from;
 
-        this.command('Hello', ['Hi', 'who is this?']);
-        this.command('who is bot', this.getProfile.bind(this));
-
         if (this.isAdminOrBot(sender)) {
+            this.command('Hello', ['Hi', 'who is this?']);
+            this.command('who is bot', this.getProfile.bind(this));
 
             this.command('.status', this.getStatus.bind(this));
             this.command('.speed', this.getSpeed.bind(this));
