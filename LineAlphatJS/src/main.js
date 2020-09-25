@@ -76,12 +76,21 @@ class LINE extends Command {
 
         // 'NOTIFIED_UPDATE_GROUP' : 11,
         if (operation.type == OpType['NOTIFIED_UPDATE_GROUP']) {
-            if (!this.isAdminOrBot(operation.param2) && this.groupSetting(group).disableQrcode) {
+            let group = operation.param1;
+            let user = operation.param2;
+            let type = operation.param3;
+
+            console.log("[* " + operation.type + ": " + this.getOprationType(operation) + " ] " +
+                group + " : " + user +
+                type == 1 ? ' change group name.' :
+                type == 4 ? ' change QR code status.' : ' Unknown action.');
+
+            if (!this.isAdminOrBot(user) && this.groupSetting(group).disableQrcode) {
                 // kick who enable QRcode
                 if (this.groupSetting(group).autoKick) {
-                    this._kickMember(operation.param1, [operation.param2]);
+                    this._kickMember(group, [user]);
                 }
-                this.messages.to = operation.param1;
+                this.messages.to = group;
                 this.qrOpenClose(); // disable QRcode
             }
         }
