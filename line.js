@@ -72,10 +72,10 @@ const _line = module.exports = {
     // },
 
     abotPush(userId, msg) {
-        _line.abot.push(userId, msg);
+        _line.abot.LINE.push(userId, msg);
     },
     abotPushLog(msg) {
-        _line.abot.push(config.abotLogger, msg);
+        _line.abot.LINE.push(config.abotLogger, msg);
     },
 
 
