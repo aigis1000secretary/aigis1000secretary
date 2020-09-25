@@ -118,13 +118,17 @@ class Command extends LineAPI {
     }
 
     OnOff() {
-        if (this.isAdminOrBot(this.messages._from)) {
+        let _from = this.messages._from;
+        let to = this.messages.to;
+
+        if (this.isAdminOrBot(_from)) {
             let [actions, status] = this.messages.text.split(' ');
-            const action = actions.toLowerCase();
-            if (status) {
-                this.stateStatus[action] = status.toLowerCase() == 'on' ? 1 : 0;
+            let cfg = (to[0] == 'c') ? this.groupSetting(to) : this.botStatus;
+
+            if (status && Object.keys(cfg).includes(actions)) {
+                cfg[actions] = status.toLowerCase() == 'on' ? 1 : 0;
             }
-            this._sendMessage(this.messages, `Status: \n${JSON.stringify(this.stateStatus, null, 4)}`);
+            this._sendMessage(this.messages, `Status: \n${JSON.stringify(cfg, null, 2)}`);
         } else {
             this._sendMessage(this.messages, `You Are Not Admin`);
         }
@@ -188,6 +192,25 @@ class Command extends LineAPI {
         if (groupIndex != -1) {
             this.checkReader.splice(groupIndex, 1);
         }
+    }
+
+    async getStatus() {
+        let _from = this.messages._from;
+        let to = this.messages.to;
+
+        if (this.isAdminOrBot(_from)) {
+            let [actions, status] = this.messages.text.split(' ');
+            const action = actions.toLowerCase();
+            if (to[0] == 'c') {
+                this._sendMessage(this.messages, `Group Status: ${JSON.stringify(this.groupSetting(to), null, 2)}`);
+            } else {
+                this._sendMessage(this.messages, `Bot Status: ${JSON.stringify(this.botStatus, null, 2)}`);
+            }
+        } else {
+            this._sendMessage(this.messages, `You Are Not Admin`);
+        }
+
+        return;
     }
 
     async getSpeed() {

@@ -151,8 +151,18 @@ class LineAPI {
                             this.setTHttpClient(this.options);
                             this._authConn();
                             this._client.pinCode = success.pinCode;
-                            console.info("\n\n=============================\nEnter This Pincode => " + success.pinCode + "\nto your mobile phone in 2 minutes\n=============================");
+                            
+                            let pinCodeString =
+                                "\n\n" +
+                                "=============================\n" +
+                                `${id}\n` +
+                                `Enter This Pincode => ${success.pinCode}\n` +
+                                "to your mobile phone in 2 minutes\n" +
+                                "=============================";
+
+                            console.info(pinCodeString);
                             require('../../line.js').botPush(require('../../config.js').alphatBot.botId, "Enter This Pincode => " + success.pinCode + "\nto your mobile phone in 2 minutes");
+                            
                             this._checkLoginResultType(success.type, success);
                             reqxy.type = 1;
                             this._loginWithVerifier((verifierResult) => {
@@ -166,7 +176,6 @@ class LineAPI {
                     } catch (error) {
                         console.log('error');
                         console.log(error);
-                        reject(error);
                     }
                 })
             })

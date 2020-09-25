@@ -1,18 +1,28 @@
 const Command = require('./command');
 const config = require('./config');
 const { Message, OpType, Location, Profile } = require('../curve-thrift/line_types');
-const anna = require("../../anna.js");
 
 class LINE extends Command {
     constructor() {
         super();
         this.checkReader = [];
-        this.stateStatus = {
-            cancelInvitation: 0,
-            acceptInvitation: 1,
+        this.botStatus = {
+            // cancelInvitation: 0,
+            acceptInvitation: 1,    // auto join group
+        };
+
+        this.groupStatus = {
+            'null': {
             antikick: 0,    // anti non-admin kick someone
             autoKick: 0,        // kick kicker
             disableQrcode: 0, // auto disable QRcode
+            }
+        };
+        this.groupSetting = function (gid) {
+            if (!Object.keys(this.groupStatus).includes(gid)) {
+                this.groupStatus[gid] = this.groupStatus['null'];
+            }
+            return this.groupStatus[gid];
         };
         this.messages = new Message();
         this.payload;
@@ -57,9 +67,6 @@ class LINE extends Command {
     poll(operation) {
         // 'SEND_MESSAGE' : 25, 'RECEIVE_MESSAGE' : 26,
         if (operation.type == OpType['SEND_MESSAGE'] || operation.type == OpType['RECEIVE_MESSAGE']) {
-            anna.debugConsoleLog()("[* " + operation.type + ": " + this.getOprationType(operation) + " ] " +
-                operation.message._from + " -> " + operation.message.to + " : " + operation.message.text);
-
             let message = new Message(operation.message);
             message.to = (operation.message.to === this.botmid) ? operation.message._from : operation.message.to;
             Object.assign(message, { ct: operation.createdTime.toString() });
@@ -69,9 +76,9 @@ class LINE extends Command {
 
         // 'NOTIFIED_UPDATE_GROUP' : 11,
         if (operation.type == OpType['NOTIFIED_UPDATE_GROUP']) {
-            if (!this.isAdminOrBot(operation.param2) && this.stateStatus.disableQrcode) {
+            if (!this.isAdminOrBot(operation.param2) && this.groupSetting(group).disableQrcode) {
                 // kick who enable QRcode
-                if (this.stateStatus.autoKick) {
+                if (this.groupSetting(group).autoKick) {
                     this._kickMember(operation.param1, [operation.param2]);
                 }
                 this.messages.to = operation.param1;
@@ -85,19 +92,17 @@ class LINE extends Command {
             // param1 = group id
             // param2 = who kick someone
             // param3 = 'someone'
-            anna.debugConsoleLog()("[* " + operation.type + ": " + this.getOprationType(operation) + " ] " +
-                operation.param1 + " : " + operation.param2 + " kick " + operation.param3);
+            let group = operation.param1;
+            let kicker = operation.param2;
+            let kicked = operation.param3;
 
-            if (this.stateStatus.antikick) {
-                if (this.isAdminOrBot(operation.param3)) {
-                    this._invite(operation.param1, [operation.param3]);
-                }
-                if (!this.isAdminOrBot(operation.param2)) {
-                    this._invite(operation.param1, [operation.param3]);
-                }
+            if (this.groupSetting(group).antiKick) {
+                if (!this.isAdminOrBot(kicker)) {
+                    this._invite(group, [kicked]);
 
-                if (!this.isAdminOrBot(operation.param2) && this.stateStatus.autoKick) {
-                    this._kickMember(operation.param1, [operation.param2]);
+                    if (this.groupSetting(group).autoKick) {
+                        this._kickMember(group, [kicker]);
+                }
                 }
             }
         }
@@ -134,7 +139,7 @@ class LINE extends Command {
             }
             */
 
-            if (this.stateStatus.acceptInvitation || this.isAdminOrBot(operation.param2)) {
+            if (this.botStatus.acceptInvitation || this.isAdminOrBot(operation.param2)) {
                 this._acceptGroupInvitation(operation.param1);
             } else {
                 this._rejectGroupInvitation(operation.param1);
@@ -174,7 +179,8 @@ class LINE extends Command {
         this.command('who is bot', this.getProfile.bind(this));
 
         if (this.isAdminOrBot(sender)) {
-            this.command('.status', `Your Status: ${JSON.stringify(this.stateStatus, null, 2)}`);
+
+            this.command('.status', this.getStatus.bind(this));
             this.command('.speed', this.getSpeed.bind(this));
             this.command('.kernel', this.checkKernel.bind(this));   // only for Linux
             this.command(`.set`, this.setReader.bind(this));
