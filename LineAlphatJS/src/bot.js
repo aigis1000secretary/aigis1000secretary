@@ -26,29 +26,3 @@ function createBot(auth) {
 }
 module.exports = createBot;
 
-
-
-
-
-
-String.prototype.equali = function (s1) {
-    let source = this;
-    if (!s1) s1 = "";
-    return (source.toUpperCase().trim() == s1.toUpperCase().trim());
-}
-
-// const fs = require("fs");
-// global.logToFile = function (name, data) {
-//     let dateNow = new Date(Date.now());
-//     let path = "./logs/" + name + "_" +
-//         dateNow.getFullYear().toString().padStart(4, "0") + "-" +
-//         (dateNow.getMonth() + 1).toString().padStart(2, "0") + "-" +
-//         dateNow.getDate().toString().padStart(2, "0") + "-" +
-//         dateNow.getHours().toString().padStart(2, "0") +
-//         dateNow.getMinutes().toString().padStart(2, "0") +
-//         dateNow.getSeconds().toString().padStart(2, "0") +
-//         dateNow.getMilliseconds().toString().padStart(4, "0") + ".log";
-
-//     let binary = Buffer.from(JSON.stringify(data, null, 4))
-//     fs.writeFileSync(path, binary);
-// }

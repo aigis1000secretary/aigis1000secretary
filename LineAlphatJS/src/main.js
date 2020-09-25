@@ -2,19 +2,16 @@ const Command = require('./command');
 const config = require('./config');
 const { Message, OpType, Location, Profile } = require('../curve-thrift/line_types');
 const anna = require("../../anna.js");
-const database = require("../../database.js");
-let lineidDatabase = database.lineidDatabase;
 
 class LINE extends Command {
     constructor() {
         super();
-        this.receiverID = '';
         this.checkReader = [];
         this.stateStatus = {
             cancelInvitation: 0,
             acceptInvitation: 1,
             antikick: 0,    // anti non-admin kick someone
-            kick: 0,        // kick kicker
+            autoKick: 0,        // kick kicker
             disableQrcode: 0, // auto disable QRcode
         };
         this.messages = new Message();
@@ -27,10 +24,8 @@ class LINE extends Command {
         }
     }
 
-
     get myBot() {
-        // const bot = [config.botmid, 'uf0073964d53b22f4f404a8fb8f7a9e3e'];
-        const bot = [config.botmid];
+        const bot = ['u33a9a527c6ac1b24e0e4e35dde60c79d', 'uf0073964d53b22f4f404a8fb8f7a9e3e'];
         return bot;
     }
     get myAdmin() {
@@ -49,9 +44,11 @@ class LINE extends Command {
     getOprationType(operations) {
         for (let key in OpType) {
             if (operations.type == OpType[key]) {
-                /*if (key !== 'NOTIFIED_UPDATE_PROFILE') {
+                /*
+                if (key !== 'NOTIFIED_UPDATE_PROFILE') {
                     console.info(`[* ${operations.type} ] ${key} `);
-                }*/
+                }
+                */
                 return key;
             }
         }
@@ -64,7 +61,7 @@ class LINE extends Command {
                 operation.message._from + " -> " + operation.message.to + " : " + operation.message.text);
 
             let message = new Message(operation.message);
-            this.receiverID = message.to = (operation.message.to === config.botmid) ? operation.message._from : operation.message.to;
+            message.to = (operation.message.to === this.botmid) ? operation.message._from : operation.message.to;
             Object.assign(message, { ct: operation.createdTime.toString() });
             if (this.isBot(operation.message._from)) this.textMessage(message);   // not from bot
             return;
@@ -74,7 +71,7 @@ class LINE extends Command {
         if (operation.type == OpType['NOTIFIED_UPDATE_GROUP']) {
             if (!this.isAdminOrBot(operation.param2) && this.stateStatus.disableQrcode) {
                 // kick who enable QRcode
-                if (this.stateStatus.kick) {
+                if (this.stateStatus.autoKick) {
                     this._kickMember(operation.param1, [operation.param2]);
                 }
                 this.messages.to = operation.param1;
@@ -100,7 +97,7 @@ class LINE extends Command {
                     this._invite(operation.param1, [operation.param3]);
                 }
 
-                if (!this.isAdminOrBot(operation.param2) && this.stateStatus.kick) {
+                if (!this.isAdminOrBot(operation.param2) && this.stateStatus.autoKick) {
                     this._kickMember(operation.param1, [operation.param2]);
                 }
             }
@@ -249,7 +246,7 @@ class LINE extends Command {
 
     async debug() {
         let message1 = new Message();
-        message1._from = config.botmid;
+        message1._from = this.botmid;
         message1.to = 'u33a9a527c6ac1b24e0e4e35dde60c79d';
         message1.text = "debug test";
         await this._client.sendMessage(0, message1);
@@ -258,7 +255,7 @@ class LINE extends Command {
 
     async push(userId, msg) {
         let message = new Message();
-        message._from = config.botmid;
+        message._from = this.botmid;
         message.to = userId;
         message.text = msg;
         await this._client.sendMessage(0, message);
@@ -270,7 +267,7 @@ class LINE extends Command {
         for (let i in groups) {
             let group = groups[i];
             let message = new Message();
-            message._from = config.botmid;
+            message._from = this.botmid;
             message.to = group;
             message.text = msg;
             await this._client.sendMessage(0, message);

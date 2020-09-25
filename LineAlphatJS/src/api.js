@@ -33,6 +33,7 @@ class LineAPI {
         this.axy = false;
         this.gdLine = "http://gd2.line.naver.jp";
         this.gdLine2 = "http://gf.line.naver.jp";
+        this.botmid = '';
     }
 
     setTHttpClient(options = {

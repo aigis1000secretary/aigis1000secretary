@@ -61,17 +61,18 @@ class LineConnect extends LineAPI {
         let res = null;
         if (this.authToken) {
             res = await this.authTokenLogin();
-        } else if (this.password && this.email) {
+        }
+
+        if (res == null && this.password && this.email) {
             res = await this.emailLogin();
-        } else {
+        }
+
+        if (res == null) {
             res = await this.manualLogin();
         }
 
         if (res != null) {
-            let { mid } = await this._client.getProfile();
-            if (Array.isArray(config.botmid)) { config.botmid.push(mid); }
-            else { config.botmid = [mid]; }
-            console.info(`=======BOT RUNNING======\n`);
+            console.info(`=======BOT RUNNING======`);
         }
         return res;
     }

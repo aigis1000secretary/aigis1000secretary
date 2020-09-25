@@ -19,7 +19,7 @@ class Command extends LineAPI {
 
     async getProfile() {
         let { displayName } = await this._myProfile();
-        return displayName;
+        return `${displayName}\n${this.botmid || "null"}`;
     }
 
     async getGroups() {
@@ -377,7 +377,7 @@ class Command extends LineAPI {
 
     async kickAll() {
         let groupID;
-        if (this.stateStatus.kick == 1 && this.isAdminOrBot(this.messages._from)) {
+        if (this.stateStatus.autoKick == 1 && this.isAdminOrBot(this.messages._from)) {
             let target = this.messages.to;
             if (this.payload.length > 0) {
                 let [groups] = await this._findGroupByName(this.payload.join(' '));
