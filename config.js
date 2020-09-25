@@ -11,47 +11,7 @@
 
 /*
     // commit 
-    >> feature/0.8.7/twitterApiRebuild
-    new twitter api
-    new method for new api
-    new stream listener
-
-    0.8.8.1
-    new twitter api online test bug fixed
-    
-    0.8.8.2
-    dbox listdir api exception handling
-
-    0.8.8.3
-    twitter bot img to dbox
-
-    0.8.8.4
-    delimg command upgrade
-
-    0.8.8.5
-    twitter api download origin image
-    twitter update manual script
-
-    0.8.8.6
-    twitter api ids bug fix(change by screen name)
-    anna add dice command
-
-    0.8.8.7
-    image uploader script upgrade
-    fix check image logic
-    local script deprecation
-
-    0.8.8.8
-    dbox upload api retry & show log
-
-    0.8.8.9
-    config switch var fix
-
-    0.8.8.10
-    getTweetImages error 429 too_many_requests fix
-
-    0.8.8.11
-    abot code format
+    >> feature/0.8.8/abotUpgrade
 */
 
 const crypto = require("./crypto.js");
