@@ -3,7 +3,7 @@
 const config = require("./config.js");
 const linebot = require("linebot");
 const linebotAlphat = require("./LineAlphatJS/src/bot.js");
-const linebotAlphat2 = require("./LineAlphatJS/srcs/bot.js");
+const linebotAlphat2 = require("./LineAlphatJS/src2/bot.js");
 
 class LineMessage {
     constructor(rawData) {
@@ -24,12 +24,30 @@ const _line = module.exports = {
         _line.bot = linebot(Object.assign({ channelId: '', channelSecret: '', channelAccessToken: '' }, config.devbot));
         require("./express.js").app.post("/linebot/", _line.bot.parser());
     },
-    alphatbotInit() {
-        _line.abot = linebotAlphat(config.alphatBot.auth['uf0073964d53b22f4f404a8fb8f7a9e3e']);
-        _line.bbot = linebotAlphat2(config.alphatBot.auth['u33a9a527c6ac1b24e0e4e35dde60c79d']);
-
+    async alphatbotInit() {
+        _line.abot = new linebotAlphat(config.alphatBot.auth['uf0073964d53b22f4f404a8fb8f7a9e3e']);
         _line.abot.LINE.groupStatus = config.alphatBot.groupStatus;
+        config.alphatBot.auth['u33a9a527c6ac1b24e0e4e35dde60c79d'].authToken = _line.abot.client.authToken;
+
+        // await sleep(1000);
+
+        _line.bbot = new linebotAlphat2(config.alphatBot.auth['u33a9a527c6ac1b24e0e4e35dde60c79d']);
         _line.bbot.LINE.groupStatus = config.alphatBot.groupStatus;
+        config.alphatBot.auth['uf0073964d53b22f4f404a8fb8f7a9e3e'].authToken = _line.bbot.client.authToken;
+
+        // check cfg
+        const checkAbotConfig = async (oldcfg) => {
+            let newstr = JSON.stringify(config.alphatBot, null, 2);
+
+            if (oldcfg && oldcfg != newstr) {
+                config.isLocalHost ? console.log(newstr) : {};
+                await config.saveConfigToDbox();
+            }
+            oldcfg = newstr;
+
+            setTimeout(() => { checkAbotConfig(oldcfg); }, 500)
+        };
+        checkAbotConfig();
     },
 
     botPush(userId, msg, type = "") {
