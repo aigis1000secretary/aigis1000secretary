@@ -120,7 +120,7 @@ const lineBotOn = function () {
                     return;
                 } else {
                     // not found
-                    abotPushLog("Search fail: " + msg);
+                    // abotPushLog("Search fail: " + msg);
                     if (msg.length == 1) {
                         replyFunc("王子太短了，找不到...");
                     } else {
@@ -232,7 +232,7 @@ const discordBotOn = function () {
                 return;
             } else {
                 // not found
-                abotPushLog("Search fail: " + msg);
+                // abotPushLog("Search fail: " + msg);
                 if (msg.length == 1) {
                     replyFunc("王子太短了，找不到...");
                 } else {
@@ -282,20 +282,20 @@ const twitterBotOn = function () {
 
             }
 
-            // get all announce target
-            let aIDs = await line.abot.LINE._getGroupsJoined();
-            for (let aid of aIDs) {
-                // // check announce switch
-                // if (!groupDatabase.data[i].alarm) continue;
-                // // 14 days no ant msg idle group	3 * 24 * 60 * 60 * 1000
-                // if (Date.now() - groupDatabase.data[i].timestamp > 259200000) {
-                //     groupDatabase.data[i].alarm = false;
-                //     groupDatabase.uploadTask();
-                //     continue;
-                // }
+            // // get all announce target
+            // let aIDs = await line.abot.LINE._getGroupsJoined();
+            // for (let aid of aIDs) {
+            //     // // check announce switch
+            //     // if (!groupDatabase.data[i].alarm) continue;
+            //     // // 14 days no ant msg idle group	3 * 24 * 60 * 60 * 1000
+            //     // if (Date.now() - groupDatabase.data[i].timestamp > 259200000) {
+            //     //     groupDatabase.data[i].alarm = false;
+            //     //     groupDatabase.uploadTask();
+            //     //     continue;
+            //     // }
 
-                line.abot.LINE.push(aid, text);
-            }
+            //     line.abot.LINE.push(aid, text);
+            // }
 
             // image to dropbox
             twitter.data.getTweetImages(tweet_data);
@@ -304,7 +304,7 @@ const twitterBotOn = function () {
             if (tweet_data.includes &&
                 Array.isArray(tweet_data.includes.media) &&
                 tweet_data.includes.media.length > 0) {
-                abotPushLog(`https://twitter.com/${tweet_data.includes.users[0].username}/status/${tweet_data.data.id}`)
+                // abotPushLog(`https://twitter.com/${tweet_data.includes.users[0].username}/status/${tweet_data.data.id}`)
             }
         }
     }
@@ -329,7 +329,7 @@ const timerBotOn = function () {
             str += (nowDate.getMinutes() + ":").padStart(3, '0');
             str += (nowDate.getSeconds() + "").padStart(2, '0');
 
-            abotPushLog(str);
+            // abotPushLog(str);
         }
         setTimeout(timer, 60 * 1000, new Date(Date.now()));// pre min
     };

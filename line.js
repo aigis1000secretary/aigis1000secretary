@@ -18,7 +18,7 @@ const _line = module.exports = {
 
     init() {
         _line.devbotInit();
-        _line.alphatbotInit();
+        // _line.alphatbotInit();
     },
     devbotInit() {
         _line.bot = linebot(Object.assign({ channelId: '', channelSecret: '', channelAccessToken: '' }, config.devbot));

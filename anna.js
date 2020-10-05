@@ -455,10 +455,10 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
         return "刪除錯誤: 空目標!";
 
     } else if (_isAdmin && (command == "ABOTINIT")) {
-        line.alphatbotInit();
+        // line.alphatbotInit();
         return "";
     } else if (command.indexOf("://LINE.ME/R/") != -1) {
-        line.abot.LINE.joinQr(msgs[0].trim());
+        // line.abot.LINE.joinQr(msgs[0].trim());
         return "";
     } else if (command.indexOf("HTTP") == 0) {
         let url = command;
@@ -789,7 +789,7 @@ const charaDataCrawler = function (urlPath, sourceId) {
             // 新增角色資料
             let msg = charaDatabase.addData(newData);
             if (msg != "") {
-                abotPushLog(msg);
+                // abotPushLog(msg);
             }
             resolve();
         });
@@ -1159,7 +1159,7 @@ const debugLog = _anna.debugLog = function () {
         if (config.switchVar.debugPush && !config.isLocalHost) {
             return (msg) => {
                 console.log(msg);
-                abotPushLog(msg);
+                // abotPushLog(msg);
             };
         } else {
             return console.log;
