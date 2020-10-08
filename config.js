@@ -34,11 +34,14 @@
 
     0.9.0.4
     abot method call fixed
+
+    0.9.0.5
+    abot invite reaction bug, anti-ban fix
 */
 
 const crypto = require("./crypto.js");
 const _config = module.exports = {
-    _version: "0.9.0.4",
+    _version: "0.9.0.5",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正

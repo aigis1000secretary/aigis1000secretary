@@ -7,7 +7,7 @@ class LINE extends Command {
         super(auth);
         this.checkReader = [];
         this.botStatus = {
-            // cancelInvitation: 0,
+            cancelInvitation: 0,
             acceptInvitation: 1,    // auto join group
         };
 
@@ -67,14 +67,21 @@ class LINE extends Command {
     poll(operation) {
         // 'SEND_MESSAGE' : 25, 'RECEIVE_MESSAGE' : 26,
         if (operation.type == OpType['SEND_MESSAGE'] || operation.type == OpType['RECEIVE_MESSAGE']) {
+            let _from = operation.message._from;
+            let _to = operation.message.to;
+
             let message = new Message(operation.message);
-            message.to = (operation.message.to === this.botmid) ? operation.message._from : operation.message.to;
+            message.to = (_to === this.botmid) ? _from : _to;
             Object.assign(message, { ct: operation.createdTime.toString() });
-            // if (!this.isBot(operation.message._from))   // not from bot
-            this.textMessage(message);
+
+            // not from bot
+            if (!this.isBot(_from)) {
+                this.textMessage(message);
+            }
         }
 
         // 'NOTIFIED_UPDATE_GROUP' : 11,
+        // some change group status
         if (operation.type == OpType['NOTIFIED_UPDATE_GROUP']) {
             let group = operation.param1;
             let user = operation.param2;
@@ -85,6 +92,7 @@ class LINE extends Command {
                 type == 1 ? ' change group name.' :
                 type == 4 ? ' change QR code status.' : ' Unknown action.');
 
+            // check group set & admin
             if (!this.isAdminOrBot(user) && this.groupSetting(group).disableQrcode) {
                 // kick who enable QRcode
                 if (this.groupSetting(group).autoKick) {
@@ -139,19 +147,26 @@ class LINE extends Command {
         }
 
         // 'NOTIFIED_INVITE_INTO_GROUP' : 13,
-        if (operation.type == OpType['NOTIFIED_INVITE_INTO_GROUP']) { // diinvite
+        if (operation.type == OpType['NOTIFIED_INVITE_INTO_GROUP']) { // deinvite
+            // param1 = group id
+            // param2 = who kick someone
+            // param3 = 'someone'
+            let group = operation.param1;
+            let inviter = operation.param2;
+            let invited = operation.param3;
 
-            /*
             // cancel invitation
-            if (this.botStatus.cancelInvitation && !this.isAdminOrBot(operation.param2) && !this.isAdminOrBot(operation.param3)) {
-                this._cancelInvitatio(operation.param1, [operation.param3]);
+            if (this.botStatus.cancelInvitation && !this.isAdminOrBot(inviter) && !this.isAdminOrBot(invited)) {
+                this._cancelInvitatio(group, [invited]);
             }
-            */
 
-            if (this.botStatus.acceptInvitation || this.isAdminOrBot(operation.param2)) {
-                this._acceptGroupInvitation(operation.param1);
-            } else {
-                this._rejectGroupInvitation(operation.param1);
+            // invite to THIS bot
+            if (invited === this.botmid) {
+                if (this.botStatus.acceptInvitation || this.isAdminOrBot(inviter)) {
+                    this._acceptGroupInvitation(group);
+                } else {
+                    this._rejectGroupInvitation(group);
+                }
             }
         }
         // this.getOprationType(operation);
@@ -198,7 +213,7 @@ class LINE extends Command {
             this.command(`.creator`, this.creator.bind(this));
             this.command('.anna', this.botcontent.bind(this));
 
-            // this.command(`cancelInvitation ${payload}`, this.OnOff.bind(this));
+            this.command(`cancelInvitation ${payload}`, this.OnOff.bind(this));
             this.command(`acceptInvitation ${payload}`, this.OnOff.bind(this));
             this.command(`antikick ${payload}`, this.OnOff.bind(this));
             this.command(`autoKick ${payload}`, this.OnOff.bind(this));
