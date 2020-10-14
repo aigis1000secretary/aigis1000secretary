@@ -20,7 +20,8 @@ let _imgur = module.exports = {
         _imgur.IMGUR_REFRESH_TOKEN = config.imgur.IMGUR_REFRESH_TOKEN;
 
         // access token update
-        await _imgur.oauth2.token();
+        let code = null;
+        while (code == null) { code = await _imgur.oauth2.token().catch(async () => { await sleep(5000) }); }
 
         _imgur.database.images = [];
         _imgur.database.albums = [];
@@ -139,7 +140,8 @@ let _imgur = module.exports = {
 
             } catch (error) {
                 _imgur.IMGUR_ACCESS_TOKEN = "";
-                console.log("IMGUR_ACCESS_TOKEN update error!\n" + error)
+                console.log(`IMGUR_ACCESS_TOKEN update error ${error.statusCode}!`);
+                // console.log(error);
                 return null;
             }
         }

@@ -390,7 +390,18 @@ const replyAI = _anna.replyAI = async function (rawMsg, sourceId, userId) {
             }
 
         } else {
-            let imgArray = imgur.database.findImageData({ md5: arg1, tag: "NewImages" });
+            let imgArray = [];
+            if (/#\d+/.test(arg1)) {
+                imgArray = imgur.database.findImageData({ tag: "NewImages" });
+
+                let index = parseInt(/\d+/.exec(arg1).toString());
+                if (index >= imgArray.length) { return "index錯誤!"; }
+
+                imgArray = [imgArray[index]];
+            } else {
+                imgArray = imgur.database.findImageData({ md5: arg1, tag: "NewImages" });
+            }
+
             if (imgArray.length != 1) { return "md5錯誤! " + imgArray.length + " result!"; }
 
             if (arg2 != "undefined") {

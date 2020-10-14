@@ -1,12 +1,10 @@
 
 const fs = require("fs");
 const path = require("path");
-// const config = require("./config.js");
-const config = { isLocalHost: false };
+const config = require("./config.js");
 const anna = require("./anna.js");
 const dbox = require("./dbox.js");
 const imgur = require("./imgur.js");
-const { isLocalHost } = require("./config.js");
 const md5f = function (str) { return require('crypto').createHash('md5').update(str).digest('hex'); }
 
 let loaclPath = "C:/Users/HUANG/Dropbox/應用程式/aigis1000secretary";
@@ -19,7 +17,7 @@ const main = async function () {
     // // // for (let i in imgur.database.images) { await imgur.image.ImageDeletion(imgur.database.images[i].id); }
 
     // save database
-    console.log("== imgUploader.js ==");
+    console.log(config.isLocalHost ? "== imgUploaderLocal.js ==" : "== imgUploader.js ==");
 
     // get dropbox image list
     let pathArray = [];
@@ -85,6 +83,7 @@ const main = async function () {
             }
             // now no image in imgur, upload new
             await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
+            await sleep(20 * 1000);
             continue;
         }
 
@@ -135,7 +134,7 @@ const main = async function () {
 
     // annaWebHook("status");
     // anna.replyAI("status");
-    checkImages();
+    await checkImages();
     console.log("done!")
     return;
 };
@@ -247,8 +246,6 @@ const checkImages = async function () {
             });
         }
     }
-
-    console.log("done!")
 }
 
 module.exports = {
