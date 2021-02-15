@@ -1018,7 +1018,7 @@ const _anna = {
                 await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
 
                 let timeout = 40;
-                if (!config.isLocalHost) { await sleep(timeout * 1000); }
+                if (!_anna.isLocalHost) { await sleep(timeout * 1000); }
                 else { for (let i = timeout; i > 0; --i) { await sleep(1000); console.log(`await... @${i}`) }; }
                 continue;
             }
@@ -1045,7 +1045,7 @@ const _anna = {
                         await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
 
                         let timeout = 40;
-                        if (!config.isLocalHost) { await sleep(timeout * 1000); }
+                        if (!_anna.isLocalHost) { await sleep(timeout * 1000); }
                         else { for (let i = timeout; i > 0; --i) { await sleep(1000); console.log(`await... @${i}`) }; }
                     }
                 }
@@ -1068,7 +1068,7 @@ const _anna = {
                 await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
 
                 let timeout = 40;
-                if (!config.isLocalHost) { await sleep(timeout * 1000); }
+                if (!_anna.isLocalHost) { await sleep(timeout * 1000); }
                 else { for (let i = timeout; i > 0; --i) { await sleep(1000); console.log(`await... @${i}`) }; }
 
                 continue;
