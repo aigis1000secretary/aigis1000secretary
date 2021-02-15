@@ -179,7 +179,7 @@ module.exports = {
                 return _line.createImageMsg(msg.imageLink, msg.thumbnailLink);
 
             } else if (type == "option") {
-                return _line.createMsgButtons(title, labels, msgs);
+                return _line.createMsgButtons(msg.title, msg.labels, msg.msgs);
 
             }
         }
