@@ -1,108 +1,20 @@
 
 
-// ライブラリ読み込み
 const fs = require('fs');
 const path = require('path');
 
 const Twitter = require('twitter');
+
 const request = require("request");
 const util = require('util');
 const get = util.promisify(request.get);
-const post = util.promisify(request.post);
+// const post = util.promisify(request.post);
 
-// const crypto = require('crypto');
-const config = require("./config.js");
-const dbox = require("./dbox.js");
-
-
-
-
-const _twitter = module.exports = {
+const _twitter = {
+    oAuthConfig: null,
+    devLabel: null,
     bot: null,
     stream: null,
-    oAuthConfig: null,
-    init() {
-        // oauth認証に使う値
-        _twitter.oAuthConfig = {
-            consumer_key: config.twitterCfg.TWITTER_CONSUMER_KEY.trim(),
-            consumer_secret: config.twitterCfg.TWITTER_CONSUMER_SECRET.trim(),
-            token: config.twitterCfg.TWITTER_ACCESS_TOKEN.trim(),
-            token_secret: config.twitterCfg.TWITTER_ACCESS_TOKEN_SECRET.trim()
-        };
-        // Twitterオブジェクトの作成
-        let twitter_oauth = {
-            consumer_key: _twitter.oAuthConfig.consumer_key,
-            consumer_secret: _twitter.oAuthConfig.consumer_secret,
-            access_token_key: _twitter.oAuthConfig.token,
-            access_token_secret: _twitter.oAuthConfig.token_secret
-        }
-        _twitter.bot = new Twitter(twitter_oauth);
-        if (_twitter.stream != null) { _twitter.stream.destroy(); }
-    },
-
-    async listen(callback) {
-
-        // get target IDs
-        // let response = await _twitter.api.getFriendIDs("Aigis1000anna");
-        // _twitter.api.getStreamByIDs(response.ids, async (tweet) => {
-
-        let response = await _twitter.api.getFriendList("Aigis1000anna");
-        _twitter.api.getStreamByNames(response.names, async (tweet) => {
-            // check then callback
-
-            // RT除外
-            if (!tweet || !tweet.user || tweet.retweeted_status) { return; }
-
-            // log
-            if (config.switchVar.logStreamToFile) {
-                dbox.logToFile("twitter/", "litsen", tweet);
-            }
-
-            // 送信する情報を定義
-            try {
-                let tweet_data = await _twitter.api.getTweet(tweet.id_str);
-                if (tweet_data) { callback(tweet_data) };
-
-            } catch (e) {   // http error
-                console.log(JSON.stringify(e, null, 2));
-                return;
-            }
-        });
-    },
-
-    data: {
-        async getTweetImages(tweet_data) {
-            // image to dropbox
-            for (let i in tweet_data.includes.media) {
-                let media = tweet_data.includes.media[i];
-
-                if (media.type == "photo") {
-                    let tweetTime = new Date(Date.parse(tweet_data.data.created_at));
-                    let timeString = tweetTime.toISOString().replace(/-|:|\.\d+Z/g, "").replace("T", "_");
-                    let filename = `${tweet_data.includes.users[0].username}-${tweet_data.data.id}-${timeString}-img${parseInt(i) + 1}${path.parse(media.url).ext}`
-
-
-                    // request.get(media.url + ":orig", { encoding: 'binary' }, async (error, response, body) => {
-                    //     if (body) {
-                    //         fs.writeFileSync("./" + filename, body, { encoding: 'binary' });
-                    //         body = fs.readFileSync("./" + filename);
-                    //         await dbox.fileUpload("Images/NewImages/" + filename, body);
-                    //         fs.unlinkSync("./" + filename);
-                    //     }
-                    //     // if (error || !body) { return console.log(error); }
-                    // });
-
-                    const req = await get({ url: media.url + ":orig", encoding: 'binary' });
-                    if (req.body) {
-                        fs.writeFileSync("./" + filename, req.body, { encoding: 'binary' });
-                        let img = fs.readFileSync("./" + filename);
-                        await dbox.fileUpload("Images/NewImages/" + filename, img);
-                        fs.unlinkSync("./" + filename);
-                    }
-                }
-            }
-        }
-    },
 
     api: {
         async getTweet(id) {
@@ -124,40 +36,82 @@ const _twitter = module.exports = {
                 return null;
             }
         },
-        async getUserData({ userName, userID }) {
-            const endpointURL = new URL('https://api.twitter.com/1.1/users/lookup.json');
-            const params = {
-                screen_name: userName,
-                user_id: userID,
-                count: 1
-            };
 
-            const req = await get({ url: endpointURL, oauth: _twitter.oAuthConfig, qs: params, json: true });
+        // download tweet images & return filelist
+        async getTweetImages(tweet_data) {
+            let images = [];
+            // image to file
+            for (let i in tweet_data.includes.media) {
+                let media = tweet_data.includes.media[i];
 
-            if (req.body && !req.body.errors) {
-                return req.body[0];
-                // req.body[0].name
-                // req.body[0].id_str
-            } else {
-                console.log(req.body.errors)
-                console.log(`Cannot get user <${{ userName, userID }}> ID`);
-                throw new Error(`Cannot get user <${{ userName, userID }}> ID`);
+                if (media.type == "photo") {
+                    // build img info
+                    let tweetTime = new Date(Date.parse(tweet_data.data.created_at));
+                    let timeString = tweetTime.toISOString().replace(/-|:|\.\d+Z/g, "").replace("T", "_");
+                    let filename = `${tweet_data.includes.users[0].username}-${tweet_data.data.id}-${timeString}-img${parseInt(i) + 1}${path.parse(media.url).ext}`
+
+                    // download image
+                    // request.get(media.url + ":orig", { encoding: 'binary' }, async (error, response, body) => {
+                    //     if (body) {
+                    //         fs.writeFileSync("./" + filename, body, { encoding: 'binary' });
+                    //         body = fs.readFileSync("./" + filename);
+                    //         await dbox.fileUpload("Images/NewImages/" + filename, body);
+                    //         fs.unlinkSync("./" + filename);
+                    //     }
+                    //     // if (error || !body) { return console.log(error); }
+                    // });
+
+                    // download image to file
+                    const req = await get({ url: media.url + ":orig", encoding: 'binary' });
+                    if (req.body) {
+                        fs.writeFileSync("./" + filename, req.body, { encoding: 'binary' });
+                        images.push("./" + filename);
+
+                        // let img = fs.readFileSync("./" + filename);
+                        // await dbox.fileUpload("Images/NewImages/" + filename, img);
+                        // fs.unlinkSync("./" + filename);
+                    }
+                }
             }
+            return images;
         },
-        async getFriendIDs(screen_name) {
-            const endpointURL = new URL('https://api.twitter.com/1.1/friends/ids.json');
-            const params = { screen_name, stringify_ids: true };
 
-            const req = await get({ url: endpointURL, oauth: _twitter.oAuthConfig, qs: params, json: true });
+        // async getUserData({ userName, userID }) {
+        //     const endpointURL = new URL('https://api.twitter.com/1.1/users/lookup.json');
+        //     const params = {
+        //         screen_name: userName,
+        //         user_id: userID,
+        //         count: 1
+        //     };
 
-            if (req.body && !req.body.errors) {
-                return req.body;
-            } else {
-                console.log(req.body.errors)
-                console.log(`Cannot get user <${screen_name}>'s friends ID`);
-                throw new Error(`Cannot get user <${screen_name}>'s friends ID`);
-            }
-        },
+        //     const req = await get({ url: endpointURL, oauth: _twitter.oAuthConfig, qs: params, json: true });
+
+        //     if (req.body && !req.body.errors) {
+        //         return req.body[0];
+        //         // req.body[0].name
+        //         // req.body[0].id_str
+        //     } else {
+        //         console.log(req.body.errors)
+        //         console.log(`Cannot get user <${{ userName, userID }}> ID`);
+        //         throw new Error(`Cannot get user <${{ userName, userID }}> ID`);
+        //     }
+        // },
+
+        // async getFriendIDs(screen_name) {
+        //     const endpointURL = new URL('https://api.twitter.com/1.1/friends/ids.json');
+        //     const params = { screen_name, stringify_ids: true };
+
+        //     const req = await get({ url: endpointURL, oauth: _twitter.oAuthConfig, qs: params, json: true });
+
+        //     if (req.body && !req.body.errors) {
+        //         return req.body;
+        //     } else {
+        //         console.log(req.body.errors)
+        //         console.log(`Cannot get user <${screen_name}>'s friends ID`);
+        //         throw new Error(`Cannot get user <${screen_name}>'s friends ID`);
+        //     }
+        // },
+
         async getFriendList(screen_name) {
             const endpointURL = new URL('https://api.twitter.com/1.1/friends/list.json');
             const params = { screen_name, skip_status: true, include_user_entities: false };
@@ -174,29 +128,6 @@ const _twitter = module.exports = {
                 throw new Error(`Cannot get user <${screen_name}>'s friends Name`);
             }
         },
-
-        // async getUserTimeline(screen_name, max_id) {
-        //     const endpointURL = new URL('https://api.twitter.com/1.1/statuses/user_timeline.json');
-        //     const params = {
-        //         screen_name,
-        //         // since_id,
-        //         // count,
-        //         max_id,
-        //         trim_user: true,
-        //         // exclude_replies: true,
-        //         // include_rts: false
-        //     };
-
-        //     const req = await get({ url: endpointURL, oauth: _twitter.oAuthConfig, qs: params, json: true });
-
-        //     if (req.body && !req.body.errors) {
-        //         return req.body;
-        //     } else {
-        //         console.log(req.body.errors)
-        //         console.log(`Cannot get user <${screen_name}>'s timeline`);
-        //         throw new Error(`Cannot get user <${screen_name}>'s timeline`);
-        //     }
-        // },
 
         async getStreamByIDs(ids, callback) { _twitter.api.getStream({ follow: ids.join(',') }, callback); },
         async getStreamByNames(names, callback) { _twitter.api.getStream({ track: names.join(',') }, callback); },
@@ -240,183 +171,86 @@ const _twitter = module.exports = {
 
             _twitter.stream = stream;
         }
-    },
-
-
-    /*
-    // webhook crc
-    crc: {
-        // https://qiita.com/Fushihara/items/79913a5b933af15c5cf4
-        // CRC API
-        crcRegistWebhook() {
-            console.log("crcRegist");
-            // Registers a webhook URL / Generates a webhook_id
-            request.post({
-                url: `https://api.twitter.com/1.1/account_activity/all/${config.twitterCfg.devLabel}/webhooks.json`,
-            oauth: twitter_oauth,
-                headers: { "Content-type": "application/x-www-form-urlencoded" },
-            form: { url: config.twitterCfg.webhookUrl }
-        }, (error, response, body) => { console.log(body) });
-        },
-
-
-crcPostSubscriptions() {
-    console.log("crcPostSubscriptions");
-    request.post({
-        url: `https://api.twitter.com/1.1/account_activity/all/${config.twitterCfg.devLabel}/subscriptions.json`,
-        oauth: twitter_oauth,
-        headers: { "Content-type": "application/x-www-form-urlencoded" },
-    }, (error, response, body) => { if (error) console.log(error); else if (body) console.log(body); else console.log(response); });
-},
-crcGetSubscriptions() {
-    console.log("crcGetSubscriptions");
-    request.get({
-        url: `https://api.twitter.com/1.1/account_activity/all/${config.twitterCfg.devLabel}/subscriptions.json`,
-        oauth: twitter_oauth,
-        headers: { "Content-type": "application/x-www-form-urlencoded" },
-    }, (error, response, body) => { if (error) console.log(error); else if (body) console.log(body); else console.log(response); });
-},
-crcDelSubscriptions() {
-    console.log("crcDelSubscriptions");
-    request.delete({
-        url: `https://api.twitter.com/1.1/account_activity/all/${config.twitterCfg.devLabel}/subscriptions.json`,
-        oauth: twitter_oauth,
-        headers: { "Content-type": "application/x-www-form-urlencoded" },
-    }, (error, response, body) => { if (error) console.log(error); else if (body) console.log(body); else console.log(response); });
-},
-
-
-crcSubsc() {
-    console.log("crcSubsc");
-    // Subscribes an application to an account"s events
-    // これが登録らしいんだけど、来ないんだよなあ
-    const request_options = {
-        url: `https://api.twitter.com/1.1/account_activity/all/${config.twitterCfg.devLabel}/subscriptions.json`,
-        oauth: twitter_oauth
-    };
-    request.post(request_options, (error, response, body) => { console.log(`${response.statusCode} ${response.statusMessage}`); console.log(body) });
-},
-crcGetList() {
-    console.log("crcGetList");
-    // Returns all webhook URLs and their statuses
-    // アクティブなwebhookのURL一覧を取得
-    // [{"id":"900000000000000000","url":"https://example.com/twitter-webhook-test/","valid":true,"created_timestamp":"2018-05-16 17:04:41 +0000"}]
-    const request_options = {
-        url: `https://api.twitter.com/1.1/account_activity/all/${config.twitterCfg.devLabel}/webhooks.json`,
-        oauth: twitter_oauth,
-        headers: { "Content-type": "application/x-www-form-urlencoded" }
-    };
-    request.get(request_options, (error, response, body) => { console.log(body) });
-},
-crcPutHook() {
-    console.log("crcPutHook");
-    // Manually triggers a challenge response check
-    // Registers a webhook URL / Generates a webhook_id
-    // 登録したurlに "GET /twitter-webhook-test/index?crc_token=xxxxxxxxxxxxxxxxxxx&nonce=yyyyyyyyyyyyyyyy HTTP/1.1" のリクエストを送る
-    // webhookの定期的なリクエストのテスト？
-    const request_options = {
-        url: `https://api.twitter.com/1.1/account_activity/all/${config.twitterCfg.devLabel}/webhooks/${config.twitterCfg.hookId}.json`,
-        oauth: twitter_oauth,
-        headers: { "Content-type": "application/x-www-form-urlencoded" },
-    };
-    request.put(request_options, (error, response, body) => { console.log(body) });
-},
-crcGetSubsc() {
-    console.log("crcGetSubsc");
-    // Check to see if a webhook is subscribed to an account
-    // よくわからん。204が返ってきているのでOKの事らしいが
-    const request_options = {
-        url: `https://api.twitter.com/1.1/account_activity/all/${config.twitterCfg.devLabel}/subscriptions.json`,
-        oauth: twitter_oauth,
-        headers: { "Content-type": "application/x-www-form-urlencoded" }
-    };
-    request.get(request_options, (error, response, body) => { console.log(`${response.statusCode} ${response.statusMessage} ( 204ならok)`); console.log(body) });
-},
-crcCount() {
-    console.log("crcCount");
-    // Returns a count of currently active subscriptions
-    // {"errors":[{"message":"Your credentials do not allow access to this resource","code":220}]}
-    // 無料だと取れないっぽい？
-    const request_options = {
-        url: `https://api.twitter.com/1.1/account_activity/subscriptions/count.json`,
-        oauth: twitter_oauth,
-        headers: { "Content-type": "application/x-www-form-urlencoded" }
-    };
-    request.get(request_options, (error, response, body) => { console.log(body) });
-},
-crcList() {
-    console.log("crcList");
-    // Returns a list of currently active subscriptions
-    // {"errors":[{"message":"Your credentials do not allow access to this resource","code":220}]}
-    // 無料では取れないっぽい？
-    const request_options = {
-        url: `https://api.twitter.com/1.1/account_activity/all/${config.twitterCfg.devLabel}/subscriptions/list.json`,
-        oauth: twitter_oauth,
-        headers: { "Content-type": "application/x-www-form-urlencoded" }
-    };
-    request.get(request_options, (error, response, body) => { console.log(`${response.statusCode} ${response.statusMessage}`); console.log(body) });
-},
-crcDel() {
-    console.log("crcDel");
-    // Deletes the webhook
-    // これを実行すると、get-listの戻り値がカラになる。
-    const request_options = {
-        url: `https://api.twitter.com/1.1/account_activity/all/${config.twitterCfg.devLabel}/webhooks/${config.twitterCfg.hookId}.json`,
-        oauth: twitter_oauth,
-        headers: { "Content-type": "application/x-www-form-urlencoded" }
-    };
-    request.delete(request_options, (error, response, body) => { console.log(`${response.statusCode} ${response.statusMessage}`); console.log(body) });
-},
-crcDes() {
-    console.log("crcDes");
-    // Deactivates subscription
-    // delを実行した後なのでわからん
-    const request_options = {
-        url: `https://api.twitter.com/1.1/account_activity/all/${config.twitterCfg.devLabel}/subscriptions.json`,
-        oauth: twitter_oauth,
-        headers: { "Content-type": "application/x-www-form-urlencoded" }
-    };
-    request.delete(request_options, (error, response, body) => { console.log(`${response.statusCode} ${response.statusMessage} (204ならOKかな？)`); console.log(body) });
+    }
 }
+
+module.exports = {
+
+    async init(twitterCfg) {
+        // oauth認証に使う値
+        _twitter.oAuthConfig = {
+            consumer_key: twitterCfg.TWITTER_CONSUMER_KEY,
+            consumer_secret: twitterCfg.TWITTER_CONSUMER_SECRET,
+            token: twitterCfg.TWITTER_ACCESS_TOKEN,
+            token_secret: twitterCfg.TWITTER_ACCESS_TOKEN_SECRET
+        };
+        _twitter.devLabel = twitterCfg.devLabel;
+
+        // Twitterオブジェクトの作成
+        let twitter_oauth = {
+            consumer_key: twitterCfg.TWITTER_CONSUMER_KEY,
+            consumer_secret: twitterCfg.TWITTER_CONSUMER_SECRET,
+            access_token_key: twitterCfg.TWITTER_ACCESS_TOKEN,
+            access_token_secret: twitterCfg.TWITTER_ACCESS_TOKEN_SECRET
+        }
+        _twitter.bot = new Twitter(twitter_oauth);
+
+        if (_twitter.stream != null) { _twitter.stream.destroy(); }
+
+        await _twitter.bot.get('statuses/user_timeline', { screen_name: "Aigis1000Anna" })
+            .catch((error) => {
+                console.log(error);
+                _twitter.bot = null;
+            })
     },
-webhook: {
-    crcFunctions(request, response) {
-        for (let key in twitterCore.crc) {
-            if (key == request.params.function) {
-                twitterCore.crc[key]();
-                response.send("twitterCore.crc." + key + "()");
+
+    enable() {
+        if (_twitter.bot != null) return true;
+        console.log("twitter unable...");
+        return false;
+    },
+
+    async listen(callback) {
+        if (!enable()) return null;
+
+        // get target IDs
+        // let response = await _twitter.api.getFriendIDs("Aigis1000Anna");
+        // _twitter.api.getStreamByIDs(response.ids, async (tweet) => {
+
+        let response = await _twitter.api.getFriendList("Aigis1000Anna");
+        _twitter.api.getStreamByNames(response.names, async (tweet) => {
+            // check then callback
+
+            // RT除外
+            if (!tweet || !tweet.user || tweet.retweeted_status) { return; }
+
+            // // log
+            // if (twitterCfg.logStreamToFile) {
+            //     dbox.logToFile("twitter/", "litsen", tweet);
+            // }
+
+            // 送信する情報を定義
+            try {
+                let tweet_data = await _twitter.api.getTweet(tweet.id_str);
+                if (tweet_data) { callback(tweet_data) };
+
+            } catch (e) {   // http error
+                console.log(JSON.stringify(e, null, 2));
                 return;
             }
-        }
-        //response.send("Unknown function");
+        });
     },
-    get(request, response) {
-        // getでchallenge response check (CRC)が来るのでその対応
-        const crc_token = request.query.crc_token
-        if (crc_token) {
-            const hash = crypto.createHmac('sha256', twitter_oauth.consumer_secret).update(crc_token).digest('base64')
-            console.log(`receive crc check. token=${crc_token} responce=${hash}`);
-            response.status(200);
-            response.send({
-                response_token: 'sha256=' + hash
-            })
-        } else {
-            response.status(400);
-            response.send('Error: crc_token missing from request.')
+
+    api: {
+        async getTweet(id) {
+            if (!module.exports.enable()) return null;
+
+            return await _twitter.api.getTweet(id);
+        },
+        async getTweetImages(tweet_data) {
+            if (!module.exports.enable()) return null;
+
+            return await _twitter.api.getTweetImages(tweet_data);
         }
-    },
-    post(request, response) {
-        if (config.switchVar.logRequestToFile && request.body) {
-            dbox.logToFile("twitter/", "webhook", request.body);
-        }
-        response.send("200 OK");
     }
-},//*/
-
-    /*async autoTest() {
-        twitterCore.stream.litsen("Aigis1000", "", console.log);
-    }//*/
-};
-
-
-
+}

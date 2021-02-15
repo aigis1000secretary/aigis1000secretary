@@ -1,144 +1,193 @@
 
-// line bot
-const config = require("./config.js");
 const linebot = require("linebot");
-const linebotAlphat = require("./LineAlphatJS/src/bot.js");
-const linebotAlphat2 = require("./LineAlphatJS/src2/bot.js");
 
-class LineMessage {
-    constructor(rawData) {
-        Object.assign(this, rawData);
-    };
-}
-
-const _line = module.exports = {
+const _line = {
     bot: null,
-    abot: null,
-    bbot: null,
+    isLocalHost: false,
+    devbotCfg: {},
 
-    init() {
-        _line.devbotInit();
-        _line.alphatbotInit();
-    },
     devbotInit() {
-        _line.bot = linebot(Object.assign({ channelId: '', channelSecret: '', channelAccessToken: '' }, config.devbot));
+        _line.bot = linebot(Object.assign({ channelId: '', channelSecret: '', channelAccessToken: '' }, this.devbotCfg));
         require("./express.js").app.post("/linebot/", _line.bot.parser());
-    },
-    async alphatbotInit() {
-        _line.abot = new linebotAlphat(config.alphatBot.auth['ub926d3162aab1d3fbf975d2c56be69aa']);
-        _line.abot.LINE.groupStatus = config.alphatBot.groupStatus;
-        config.alphatBot.auth['ub926d3162aab1d3fbf975d2c56be69aa'].authToken = _line.abot.client.authToken;
-
-        // await sleep(1000);
-
-        _line.bbot = new linebotAlphat2(config.alphatBot.auth['u33a9a527c6ac1b24e0e4e35dde60c79d']);
-        _line.bbot.LINE.groupStatus = config.alphatBot.groupStatus;
-        config.alphatBot.auth['u33a9a527c6ac1b24e0e4e35dde60c79d'].authToken = _line.bbot.client.authToken;
-
-        // check cfg
-        const checkAbotConfig = async (oldcfg) => {
-            let newstr = JSON.stringify(config.alphatBot, null, 2);
-
-            if (oldcfg && oldcfg != newstr) {
-                config.isLocalHost ? console.log(newstr) : {};
-                await config.saveConfigToDbox();
-            }
-            oldcfg = newstr;
-
-            setTimeout(() => { checkAbotConfig(oldcfg); }, 500)
-        };
-        checkAbotConfig();
-    },
-
-    botPush(userId, msg, type = "") {
-        if (!config.isLocalHost && userId != "") {
-            _line.bot.push(userId, msg).then(function (result) {
-                if (config.switchVar.logLineBotPush) {
-                    // log to dropbox
-                    let logObject = { to: userId, type: type, messages: msg, result: result };
-                    let name = (result.message == "You have reached your monthly limit." ? "linePushFail" : "linePush");
-                    require("./dbox.js").logToFile("line/", name, logObject);
-                }
-            });
-        } else {
-            console.log(type + ">> " + JSON.stringify(msg, null, 2));
-        }
-    },
-    // botPushLog(msg) {
-    //     module.exports.botPush(config.botLogger, msg, "log");
-    // },
-    // botPushError(msg) {
-    //     module.exports.botPush(config.botLogger, msg, "logError");
-    // },
-
-    abotPush(userId, msg) {
-        _line.abot.LINE.push(userId, msg);
-    },
-    abotPushLog(msg) {
-        _line.abot.LINE.push(config.abotLogger, msg);
     },
 
 
     // Line Message element
     // 文字訊息
     createTextMsg(_text) {
-        return new LineMessage({
+        return {
             type: "text",
             text: _text.trim()
-        });
+        };
     },
 
     // 圖片訊息
     // url = https://aigis1000secretary.updog.co/刻詠の風水士リンネ/6230667.png encodeURI(img) (utf8 to %utf8 )
     createImageMsg(image, thumbnail) {
-        return new LineMessage({
+        return {
             type: "image",
             originalContentUrl: image,
             previewImageUrl: (thumbnail || image)
-        });
+        };
     },
 
     // 超連結選項
     // altText = "Wiki 連結"
     // label = Name
     // msg = "https://seesaawiki.jp/aigis/d/刻詠の風水士リンネ"	encodeURI_JP(url)
-    createMsgButtons(altText, label, msg) {
-        if (label.length != msg.length) return "";
-        if (label.length <= 0 || 4 < label.length) return "";
-        let replyMsg = {
-            type: "template",
-            altText: altText,
-            template: {
-                type: "buttons",
-                text: altText,
-                actions: []
+    createMsgButtons(altText, labels, msgs) {
+        // check data
+        if (labels.length != msgs.length || labels.length <= 0) return "";
+
+        if (labels.length <= 4) {
+            let replyMsg = {
+                type: "template",
+                altText: altText,
+                template: {
+                    type: "buttons",
+                    text: altText,
+                    actions: []
+                }
+            };
+            for (let i = 0; i < labels.length; ++i) {
+                // build action obj
+                let act = {
+                    type: msgs[i].indexOf("http") == 0 ? "uri" : "message",
+                    label: labels[i],
+                    text: msgs[i],
+                    uri: msgs[i]
+                }
+
+                // push act to col
+                replyMsg.template.actions.push(act);
             }
-        };
-        for (let i = 0; i < label.length; ++i) {
-            let buttons = {};
-            if (msg[i].indexOf("http") == 0) {
-                buttons.type = "uri";
-                buttons.label = label[i];
-                buttons.uri = msg[i];
-            } else {
-                buttons.type = "message";
-                buttons.label = label[i];
-                buttons.text = msg[i];
+            return replyMsg;
+
+        } else if (labels.length <= 30) {
+            let replyMsg = {
+                type: "template",
+                altText: altText,
+                template: {
+                    type: "carousel",
+                    columns: []
+                }
+            };
+
+            let c = -1, i = 0;
+            for (i = 0; i < labels.length; ++i) {
+                // build action obj
+                let act = {
+                    type: msgs[i].indexOf("http") == 0 ? "uri" : "message",
+                    label: labels[i],
+                    text: msgs[i],
+                    uri: msgs[i]
+                }
+
+                // build new columns pre 3 act
+                if (i % 3 == 0) {
+                    ++c;
+                    replyMsg.template.columns.push({
+                        text: `${parseInt(i / 3)}/${1 + parseInt(labels.length / 3)}`,
+                        actions: []
+                    });
+                }
+
+                // push act to col
+                replyMsg.template.columns[c].actions.push(act);
             }
-            replyMsg.template.actions.push(buttons);
+
+            // fill actions
+            while (i % 3 != 0) {
+                replyMsg.template.columns[c].actions.push({
+                    type: "message",
+                    label: i % 3 == 2 ? "next" : " ",
+                    text: i % 3 == 2 ? "new" : " ",
+                })
+                ++i;
+            }
+            return replyMsg;
+
         }
-        return new LineMessage(replyMsg);
+        return "";
+    },
+}
+
+module.exports = {
+    bot: null,
+    admin: [],
+
+    init(devbot, isLocalHost) {
+        _line.isLocalHost = isLocalHost;
+        _line.devbotCfg = devbot;
+        _line.devbotInit();
+        this.bot = _line.bot;
+        this.admin = devbot.admin;
     },
 
-    // 代傳訊息選項
+    isAdmin(id) {
+        return this.admin.includes(id);
+    },
+
+    enable() {
+        if (_line.bot != null) return true;
+        console.log("Line DevBot unable...");
+        return false;
+    },
+
+    async botPush(userId, msg, type = "") {
+        if (!this.enable()) return null;
+
+        if (!_line.isLocalHost && userId != "") {
+            let result = await _line.bot.push(userId, msg);
+
+            if (_line.devbotCfg.logLineBotPush) {
+                // // log to dropbox
+                // let logObject = { to: userId, type: type, messages: msg, result: result };
+                // let name = (result.message == "You have reached your monthly limit." ? "linePushFail" : "linePush");
+                // require("./dbox.js").logToFile("line/", name, logObject);
+                return result; // need to logToFile
+            }
+            return true;
+
+        } else {
+            console.log(type + ">> " + JSON.stringify(msg, null, 2));
+            return true;
+        }
+    },
+
+    formatReply(msgs) {
+        if (Array.isArray(msgs)) {
+            for (let i = 0; i < msgs.length; ++i) {
+                msgs[i] = this.replyObj(msgs[i]);
+            }
+            return msgs;
+        } else {
+            return this.replyObj(msgs);
+        }
+    },
+    replyObj(msg) {
+        let type = typeof (msg);
+
+        if (type == "string") {
+            return _line.createTextMsg(msg);
+
+        } else if (type == "object") {
+            // console.json(msg);
+            type = msg.type;
+
+            if (type == "image") {
+                return _line.createImageMsg(msg.imageLink, msg.thumbnailLink);
+
+            } else if (type == "option") {
+                return _line.createMsgButtons(title, labels, msgs);
+
+            }
+        }
+    },
+}
 
 
-    // DROPBOX: encodeURI(url);
-    // Wiki   : encodeURI_JP(url);
 
-};
 
-// botPush = module.exports.botPush;
-// botPushLog = module.exports.botPushLog;
-// botPushError = module.exports.botPushError;
-abotPushLog = module.exports.abotPushLog;
+
+

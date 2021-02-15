@@ -1,7 +1,8 @@
 
 const fs = require('fs');
-const config = require("./config.js");
 const dbox = require("./dbox.js");
+
+let config = { isLocalHost: true };
 
 class Database {
     constructor(dbName, backup) {
@@ -55,26 +56,24 @@ class Database {
     async loadDB() {
         // console.log(this.name + " loading...");
 
-        let obj = [];
+        let dataArray = [];
         try {
             this.data = [];
-            let data = fs.readFileSync(this.fileName);
+            let raw = fs.readFileSync(this.fileName);
 
             try {
-                obj = JSON.parse(data);
+                dataArray = JSON.parse(raw);
             } catch (e) {
-                obj = eval("(" + data + ")");
+                dataArray = eval("(" + raw + ")");
             }
 
-            for (let i in obj) {
+            for (let data of dataArray) {
                 // 建立樣板
                 let newData = this.newData();
 
                 // 讀取參數
-                for (let key in obj[i]) {
-                    if (typeof (newData[key]) != "undefined") {
-                        newData[key] = obj[i][key];
-                    }
+                for (let key of Object.keys(newData)) {
+                    if (data[key]) { newData[key] = data[key]; }
                 }
                 if (this.data.indexOf(newData.name) == -1) {
                     this.data.push(newData);
@@ -95,7 +94,7 @@ class Database {
 
         // download json
         try {
-            await dbox.fileDownloadToFile(this.fileName)
+            await dbox.fileDownloadToFile(`/${this.fileName}`)
             console.log(this.name + " downloaded!");
             return true;
         } catch (error) {
@@ -107,13 +106,14 @@ class Database {
     // 上傳備份
     async uploadDB() {
         if (config.isLocalHost) { console.log(this.name + " uploadDB(Dry)"); return true; }
+
         console.log(this.name + " uploading...");
 
         try {
-            if (this.backup) { await dbox.fileBackup(this.fileName); }
+            if (this.backup) { await dbox.fileBackup(`/${this.fileName}`); }
 
             let binary = Buffer.from(JSON.stringify(this.data));
-            await dbox.fileUpload(this.fileName, binary)
+            await dbox.fileUpload(`/${this.fileName}`, binary)
 
             console.log(this.name + " uploaded!");
             return true;
@@ -188,9 +188,9 @@ class CharaDatabase extends Database {
             string += this.name + "　　" + this.rarity + "\n";
 
             let nickList = [];
-            for (let i in nickDatabase.data) {
-                if (nickDatabase.data[i].target == this.name) {
-                    nickList.push("#" + nickDatabase.data[i].name);
+            for (let data of nickDatabase.data) {
+                if (data.target == this.name) {
+                    nickList.push("#" + data.name);
                 }
             }
             if (nickList.length > 0) {
@@ -235,8 +235,8 @@ class CharaDatabase extends Database {
             let changed = false;
 
             let keys = ["ability", "ability_aw", "skill", "skill_aw", "rarity", "class", "urlName"];
-            for (let j in keys) {
-                let key = keys[j];
+            for (let key of keys) {
+                // let key = keys[j];
                 if (this.data[i][key] == "" && newData[key]) {
                     if (newData[key] != "") { changed = true; }
                     this.data[i][key] = newData[key];
@@ -380,12 +380,31 @@ class GroupDatabase extends Database {
     };
 }
 
-let groupDatabase = new GroupDatabase("GroupDatabase", false);
+let groupDatabase = new GroupDatabase("GroupDatabase", false)
 let charaDatabase = new CharaDatabase("CharaDatabase", true);
 let nickDatabase = new NickDatabase("NickDatabase", true);
 let classDatabase = new ClassDatabase("ClassDatabase", true);
 
 module.exports = {
+    async init(isLocalHost) {
+        config.isLocalHost = isLocalHost;
+        // console.log(`dbox = ${await dbox.checkUser()}`);
+        // console.log(`isLocalHost = ${isLocalHost}`);
+
+        // await charaDatabase.init().catch(console.log);
+        // await nickDatabase.init().catch(console.log);
+        // await classDatabase.init().catch(console.log);
+        // await groupDatabase.init().catch(console.log);
+
+        await Promise.all([
+            charaDatabase.init(),
+            nickDatabase.init(),
+            classDatabase.init(),
+            groupDatabase.init()
+        ]).catch(console.error);
+
+    },
+
     groupDatabase: groupDatabase,
     charaDatabase: charaDatabase,
     nickDatabase: nickDatabase,
