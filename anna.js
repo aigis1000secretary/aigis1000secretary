@@ -344,10 +344,9 @@ module.exports = {
                                 labels.push(name);
                                 msgs.push("new " + img.md5 + " " + name);
                             }
-                            if (array.length < 4) {
-                                labels.push("next");
-                                msgs.push("new");
-                            }
+                            labels.push("next");
+                            msgs.push("new");
+                            
                             replyMsg.push({
                                 type: "option",
                                 title: `[${i}/${imgArray.length}]`,
@@ -839,7 +838,7 @@ const _anna = {
         let _class = (command.indexOf("白金") == 0 ? command.substring(2) : command.substring(1)).trim();
         _class = this.getClassnameByIndex(_class);
         if (_class == false) { return []; }
-        裝
+
         _anna.log(`_rarity + _class: <${_rarity} + ${_class}>`);
 
         let result = [];
