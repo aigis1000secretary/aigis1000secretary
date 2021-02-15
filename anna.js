@@ -462,7 +462,7 @@ module.exports = {
 
         } else if (isAdmin && (command == "HOTFIX")) {
             try {
-                let rawData = await dbox.fileDownload("/hotfix.json");
+                let rawData = await dbox.fileDownload("/hotfix.js");
                 rawData = Buffer.from(rawData, "binary").toString();
                 return eval(rawData)();
 

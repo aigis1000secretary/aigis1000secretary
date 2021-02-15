@@ -154,7 +154,7 @@ const discordBotOn = function () {
 const lineBotOn = function () {
     // bot.on
     line.bot.on("message", async function (event) {
-        if (!event) return;
+        if (!event || event.message.type != "text") return;
 
         // define reply function
         let replyFunc = async function (rMsg) {
@@ -171,7 +171,7 @@ const lineBotOn = function () {
         };
 
         // 取出文字內容
-        let msg = event.message.text.trim()
+        let msg = event.message.text.trim();
         let isAdmin = line.isAdmin(event.source.userId);
         let cmd = msg;
 
