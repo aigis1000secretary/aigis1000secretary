@@ -347,7 +347,7 @@ module.exports = {
                             }
                             labels.push("next");
                             msgs.push("new");
-                            
+
                             replyMsg.push({
                                 type: "option",
                                 title: `[${i}/${imgArray.length}]`,
@@ -887,6 +887,8 @@ const _anna = {
     // imgUploader
     // upload dbox images to imgur
     async uploadImages() {
+        console.log(`Image Upload ${_anna.isLocalHost ? "(Local) " : " "}Script`);
+
         // let loaclPath = "C:/Users/HUANG/Dropbox/應用程式/aigis1000secretary";
         let loaclPath = "C:/Users/Mirror/Dropbox/應用程式/aigis1000secretary";
         const md5f = (str) => { return require('crypto').createHash('md5').update(str).digest('hex'); }
