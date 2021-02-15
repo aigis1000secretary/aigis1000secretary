@@ -4,6 +4,7 @@ node_modules/
 test.js
 hotfix.js
 debug.js
+config.json
 
 node.bat
 *.json
