@@ -97,14 +97,16 @@ const _line = {
             }
 
             // fill actions
-            while (i % 3 != 0) {
-                replyMsg.template.columns[c].actions.push({
-                    type: "message",
-                    label: i % 3 == 2 ? "next" : " ",
-                    text: i % 3 == 2 ? "new" : " ",
-                })
-                ++i;
+            for (let column of replyMsg.template.columns) {
+                while (column.actions.length != 3) {
+                    column.actions.push({
+                        type: "message",
+                        label: " ",
+                        text: " ",
+                    })
+                }
             }
+
             return replyMsg;
 
         }
