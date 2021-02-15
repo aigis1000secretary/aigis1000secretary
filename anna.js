@@ -1,5 +1,6 @@
 
 const fs = require("fs");
+const path = require("path");
 
 const dbox = require("./dbox.js");
 const imgur = require("./imgur.js");

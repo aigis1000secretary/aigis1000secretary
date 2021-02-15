@@ -45,7 +45,7 @@ module.exports = {
     // filter: "file" or "folder"
     async listDir(dirPath = "", filter) {
         if (!this.enable()) return null;
-        console.log(`[dropbox] listDir( ${dirPath} )`);
+        // console.log(`[dropbox] listDir( ${dirPath} )`);
 
         try {
             // get list
@@ -67,7 +67,7 @@ module.exports = {
 
             return result;
         } catch (error) {
-            console.log(`[dropbox] listDir( ${dirPath} ) error...`);
+            // console.log(`[dropbox] listDir( ${dirPath} ) error...`);
             // console.log(json(error));
             throw error;
         }
