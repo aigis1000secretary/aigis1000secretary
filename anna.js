@@ -887,7 +887,7 @@ const _anna = {
     // imgUploader
     // upload dbox images to imgur
     async uploadImages() {
-        console.log(`Image Upload ${_anna.isLocalHost ? "(Local) " : " "}Script`);
+        console.log(`Image Upload ${_anna.isLocalHost ? "(Local) " : ""}Script`);
 
         // let loaclPath = "C:/Users/HUANG/Dropbox/應用程式/aigis1000secretary";
         let loaclPath = "C:/Users/Mirror/Dropbox/應用程式/aigis1000secretary";
@@ -1099,7 +1099,7 @@ const _anna = {
 
             // for (let img of imgur.database.images) {
             for (let img of imgur.database.image.findData({ isGif: true })) {
-                let path = img.tagList; o
+                let path = img.tagList;
                 let filename = img.imageLink.replace(`https://i.imgur.com/`, "");
                 let pathInDbox = pathArray.find((p) => path.equali(p));
                 if (!pathInDbox) {
