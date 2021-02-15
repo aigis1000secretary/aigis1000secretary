@@ -1,7 +1,8 @@
 
 const fs = require('fs');
-const config = require("./config.js");
 const dbox = require("./dbox.js");
+
+let config = { isLocalHost: true };
 
 class Database {
     constructor(dbName, backup) {
@@ -31,7 +32,7 @@ class Database {
 
     // 儲存資料
     async saveDB() {
-        console.log(this.name + " saving...");
+        console.log(`[database] ${this.name} saving...`);
 
         // sort
         this.data.sort(this.sortMethod);
@@ -43,48 +44,45 @@ class Database {
 
         try {
             fs.writeFileSync(this.fileName, json);
-            console.log(this.name + " saved!");
+            console.log(`[database] ${this.name} saved!`);
             return true;
         } catch (error) {
-            console.log(this.name + " saving error...");
+            console.log(`[database] ${this.name} saving error...`);
             throw error;
         }
     };
 
     // 讀取資料
     async loadDB() {
-        // console.log(this.name + " loading...");
 
-        let obj = [];
+        let dataArray = [];
         try {
             this.data = [];
-            let data = fs.readFileSync(this.fileName);
+            let raw = fs.readFileSync(this.fileName);
 
             try {
-                obj = JSON.parse(data);
+                dataArray = JSON.parse(raw);
             } catch (e) {
-                obj = eval("(" + data + ")");
+                dataArray = eval("(" + raw + ")");
             }
 
-            for (let i in obj) {
+            for (let data of dataArray) {
                 // 建立樣板
                 let newData = this.newData();
 
                 // 讀取參數
-                for (let key in obj[i]) {
-                    if (typeof (newData[key]) != "undefined") {
-                        newData[key] = obj[i][key];
-                    }
+                for (let key of Object.keys(newData)) {
+                    if (data[key]) { newData[key] = data[key]; }
                 }
                 if (this.data.indexOf(newData.name) == -1) {
                     this.data.push(newData);
                 }
             }
 
-            console.log(this.name + " loaded!");
+            console.log(`[database] ${this.name} loaded!`);
             return true;
         } catch (error) {
-            console.log(this.name + " loading error...");
+            console.log(`[database] ${this.name} saving error...`);
             throw error;
         }
     };
@@ -95,30 +93,31 @@ class Database {
 
         // download json
         try {
-            await dbox.fileDownloadToFile(this.fileName)
-            console.log(this.name + " downloaded!");
+            await dbox.fileDownloadToFile(`/${this.fileName}`)
+            console.log(`[database] ${this.name} downloaded!`);
             return true;
         } catch (error) {
-            console.log(this.name + " downloading error...");
+            console.log(`[database] ${this.name} downloaded error...`);
             throw error;
         }
     };
 
     // 上傳備份
     async uploadDB() {
-        if (config.isLocalHost) { console.log(this.name + " uploadDB(Dry)"); return true; }
-        console.log(this.name + " uploading...");
+        if (config.isLocalHost) { console.log(`[database] ${this.name} uploadDB(Dry)`); return true; }
+
+        console.log(`[database] ${this.name} uploading...`);
 
         try {
-            if (this.backup) { await dbox.fileBackup(this.fileName); }
+            if (this.backup) { await dbox.fileBackup(`/${this.fileName}`); }
 
             let binary = Buffer.from(JSON.stringify(this.data));
-            await dbox.fileUpload(this.fileName, binary)
+            await dbox.fileUpload(`/${this.fileName}`, binary)
 
-            console.log(this.name + " uploaded!");
+            console.log(`[database] ${this.name} uploaded!`);
             return true;
         } catch (error) {
-            console.log(this.name + " uploading error...");
+            console.log(`[database] ${this.name} uploading error...`);
             throw error;
         }
     };
@@ -143,7 +142,7 @@ class Database {
                 await this.saveDB()
                 await this.uploadDB();
             } catch (error) {
-                console.log(this.name + " Task upload error...\n");
+                console.log(`[database] ${this.name} Task upload error...`);
                 console.log(error);
             }
         }
@@ -156,7 +155,7 @@ class Database {
             await this.loadDB();
             return true;
         } catch (error) {
-            console.log(this.name + " init error...");
+            console.log(`[database] ${this.name} init error...`);
             throw error;
         }
     };
@@ -188,9 +187,9 @@ class CharaDatabase extends Database {
             string += this.name + "　　" + this.rarity + "\n";
 
             let nickList = [];
-            for (let i in nickDatabase.data) {
-                if (nickDatabase.data[i].target == this.name) {
-                    nickList.push("#" + nickDatabase.data[i].name);
+            for (let data of nickDatabase.data) {
+                if (data.target == this.name) {
+                    nickList.push("#" + data.name);
                 }
             }
             if (nickList.length > 0) {
@@ -227,7 +226,7 @@ class CharaDatabase extends Database {
 
         if (this.indexOf(newData.name) == -1) {
             this.data.push(newData);
-            console.log("[+] Add     New character <" + newData.name + "> data!");
+            console.log(`[database][+] Add     New character <${newData.name}> data!`);
             return "anna " + newData.name + " New character data add!";
 
         } else {
@@ -235,8 +234,8 @@ class CharaDatabase extends Database {
             let changed = false;
 
             let keys = ["ability", "ability_aw", "skill", "skill_aw", "rarity", "class", "urlName"];
-            for (let j in keys) {
-                let key = keys[j];
+            for (let key of keys) {
+                // let key = keys[j];
                 if (this.data[i][key] == "" && newData[key]) {
                     if (newData[key] != "") { changed = true; }
                     this.data[i][key] = newData[key];
@@ -244,7 +243,7 @@ class CharaDatabase extends Database {
             }
 
             if (changed) {
-                console.log("[*] Update  character <" + newData.name + "> data!");
+                console.log(`[database][*] Update  character <${newData.name}> data!`);
                 return "anna " + newData.name + " New character data update!";
             } else {
                 // if (config.isLocalHost) {
@@ -300,7 +299,7 @@ class ClassDatabase extends Database {
 
         if (this.indexOf(newClass.name) == -1) {
             this.data.push(newClass);
-            console.log("New Class <" + newClass.name + "> add complete!");
+            console.log(`[database] New Class <${newClass.name}> add complete!`);
             return "New Class <" + newClass.name + "> add complete!";
 
         } else {
@@ -314,7 +313,7 @@ class ClassDatabase extends Database {
             await this.downloadDB();
             await this.loadDB();
         } catch (error) {
-            console.log(this.name + " init error...");
+            console.log(`[database] ${this.name} init error...`);
             throw error;
         }
 
@@ -380,12 +379,31 @@ class GroupDatabase extends Database {
     };
 }
 
-let groupDatabase = new GroupDatabase("GroupDatabase", false);
+let groupDatabase = new GroupDatabase("GroupDatabase", false)
 let charaDatabase = new CharaDatabase("CharaDatabase", true);
 let nickDatabase = new NickDatabase("NickDatabase", true);
 let classDatabase = new ClassDatabase("ClassDatabase", true);
 
 module.exports = {
+    async init(isLocalHost) {
+        config.isLocalHost = isLocalHost;
+        // console.log(`dbox = ${await dbox.checkUser()}`);
+        // console.log(`isLocalHost = ${isLocalHost}`);
+
+        // await charaDatabase.init().catch(console.log);
+        // await nickDatabase.init().catch(console.log);
+        // await classDatabase.init().catch(console.log);
+        // await groupDatabase.init().catch(console.log);
+
+        await Promise.all([
+            charaDatabase.init(),
+            nickDatabase.init(),
+            classDatabase.init(),
+            groupDatabase.init()
+        ]).catch(console.error);
+
+    },
+
     groupDatabase: groupDatabase,
     charaDatabase: charaDatabase,
     nickDatabase: nickDatabase,

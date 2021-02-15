@@ -1,193 +1,95 @@
-// 初始化
-const config = require("./config.js");
-const dbox = require("./dbox.js");
 
-const imgur = require("./imgur.js");
-const express = require("./express.js");
-const line = require("./line.js");
-const twitter = require("./twitter.js");
-const discord = require("./discord.js");
+const config = require("./config.js");
 
 const anna = require("./anna.js");
-let tweetMediaCache = [];
 
-// groupDatabase
-const database = require("./database.js");
-let groupDatabase = database.groupDatabase;
+const discord = require("./discord.js");
+const line = require("./line.js")
+const express = require("./express.js")
 
-// line bot 監聽
-const lineBotOn = function () {
+const main = async function () {
+    // config
+    await config.init();
+    // core
+    await anna.init(config);
 
-    // wellcome msg
-    line.bot.on("memberJoined", function (event) {
-        if (event && config.switchVar.logRequestToFile) {
-            dbox.logToFile("line/", "memberJoined", event);
+    // io
+    express.init();
+    discord.init(config.discord);
+    line.init(config.devbot, config.isLocalHost);
+
+    // console.clear();
+    console.log(`[main] ${config.hostIP}`);
+    // let cmd = "new";
+    // anna.autoTest();
+
+    expressOn();
+    discordBotOn();
+    lineBotOn();
+
+    console.log("=====*****Anna secretary online*****=====");
+
+}; main();
+
+
+const expressOn = function () {
+
+    express.app.get("/anna/:command", async (request, response) => {
+
+        let command = request.params.command;
+        // console.log(command);
+
+        let result = await anna.replyAI(command, false);
+
+        let responseBody = (typeof (result) == "string" ? result : JSON.stringify(result, null, 2));
+        responseBody = responseBody.replaceAll("\n", "<br>");
+        response.send(responseBody);
+    });
+    express.app.get("/stamp/:command", async (request, response) => {
+
+        let command = request.params.command;
+        // console.log(command);
+
+        let result = anna.replyStamp(command, true);
+
+        let responseBody = (typeof (result) == "string" ? result : JSON.stringify(result, null, 2));
+        responseBody = responseBody.replaceAll("\n", "<br>");
+        response.send(responseBody);
+    });
+    express.app.get("/images/:command", async (request, response) => {
+
+        let command = request.params.command;
+        // console.log(command);
+
+        let result = require("./imgur.js").database.image.findData({ tag: command, isGif: true });
+
+        let responseBody = "reply false!";
+        if (result.length != 0) {
+            result.sort(function (A, B) { return A.tagList.localeCompare(B.tagList) })
+
+            responseBody = "";
+            for (let res of result) {
+                responseBody += `<blockquote class="imgur-embed-pub" lang="en" data-id="${res.id}"><a href="//imgur.com/${res.id}">${res.tagList}</a></blockquote><script async src="//s.imgur.com/min/embed.js" charset="utf-8"></script><br>`
+                responseBody += `<a href="${res.imageLink}">${res.tagList}</a><br><br>`;
+            }
         }
-
-        // define reply function
-        let replyFunc = function (rMsg) {
-            anna.debugLog()(rMsg);
-            event.reply(rMsg).then(anna.debugLog).catch(anna.debugLog);
-            return true;
-        };
-
-        // 呼叫定型文
-        let result = anna.replyStamp("新人");
-        if (result == false) {
-            result = "歡迎使用政務官小安娜 v" + config._version + ", 輸入(安娜 HELP)以取得更多訊息";
-        }
-
-        if (!anna.isAdmin(event.source.userId)) {
-            replyFunc(result);
-        }
-        return true;
-    });// */
-
-    // normal msg
-    line.bot.on("message", async function (event) {
-        // log to file
-        if (config.switchVar.logRequestToFile && event) {
-            dbox.logToFile("line/", "message", event);
-        }
-
-        // 文字事件
-        if (event.message.type == "text") {
-            anna.debugLog()(event);
-
-            // define reply function
-            let replyFunc = function (rMsg) {
-                anna.debugLog()(rMsg);
-                event.reply(rMsg).then(anna.debugLog).catch(anna.debugLog);
-                return true;
-            };
-
-            // 取出文字內容
-            let msg = event.message.text.trim()
-
-            // reply tweet image
-            for (let key in tweetMediaCache) {
-                if (msg.indexOf(key) != -1) {
-                    let medias = [];
-                    for (let i in tweetMediaCache[key]) {
-                        let link = tweetMediaCache[key][i];
-                        medias.push(line.createImageMsg(link, link));
-                    }
-
-                    // reply media
-                    replyFunc(medias);
-                    return;
-                }
-            }
-
-            // get source id
-            let userId = event.source.userId || "U";	// Line API bug?
-            let sourceId = event.source.groupId || event.source.roomId || userId;
-            if (sourceId[0] != "U") {
-                groupDatabase.addData(sourceId, msg.split("\n")[0].trim(), event.timestamp);
-            }
-
-            // bot mode
-            // 身分驗證
-            if (userId == "U9eefeba8c0e5f8ee369730c4f983346b") {
-                if (msg == "我婆") {
-                    msg = "刻詠の風水士リンネ";
-                }
-            }
-            // in user chat
-            let inChat = (event.source.type == "user");
-            let callAnna = false;
-            if (msg.toUpperCase().indexOf("ANNA ") == 0) {
-                callAnna = true;
-                msg = msg.slice(4).trim();
-            } else if (msg.indexOf("安娜 ") == 0) {
-                callAnna = true;
-                msg = msg.slice(2).trim();
-            }
-
-            // ask ai
-            let rMsg = await anna.replyAI(msg, sourceId, userId);
-            let rStamp = anna.replyStamp(msg);
-
-            // callAnna
-            if (inChat || callAnna) {
-
-                // ai done something
-                if (rMsg !== false) {
-                    replyFunc(rMsg);
-                    return;
-                } else if (rStamp !== false) {
-                    replyFunc(rStamp);
-                    return;
-                } else {
-                    // not found
-                    abotPushLog("Search fail: " + msg);
-                    if (msg.length == 1) {
-                        replyFunc("王子太短了，找不到...");
-                    } else {
-                        let replyMsgs = ["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"];
-                        let replyMsg = replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
-                        replyFunc(replyMsg);
-                    }
-                    return;
-                }
-            } else {
-                if (rStamp !== false) {
-                    replyFunc(rStamp);
-                    return;
-                }
-            }
-
-            // egg
-            if (Math.floor(Math.random() * 10000) == 0) {
-                replyFunc("ちくわ大明神");
-                return;
-            }
-
-            // 無視...
-            // anna.debugLog()("Not a command");
-            return;
-        }
+        response.send(responseBody);
     });
 }
+
 // discord bot 監聽
 const discordBotOn = function () {
-
+    // bot.on
     discord.bot.on('message', async function (dMsg) {
         // if (dMsg.author.id == 628127387657175040) {
-        if (dMsg.author.id == discord.bot.user.id) {
-            return;
-        }
+        if (dMsg.author.id == discord.bot.user.id) { return; }
+        let inChat = dMsg.guild ? dMsg.guild.name : "Chat";
+        // console.log(`{${inChat}} <${dMsg.channel.name}> [${dMsg.author.id}] :\n${dMsg.content.trim()}`);
+        // console.log(`{${inChat}} <${dMsg.channel.name}> [${dMsg.author.username}] :\n${dMsg.content.trim()}`);
 
         // define reply function
         let replyFunc = async function (rMsg) {
-
-            let linemsgToString = function (linemsg) {
-                if (linemsg.type == "text") {
-                    return "```" + linemsg.text + "```";
-                } else if (linemsg.type == "image") {
-                    return linemsg.originalContentUrl;
-                } else if (linemsg.type == "template") {
-                    let str = "";
-                    for (let i in linemsg.template.actions) {
-                        let msg = linemsg.template.actions[i];
-                        str += msg.label + ": __" + msg.uri + "__\n";
-                    }
-                    return str;
-                }
-            }
-
-            if (Array.isArray(rMsg)) {
-                for (let i in rMsg) {
-                    let res = rMsg[i];
-                    if (res.constructor.name == "LineMessage") {
-                        rMsg[i] = linemsgToString(rMsg[i]);
-                    };
-                }
-            } else {
-                if (rMsg.constructor.name == "LineMessage") {
-                    rMsg = linemsgToString(rMsg);
-                };
-            }
+            rMsg = discord.formatReply(rMsg);
 
             try {
                 if (!config.isLocalHost) {
@@ -199,29 +101,27 @@ const discordBotOn = function () {
             return;
         };
 
-        let msg = dMsg.content;
-        let target = anna.getFullnameByNick(dMsg.content);
-        if (dMsg.content != target) target = false;
+        // 取出文字內容
+        let msg = dMsg.content.trim();
+        let isAdmin = discord.isAdmin(dMsg.author.id);
+        let cmd = msg;
 
         // in user chat
         let callAnna = false;
-        if (msg.toUpperCase().indexOf("ANNA ") == 0) {
+        if (/^(ANNA |安娜 )/i.test(msg) || inChat == "Chat") {
             callAnna = true;
-            msg = msg.slice(4).trim();
-        } else if (msg.indexOf("安娜 ") == 0) {
-            callAnna = true;
-            msg = msg.slice(2).trim();
+            cmd = cmd.replace(/^(ANNA |安娜 )/i, "");
         }
 
         // ask ai
         if (callAnna) {
-            if (msg.length == 0) { // normal response
+            if (cmd.length == 0) { // normal response
                 replyFunc("是的！王子？");
                 return;
             }
 
-            let rMsg = await anna.replyAI(msg);
-            let rStamp = anna.replyStamp(msg, true);
+            let rMsg = await anna.replyAI(cmd, isAdmin);
+            let rStamp = anna.replyStamp(cmd, true);
 
             // ai done something
             if (rMsg !== false) {
@@ -230,19 +130,86 @@ const discordBotOn = function () {
             } else if (rStamp !== false) {
                 replyFunc(rStamp);
                 return;
-            } else {
-                // not found
-                abotPushLog("Search fail: " + msg);
-                if (msg.length == 1) {
-                    replyFunc("王子太短了，找不到...");
-                } else {
-                    let replyMsgs = ["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"];
-                    let replyMsg = replyMsgs[Math.floor(Math.random() * replyMsgs.length)];
-                    replyFunc(replyMsg);
-                }
+            } else if (rMsg !== null) {
+                // not found]
+                let res = cmd.length == 1 ? "王子太短了，找不到..." : randomPick(["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"]);
+                replyFunc(res);
                 return;
             }
-        } else if (target) {
+        } else if (cmd != "") {
+
+            let target = anna.getFullnameByNick(msg);
+            if (msg != target) return;
+
+            let rStamp = anna.replyStamp(target, true);
+            if (rStamp !== false) {
+                replyFunc(rStamp);
+                return;
+            }
+        }
+    });
+}
+
+// line bot 監聽
+const lineBotOn = function () {
+    // bot.on
+    line.bot.on("message", async function (event) {
+        if (!event) return;
+
+        // define reply function
+        let replyFunc = async function (rMsg) {
+            rMsg = line.formatReply(rMsg);
+
+            try {
+                if (!config.isLocalHost) {
+                    await event.reply(rMsg);
+                } else {
+                    console.log("[LI] " + rMsg);
+                }
+            } catch (e) { console.log(e); }
+            return;
+        };
+
+        // 取出文字內容
+        let msg = event.message.text.trim()
+        let isAdmin = line.isAdmin(event.source.userId);
+        let cmd = msg;
+
+        // in user chat
+        let callAnna = false;
+        if (/^(ANNA |安娜 )/i.test(msg) || event.source.type == "user") {
+            callAnna = true;
+            cmd = cmd.replace(/^(ANNA |安娜 )/i, "");
+        }
+
+        // ask ai
+        if (callAnna) {
+            if (cmd.length == 0) { // normal response
+                replyFunc("是的！王子？");
+                return;
+            }
+
+            let rMsg = await anna.replyAI(cmd, isAdmin);
+            let rStamp = anna.replyStamp(cmd, true);
+
+            // ai done something
+            if (rMsg !== false) {
+                replyFunc(rMsg);
+                return;
+            } else if (rStamp !== false) {
+                replyFunc(rStamp);
+                return;
+            } else if (rMsg !== null) {
+                // not found]
+                let res = cmd.length == 1 ? "王子太短了，找不到..." : randomPick(["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"]);
+                replyFunc(res);
+                return;
+            }
+        } else if (cmd != "") {
+
+            let target = anna.getFullnameByNick(msg);
+            if (msg != target) { target = cmd; }
+
             let rStamp = anna.replyStamp(target, true);
             if (rStamp !== false) {
                 replyFunc(rStamp);
@@ -251,143 +218,31 @@ const discordBotOn = function () {
         }
     });
 
-}
-// twitter bot 監聽 Aigis1000
-const twitterBotOn = function () {
+    // wellcome msg
+    line.bot.on("memberJoined", function (event) {
+        if (!event) return;
 
-    if (config.isLocalHost) { return; }
+        // define reply function
+        let replyFunc = async function (rMsg) {
+            rMsg = line.formatReply(rMsg);
 
-    let callback = async function (tweet_data) {
-        // get tweet text & media keyword
-        let text = tweet_data.data.text;
-        let mediaKey = "";
-
-        // if source is Aigis1000
-        if (tweet_data.includes.users[0].username == "Aigis1000") {
-
-            // push image data to tweetMediaCache if there are some media
-            if (tweet_data.includes &&
-                Array.isArray(tweet_data.includes.media) &&
-                tweet_data.includes.media.length > 0) {
-                // check keyword in text
-                mediaKey = text.split('/t.co/').splice(-1);
-
-                // map keyword => media.url
-                tweetMediaCache[mediaKey] = [];
-                for (let media of tweet_data.includes.media) {
-                    if (media.type == "photo") {
-                        tweetMediaCache[mediaKey].push(media.url);
-                    }
+            try {
+                if (!config.isLocalHost) {
+                    await event.reply(rMsg);
+                } else {
+                    console.log("[LI] " + rMsg);
                 }
+            } catch (e) { console.log(e); }
+            return;
+        };
 
-            }
-
-            // get all announce target
-            let aIDs = await line.abot.LINE._getGroupsJoined();
-            for (let aid of aIDs) {
-                // // check announce switch
-                // if (!groupDatabase.data[i].alarm) continue;
-                // // 14 days no ant msg idle group	3 * 24 * 60 * 60 * 1000
-                // if (Date.now() - groupDatabase.data[i].timestamp > 259200000) {
-                //     groupDatabase.data[i].alarm = false;
-                //     groupDatabase.uploadTask();
-                //     continue;
-                // }
-
-                line.abot.LINE.push(aid, text);
-            }
-
-            // image to dropbox
-            twitter.data.getTweetImages(tweet_data);
-        } else {
-            // send tweet with media to pushlog
-            if (tweet_data.includes &&
-                Array.isArray(tweet_data.includes.media) &&
-                tweet_data.includes.media.length > 0) {
-                abotPushLog(`https://twitter.com/${tweet_data.includes.users[0].username}/status/${tweet_data.data.id}`)
-            }
+        // 呼叫定型文
+        let result = anna.replyStamp("新人", true);
+        if (result == false) {
+            result = "歡迎使用政務官小安娜 v" + config._version + ", 輸入(安娜 HELP)以取得更多訊息";
         }
-    }
-    twitter.listen(callback);
+
+        replyFunc(result);
+        return true;
+    });// */
 }
-
-const timerBotOn = function () {
-
-    let timer = async function (lastDate) {
-        let nowDate = new Date(Date.now());
-        if (nowDate.getMinutes() < lastDate.getMinutes() && // now hh:00 < hh:59 
-            nowDate.getHours() == 8) { // new 08:00 
-
-            let dayList = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"]
-            let str = "";
-            str += nowDate.getFullYear() + "/";
-            str += ((nowDate.getMonth() + 1) + "/").padStart(3, '0');
-            str += (nowDate.getDate() + " ").padStart(3, '0');
-            str += dayList[nowDate.getDay()] + " ";
-
-            str += (nowDate.getHours() + ":").padStart(3, '0');
-            str += (nowDate.getMinutes() + ":").padStart(3, '0');
-            str += (nowDate.getSeconds() + "").padStart(2, '0');
-
-            abotPushLog(str);
-        }
-        setTimeout(timer, 60 * 1000, new Date(Date.now()));// pre min
-    };
-    timer(new Date(0));
-}
-
-
-
-const main = async function () {
-    // 讀取資料
-    await config.init();
-    express.init();
-    line.init();
-    twitter.init();
-    discord.init();
-
-    await anna.init();
-    await groupDatabase.init().catch((error) => { console.log("database init error:\n"); console.log(error); });
-    await imgur.init();
-
-    // 開始監聽
-    lineBotOn();
-    twitterBotOn();
-    discordBotOn();
-    timerBotOn();
-
-    // if (config.isLocalHost) console.clear();
-    console.log("=====*****Anna secretary online*****=====");
-    // abotPushLog("Anna secretary online");
-
-}; main();
-
-
-
-/*
-const debugFunc = async function () {
-	let sourceId = "U9eefeba8c0e5f8ee369730c4f983346b";
-	let userId = "U9eefeba8c0e5f8ee369730c4f983346b";
-	let replyFunc = function (str) { console.log(">>" + str + "<<"); return str != "" && str && str != "undefined" };
-	config.switchVar.debug = true;
-}
-
-
-
-// Test function
-setTimeout(debugFunc, 5 * 1000);// */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
