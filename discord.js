@@ -39,10 +39,14 @@ module.exports = {
                 return msg.imageLink;
 
             } else if (type == "option") {
-                let str = "";
+                let str = `${msg.title}\n`;
 
                 for (let i = 0; i < msg.labels.length; ++i) {
-                    str += `${msg.labels[i]}: <${msg.msgs[i]}>\n`;
+                    if (msg.msgs[i].indexOf("http") == 0) {
+                        str += `${msg.labels[i]}: <${msg.msgs[i]}>\n`;
+                    } else {
+                        str += `${msg.labels[i]}:\n${msg.msgs[i]}\n`;
+                    }
                 }
 
                 return str;
