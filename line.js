@@ -130,7 +130,7 @@ module.exports = {
 
     enable() {
         if (_line.bot != null) return true;
-        console.log("Line DevBot unable...");
+        console.log("[line] Line DevBot unable...");
         return false;
     },
 
@@ -150,7 +150,7 @@ module.exports = {
             return true;
 
         } else {
-            console.log(type + ">> " + JSON.stringify(msg, null, 2));
+            console.log(`[line] ${type} >> ${JSON.stringify(msg, null, 2)}`);
             return true;
         }
     },

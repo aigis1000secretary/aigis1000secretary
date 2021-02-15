@@ -32,7 +32,7 @@ class Database {
 
     // 儲存資料
     async saveDB() {
-        console.log(this.name + " saving...");
+        console.log(`[database] ${this.name} saving...`);
 
         // sort
         this.data.sort(this.sortMethod);
@@ -44,17 +44,16 @@ class Database {
 
         try {
             fs.writeFileSync(this.fileName, json);
-            console.log(this.name + " saved!");
+            console.log(`[database] ${this.name} saved!`);
             return true;
         } catch (error) {
-            console.log(this.name + " saving error...");
+            console.log(`[database] ${this.name} saving error...`);
             throw error;
         }
     };
 
     // 讀取資料
     async loadDB() {
-        // console.log(this.name + " loading...");
 
         let dataArray = [];
         try {
@@ -80,10 +79,10 @@ class Database {
                 }
             }
 
-            console.log(this.name + " loaded!");
+            console.log(`[database] ${this.name} loaded!`);
             return true;
         } catch (error) {
-            console.log(this.name + " loading error...");
+            console.log(`[database] ${this.name} saving error...`);
             throw error;
         }
     };
@@ -95,19 +94,19 @@ class Database {
         // download json
         try {
             await dbox.fileDownloadToFile(`/${this.fileName}`)
-            console.log(this.name + " downloaded!");
+            console.log(`[database] ${this.name} downloaded!`);
             return true;
         } catch (error) {
-            console.log(this.name + " downloading error...");
+            console.log(`[database] ${this.name} downloaded error...`);
             throw error;
         }
     };
 
     // 上傳備份
     async uploadDB() {
-        if (config.isLocalHost) { console.log(this.name + " uploadDB(Dry)"); return true; }
+        if (config.isLocalHost) { console.log(`[database] ${this.name} uploadDB(Dry)`); return true; }
 
-        console.log(this.name + " uploading...");
+        console.log(`[database] ${this.name} uploading...`);
 
         try {
             if (this.backup) { await dbox.fileBackup(`/${this.fileName}`); }
@@ -115,10 +114,10 @@ class Database {
             let binary = Buffer.from(JSON.stringify(this.data));
             await dbox.fileUpload(`/${this.fileName}`, binary)
 
-            console.log(this.name + " uploaded!");
+            console.log(`[database] ${this.name} uploaded!`);
             return true;
         } catch (error) {
-            console.log(this.name + " uploading error...");
+            console.log(`[database] ${this.name} uploading error...`);
             throw error;
         }
     };
@@ -143,7 +142,7 @@ class Database {
                 await this.saveDB()
                 await this.uploadDB();
             } catch (error) {
-                console.log(this.name + " Task upload error...\n");
+                console.log(`[database] ${this.name} Task upload error...`);
                 console.log(error);
             }
         }
@@ -156,7 +155,7 @@ class Database {
             await this.loadDB();
             return true;
         } catch (error) {
-            console.log(this.name + " init error...");
+            console.log(`[database] ${this.name} init error...`);
             throw error;
         }
     };
@@ -227,7 +226,7 @@ class CharaDatabase extends Database {
 
         if (this.indexOf(newData.name) == -1) {
             this.data.push(newData);
-            console.log("[+] Add     New character <" + newData.name + "> data!");
+            console.log(`[database][+] Add     New character <${newData.name}> data!`);
             return "anna " + newData.name + " New character data add!";
 
         } else {
@@ -244,7 +243,7 @@ class CharaDatabase extends Database {
             }
 
             if (changed) {
-                console.log("[*] Update  character <" + newData.name + "> data!");
+                console.log(`[database][*] Update  character <${newData.name}> data!`);
                 return "anna " + newData.name + " New character data update!";
             } else {
                 // if (config.isLocalHost) {
@@ -300,7 +299,7 @@ class ClassDatabase extends Database {
 
         if (this.indexOf(newClass.name) == -1) {
             this.data.push(newClass);
-            console.log("New Class <" + newClass.name + "> add complete!");
+            console.log(`[database] New Class <${newClass.name}> add complete!`);
             return "New Class <" + newClass.name + "> add complete!";
 
         } else {
@@ -314,7 +313,7 @@ class ClassDatabase extends Database {
             await this.downloadDB();
             await this.loadDB();
         } catch (error) {
-            console.log(this.name + " init error...");
+            console.log(`[database] ${this.name} init error...`);
             throw error;
         }
 

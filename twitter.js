@@ -31,7 +31,7 @@ const _twitter = {
                 return req.body;
             } else {
                 // throw new Error(`Cannot get tweet <${id}>`);
-                console.log(`Cannot get tweet <${id}>`);
+                console.log(`[twitter] Cannot get tweet <${id}>`);
                 console.log(req.body.errors)
                 return null;
             }
@@ -123,7 +123,7 @@ const _twitter = {
                 for (let obj of req.body.users) { names.push(obj.screen_name); }
                 return { names: names };
             } else {
-                console.log(req.body.errors)
+                console.log(`[twitter]  ${req.body.errors}`)
                 console.log(`Cannot get user <${screen_name}>'s friends Name`);
                 throw new Error(`Cannot get user <${screen_name}>'s friends Name`);
             }
@@ -206,7 +206,7 @@ module.exports = {
 
     enable() {
         if (_twitter.bot != null) return true;
-        console.log("twitter unable...");
+        console.log("[twitter] twitter unable...");
         return false;
     },
 

@@ -70,14 +70,14 @@ let _config = module.exports = {
         try {
             // json string to object
             cfgObj = eval(`(${rawData})`);
-            console.log("Download config from dropbox");
+            console.log("[config] Download config from dropbox");
         } catch (e) {
             // encode
             let key = process.env.JSONKEY;
             let data = crypto.decrypt(rawData, key);
             // json string to object
             cfgObj = eval(`(${data})`);
-            console.log("Download encrypt config from dropbox");
+            console.log("[config] Download encrypt config from dropbox");
         }
 
         return cfgObj;
@@ -92,7 +92,7 @@ let _config = module.exports = {
             devbot: this.devbot
         }
         let data = crypto.encrypt(JSON.stringify(cfg, null, 2), key);
-        console.log("Upload config to dropbox");
+        console.log("[config] Upload config to dropbox");
 
         dbox.fileUpload("/config.json", data);
     }

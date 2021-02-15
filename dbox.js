@@ -25,7 +25,7 @@ module.exports = {
 
     enable() {
         if (dbox != null) return true;
-        console.log("Dropbox unable...");
+        console.log("[dropbox] Dropbox unable...");
         return false;
     },
 
@@ -45,7 +45,7 @@ module.exports = {
     // filter: "file" or "folder"
     async listDir(dirPath = "", filter) {
         if (!this.enable()) return null;
-        console.log(`listDir( ${dirPath} )`);
+        console.log(`[dropbox] listDir( ${dirPath} )`);
 
         try {
             // get list
@@ -67,7 +67,7 @@ module.exports = {
 
             return result;
         } catch (error) {
-            console.log(`listDir( ${dirPath} ) error...`);
+            console.log(`[dropbox] listDir( ${dirPath} ) error...`);
             // console.log(json(error));
             throw error;
         }
@@ -79,10 +79,10 @@ module.exports = {
 
         try {
             let response = await dbox.filesCreateFolder({ path: root + path, autorename: false });
-            console.log(response);
+            // console.log(`[dropbox]\n${response}`);
             return true;
         } catch (error) {
-            console.log("makeDir error... " + path);
+            console.log("[dropbox] makeDir error... " + path);
             throw error;
         }
     },
@@ -101,7 +101,7 @@ module.exports = {
 
             return response.result.fileBinary;
         } catch (error) {
-            console.log("fileDownload error... " + base);
+            console.log("[dropbox] fileDownload error... " + base);
             throw error;
         }
     },
@@ -126,7 +126,7 @@ module.exports = {
 
             return true;
         } catch (error) {
-            console.log("fileDownloadToFile error... " + base);
+            console.log("[dropbox] fileDownloadToFile error... " + base);
             throw error;
         }
     },
@@ -148,7 +148,7 @@ module.exports = {
             await dbox.filesUpload(filesCommitInfo);
             return true;
         } catch (error) {
-            console.log("fileUpload error... " + dirPath);
+            console.log("[dropbox] fileUpload error... " + dirPath);
             throw error;
         }
     },
@@ -173,7 +173,7 @@ module.exports = {
             // await dbox.filesDelete(filesDeleteArg);
             return true;
         } catch (error) {
-            console.log("fileBackup error... " + filePath);
+            console.log("[dropbox] fileBackup error... " + filePath);
             throw error;
         }
     },
@@ -194,7 +194,7 @@ module.exports = {
             await dbox.filesMoveV2(filesRelocationArg);
             return true;
         } catch (error) {
-            console.log("filesMove error... <" + (root + from) + ">");
+            console.log("[dropbox] filesMove error... <" + (root + from) + ">");
             throw error;
         }
     },
@@ -204,11 +204,11 @@ module.exports = {
         if (!this.enable()) return null;
 
         try {
-            console.log("filesDelete: " + path);
+            console.log("[dropbox] filesDelete: " + path);
             await dbox.filesDelete({ path: root + path });
             return true;
         } catch (error) {
-            console.log("filesDelete error... " + path);
+            console.log("[dropbox] filesDelete error... " + path);
             throw error;
         }
     },
@@ -222,7 +222,7 @@ module.exports = {
 
         let binary = Buffer.from(JSON.stringify(data, null, 4));
         module.exports.fileUpload(`/Logs/${base}/${timeString}.json`, binary, "add").catch((error) => {
-            console.log("logToFile error... ");
+            console.log("[dropbox] logToFile error... ");
             console.log(error);
         });
     },

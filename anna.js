@@ -274,8 +274,8 @@ module.exports = {
 
         } else if (command == "更新" || command == "UPDATE") {
 
-            await charaDatabase.init().catch(console.log);
-            await classDatabase.init().catch(console.log);
+            await charaDatabase.init().catch(_anna.log);
+            await classDatabase.init().catch(_anna.log);
 
             return "更新中...";
 
@@ -355,7 +355,7 @@ module.exports = {
                                 msgs
                             });
 
-                            // console.log(JSON.stringify(replyMsg));
+                            // _anna.log(JSON.stringify(replyMsg));
                             return replyMsg;
                         }
                     }
@@ -408,8 +408,8 @@ module.exports = {
                                 `/Images/NewImages/${imgArray[0].fileName}`,
                                 `/Images/Character/${target}/${imgArray[0].fileName}`);
                         } catch (error) {
-                            console.log("分類錯誤!");
-                            console.log(error);
+                            _anna.log("分類錯誤!");
+                            _anna.log(error);
                             return "分類錯誤!";
                         }
 
@@ -442,7 +442,7 @@ module.exports = {
                         imgur.database.image.findData({ tag: key, isGif: true });
 
                 if (imgArray.length != 1) {
-                    console.log(`刪除錯誤: 目標異常! (${imgArray.length} results!)`);
+                    _anna.log(`刪除錯誤: 目標異常! (${imgArray.length} results!)`);
                     return `刪除錯誤: 目標異常! (${imgArray.length} results!)`;
                 }
 
@@ -452,8 +452,8 @@ module.exports = {
                     await imgur.api.image.imageDeletion({ imageHash: imgArray[0].id });
                     await dbox.fileMove(tagList.substring(1), "DelImages/" + fileName);
                 } catch (error) {
-                    console.log("刪除錯誤!");
-                    console.log(error);
+                    _anna.log("刪除錯誤!");
+                    _anna.log(error);
                     return "刪除錯誤 (API Error)!";
                 }
                 return "刪除成功";
@@ -514,7 +514,7 @@ module.exports = {
             try {
                 return `${result} = \n${eval(result)}`;
             } catch (e) {
-                console.log(e.message);
+                _anna.log(e.message);
                 return "這個東西怪怪的...";
             }
         }
@@ -583,7 +583,7 @@ module.exports = {
     async autoTest(cmd) {
         await sleep(1000);
 
-        console.clear();
+        // console.clear();
 
         let testCmds = [
             // "狀態",
@@ -920,7 +920,7 @@ const _anna = {
             let files = [];
 
             let listDirsTask = async function (retryCount) {
-                console.log(retryCount)
+                // console.log(retryCount)
                 if (retryCount <= 0) return true;
                 if (dirs.length <= 0) {
                     await sleep(100);

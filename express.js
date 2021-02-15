@@ -11,7 +11,7 @@ const _express = {
         _express.server = _express.app.listen(process.env.PORT || 8080, () => {
             // 因為 express 預設走 port 3000，而 heroku 上預設卻不是，要透過下列程式轉換
             let port = _express.server.address().port;
-            console.log("App now running on port", port);
+            console.log("[express] App now running on port", port);
         });
 
         // uptimerobot
@@ -64,7 +64,7 @@ module.exports = {
 
     enable() {
         if (_express.app != null) return true;
-        console.log("express unable...");
+        console.log("[express] express unable...");
         return false;
     },
 

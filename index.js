@@ -18,8 +18,8 @@ const main = async function () {
     discord.init(config.discord);
     line.init(config.devbot, config.isLocalHost);
 
-    console.clear();
-    console.log(config.hostIP);
+    // console.clear();
+    console.log(`[main] ${config.hostIP}`);
     // let cmd = "new";
     // anna.autoTest();
 
@@ -84,7 +84,8 @@ const discordBotOn = function () {
         // if (dMsg.author.id == 628127387657175040) {
         if (dMsg.author.id == discord.bot.user.id) { return; }
         let inChat = dMsg.guild ? dMsg.guild.name : "Chat";
-        console.log(`{${inChat}} <${dMsg.channel.name}> [${dMsg.author.id}] :\n${dMsg.content.trim()}`);
+        // console.log(`{${inChat}} <${dMsg.channel.name}> [${dMsg.author.id}] :\n${dMsg.content.trim()}`);
+        // console.log(`{${inChat}} <${dMsg.channel.name}> [${dMsg.author.username}] :\n${dMsg.content.trim()}`);
 
         // define reply function
         let replyFunc = async function (rMsg) {
