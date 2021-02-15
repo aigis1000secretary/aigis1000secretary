@@ -1,39 +1,10 @@
 ﻿
 /*
     // todo
-    database api input
-    newimg error msg?
-    class Database
-
-    R18 switch
-    
 */
 
 /*
     // commit 
-    >> feature/0.8.8/abotUpgrade
-    var/method name fix
-    command fix
-    bot status upgrade
-    new abot init
-    double abot init
-    change reply logic
-    run test
-    run test fix
-    update abot id
-
-    0.9.0.1
-    new abot devid
-    auto joinqr fix
-
-    0.9.0.2
-    fix NOTIFIED_UPDATE_GROUP event
-
-    0.9.0.3
-    dice limit
-
-    0.9.0.4
-    abot method call fixed
 */
 
 const crypto = require("./crypto.js");
