@@ -96,6 +96,17 @@ const _line = {
                 replyMsg.template.columns[c].actions.push(act);
             }
 
+            // fill actions
+            for (let column of replyMsg.template.columns) {
+                while (column.actions.length != 3) {
+                    column.actions.push({
+                        type: "message",
+                        label: " ",
+                        text: " ",
+                    })
+                }
+            }
+
             return replyMsg;
 
         }

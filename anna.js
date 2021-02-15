@@ -330,7 +330,7 @@ module.exports = {
                         if (tweet_data == null) tweet_data = { data: { text: false } };
                         // get cards in text
                         let array = _anna.getFullnamesFromText(tweet_data.data.text);
-
+                        
                         if (array.length > 0) {
 
                             replyMsg.push({
@@ -808,9 +808,9 @@ const _anna = {
             // let name = charaDatabase.data[charaIndex].name;
             // let subName = charaDatabase.data[charaIndex].subName;
             let name = card.name;
-            let subName = card.subName;
+            let subName = card.subName || "NULL";
             if (text.indexOf(name) != -1) { result.push(name); }
-            if (subName != "" && text.indexOf(subName) != -1) { result2.push(name); }
+            if (text.indexOf(subName) != -1) { result2.push(name); }
         }
 
         return result.length != 0 ? result : result2;
