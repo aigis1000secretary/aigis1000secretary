@@ -96,15 +96,6 @@ const _line = {
                 replyMsg.template.columns[c].actions.push(act);
             }
 
-            // fill actions
-            while (i % 3 != 0) {
-                replyMsg.template.columns[c].actions.push({
-                    type: "message",
-                    label: i % 3 == 2 ? "next" : " ",
-                    text: i % 3 == 2 ? "new" : " ",
-                })
-                ++i;
-            }
             return replyMsg;
 
         }
