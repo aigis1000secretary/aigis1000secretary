@@ -26,12 +26,16 @@
     1.1.0.1
     line Callback Fix
     fix line callback bug
+    
+    1.1.0.2
+    getTweetImages fix
+    
 */
 
 const crypto = require("./crypto.js");
 const dbox = require("./dbox.js");
 let _config = module.exports = {
-    _version: "1.1.0.1",
+    _version: "1.1.0.2",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正

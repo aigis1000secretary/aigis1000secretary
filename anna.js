@@ -490,13 +490,15 @@ module.exports = {
                 twitter.api.getTweetImages(tweet_data, isAdmin);
 
                 let replyMsg = [];
-                for (let media of tweet_data.includes.media) {
-                    if (media.type == "photo") {
-                        replyMsg.push({
-                            type: "image",
-                            imageLink: media.url,
-                            thumbnailLink: media.url
-                        });
+                if (tweet_data.includes && Array.isArray(tweet_data.includes.media) && tweet_data.includes.media.length > 0) {
+                    for (let media of tweet_data.includes.media) {
+                        if (media.type == "photo") {
+                            replyMsg.push({
+                                type: "image",
+                                imageLink: media.url,
+                                thumbnailLink: media.url
+                            });
+                        }
                     }
                 }
                 return replyMsg;
