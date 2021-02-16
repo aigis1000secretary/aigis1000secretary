@@ -48,9 +48,17 @@ module.exports = {
                         str += `${msg.labels[i]}:\n${msg.msgs[i]}\n`;
                     }
                 }
+                return str.trim();
 
-                return str;
+            } else if (type == "twitter") {
+                let str = ""
+                for (data of msg.data) {
+                    str += `<https://twitter.com/Aigis1000/status/${data.twitterId}>\n`;
+                }
+                return str.trim();
+
             }
+            return msg;
         }
     }
 

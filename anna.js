@@ -304,7 +304,7 @@ module.exports = {
             await this.init(this.config);
             return "初始化完成!";
 
-        } else if ((command == "NEWIMG")) {
+        } else if (command == "NEWIMG") {
             // imgUploader.upload();
             _anna.uploadImages();
             return "上傳圖檔中...";
@@ -330,7 +330,7 @@ module.exports = {
                         if (tweet_data == null) tweet_data = { data: { text: false } };
                         // get cards in text
                         let array = _anna.getFullnamesFromText(tweet_data.data.text);
-                        
+
                         if (array.length > 0) {
 
                             replyMsg.push({
@@ -482,10 +482,10 @@ module.exports = {
             // tweet image to dropbox
             let url = command;
 
-            if (/\/\d{18,19}(\?|\/|$)/.test(url)) {
+            if (/(\/)(\d{18,19})(\?|\/|$)/.test(url)) {
                 let tweetId = /\d{18,19}/.exec(url).toString();
                 let tweet_data = await twitter.api.getTweet(tweetId);
-                if (!tweet_data) { return ""; }
+                if (!tweet_data) { return false; }
 
                 twitter.api.getTweetImages(tweet_data, isAdmin);
 
@@ -497,6 +497,80 @@ module.exports = {
                             imageLink: media.url,
                             thumbnailLink: media.url
                         });
+                    }
+                }
+                return replyMsg;
+            }
+            return false;
+
+        } else if (command == "推特" || command == "TWITTER") {
+
+            if (arg1 == null) {
+                // search tweet list
+                let tweets = await twitter.api.getTweetList("Aigis1000");
+                // filter today tweet
+                tweets = tweets.filter((tweet) => {
+                    let now = new Date(Date.now());
+                    let date = new Date(tweet.created_at);
+                    return (now.getDate() == date.getDate()
+                        && now.getMonth() == date.getMonth()
+                        && now.getFullYear() == date.getFullYear());
+                })
+                // sort
+                tweets.sort(function (a, b) {
+                    let idA = a.id_str;
+                    let idB = b.id_str;
+                    if (idA < idB) { return -1; }
+                    if (idA > idB) { return 1; }
+                    return 0;
+                })
+
+                let replyMsg = {
+                    type: "twitter",
+                    // columns
+                    data: []
+                }
+                // set tweet
+                for (let tweet of tweets) {
+                    let tweetId = tweet.id_str;
+                    let tweet_data = await twitter.api.getTweet(tweetId);
+                    if (!tweet_data) { continue; }
+                    try {
+                        let column = {
+                            text: tweet_data.data.text,
+                            twitterId: tweetId,
+                            media: (tweet_data.includes && Array.isArray(tweet_data.includes.media) && tweet_data.includes.media.length > 0)
+                        };
+                        replyMsg.data.push(column);
+                    } catch (e) {
+                    }
+                }
+                return replyMsg;
+
+            } else if (/\d{18,19}/.test(arg1)) {
+                let replyMsg = [];
+
+                // get tweet id
+                let tweetId = arg1;
+                let tweet_data = await twitter.api.getTweet(tweetId);
+                if (!tweet_data) { return false; }
+
+                // get tweet text
+                let text = tweet_data.data.text;
+                replyMsg.push(text);
+
+                if (tweet_data.includes &&
+                    Array.isArray(tweet_data.includes.media) &&
+                    tweet_data.includes.media.length > 0) {
+
+                    for (let media of tweet_data.includes.media) {
+                        if (media.type == "photo") {
+                            replyMsg.push({
+                                type: "image",
+                                imageLink: media.url,
+                                thumbnailLink: media.url
+                            });
+                        }
                     }
                 }
                 return replyMsg;
