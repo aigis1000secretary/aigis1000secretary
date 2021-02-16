@@ -155,8 +155,10 @@ const discordBotOn = function () {
 // line bot 監聽
 const lineBotOn = function () {
     // bot.on
-    line.bot.on("message", async function (event) {
-        if (!event || event.message.type != "text") return;
+    let textMessage = async function (event) {
+        if (!event) return;
+        let message = event.message || event.postback;
+        if (["text", "postback"].includes(message.type)) return;
 
         // define reply function
         let replyFunc = async function (rMsg) {
@@ -173,7 +175,7 @@ const lineBotOn = function () {
         };
 
         // 取出文字內容
-        let msg = event.message.text.trim();
+        let msg = message.text.trim();
         let isAdmin = line.isAdmin(event.source.userId);
         let cmd = msg;
 
@@ -218,7 +220,11 @@ const lineBotOn = function () {
                 return;
             }
         }
-    });
+    };
+    line.bot.on("message", textMessage());
+    line.bot.on("postback", textMessage());
+
+
 
     // wellcome msg
     line.bot.on("memberJoined", function (event) {
@@ -303,7 +309,7 @@ const twitterBotOn = function () {
             //     tweet_data.includes.media.length > 0) {
             //     // abotPushLog(`https://twitter.com/${tweet_data.includes.users[0].username}/status/${tweet_data.data.id}`)
             // }
-            
+
             twitter.api.getTweetImages(tweet_data, false);
         }
     }

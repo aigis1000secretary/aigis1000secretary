@@ -18,6 +18,10 @@
 
 /*
     // commit 
+    >> feature/1.0.0/todaysTweet
+    add method to format twitter url obj
+    add twitter api to search new tweet
+    new anna reply cmd
     
 */
 
@@ -26,7 +30,7 @@ const dbox = require("./dbox.js");
 let _config = module.exports = {
     _version: "1.0.0.7",
     // 主版本號：當你做了不兼容的API修改
-    // 次s版本號：當你做了向下兼容的功能性新增
+    // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
     // 次修訂號：線上debug
 

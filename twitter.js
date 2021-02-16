@@ -130,6 +130,26 @@ const _twitter = {
             }
         },
 
+        async getTweetList(screen_name) {
+            const endpointURL = new URL(`https://api.twitter.com/1.1/search/tweets.json`);
+            // const params = { q: `(from:${screen_name})`, count: 10 };
+            const params = { q: `(from:${screen_name})`, count: 10 };
+
+            const req = await get({ url: endpointURL, oauth: _twitter.oAuthConfig, qs: params, json: true });
+
+            if (req.body && !req.body.errors) {
+                // let names = [];
+                // for (let obj of req.body.users) { names.push(obj.screen_name); }
+                // return { names: names };
+                return req.body.statuses;
+            } else {
+                console.log(`[twitter]`)
+                console.log(req.body.errors)
+                console.log(`Cannot get user <${screen_name}>'s tweet list`);
+                throw new Error(`Cannot get user <${screen_name}>'s tweet list`);
+            }
+        },
+
         async getStreamByIDs(ids, callback) { _twitter.api.getStream({ follow: ids.join(',') }, callback); },
         async getStreamByNames(names, callback) { _twitter.api.getStream({ track: names.join(',') }, callback); },
 
@@ -252,6 +272,11 @@ module.exports = {
             if (!module.exports.enable()) return null;
 
             return await _twitter.api.getTweetImages(tweet_data, isAdmin);
+        },
+        async getTweetList(screen_name) {
+            if (!module.exports.enable()) return null;
+
+            return await _twitter.api.getTweetList(screen_name);
         }
     }
 }
