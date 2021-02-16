@@ -155,10 +155,10 @@ const discordBotOn = function () {
 // line bot 監聽
 const lineBotOn = function () {
     // bot.on
-    let textMessage = async function (event) {
-        if (!event) return;
-        let message = event.message || event.postback;
-        if (["text", "postback"].includes(message.type)) return;
+    let textMessage = async (event) => {
+        if (!event || !["message", "postback"].includes(event.type)) return;
+        let message = event.message || event.postback || null;
+        if (!message) return;
 
         // define reply function
         let replyFunc = async function (rMsg) {
@@ -175,19 +175,19 @@ const lineBotOn = function () {
         };
 
         // 取出文字內容
-        let msg = message.text.trim();
+        let msg = (message.text || message.data || "").trim();
         let isAdmin = line.isAdmin(event.source.userId);
         let cmd = msg;
 
         // in user chat
         let callAnna = false;
-        if (/^(ANNA |安娜 )/i.test(msg) || event.source.type == "user") {
+        if (/^(ANNA |安娜 )/i.test(msg) || event.source.type == "user" || event.type == "postback") {
             callAnna = true;
             cmd = cmd.replace(/^(ANNA |安娜 )/i, "");
         }
 
         // ask ai
-        if (callAnna) {
+        if (callAnna && msg != "") {
             if (cmd.length == 0) { // normal response
                 replyFunc("是的！王子？");
                 return;
@@ -221,10 +221,8 @@ const lineBotOn = function () {
             }
         }
     };
-    line.bot.on("message", textMessage());
-    line.bot.on("postback", textMessage());
-
-
+    line.bot.on("message", textMessage);
+    line.bot.on("postback", textMessage);
 
     // wellcome msg
     line.bot.on("memberJoined", function (event) {
