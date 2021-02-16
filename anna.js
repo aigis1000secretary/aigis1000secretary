@@ -304,7 +304,7 @@ module.exports = {
             await this.init(this.config);
             return "初始化完成!";
 
-        } else if ((command == "NEWIMG")) {
+        } else if (command == "NEWIMG") {
             // imgUploader.upload();
             _anna.uploadImages();
             return "上傳圖檔中...";
@@ -330,7 +330,7 @@ module.exports = {
                         if (tweet_data == null) tweet_data = { data: { text: false } };
                         // get cards in text
                         let array = _anna.getFullnamesFromText(tweet_data.data.text);
-                        
+
                         if (array.length > 0) {
 
                             replyMsg.push({
@@ -482,10 +482,10 @@ module.exports = {
             // tweet image to dropbox
             let url = command;
 
-            if (/\/\d{18,19}(\?|\/|$)/.test(url)) {
+            if (/(\/)(\d{18,19})(\?|\/|$)/.test(url)) {
                 let tweetId = /\d{18,19}/.exec(url).toString();
                 let tweet_data = await twitter.api.getTweet(tweetId);
-                if (!tweet_data) { return ""; }
+                if (!tweet_data) { return false; }
 
                 twitter.api.getTweetImages(tweet_data, isAdmin);
 

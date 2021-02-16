@@ -112,6 +112,37 @@ const _line = {
         }
         return "";
     },
+
+    createTwitterButtons(dataArray) {
+
+        let replyMsg = {
+            type: "template",
+            altText: "今日官方推特",
+            template: {
+                type: "carousel",
+                columns: []
+            }
+        }
+
+        for (let data of dataArray) {
+            let text = data.text;
+            if (text.length > 120) text = text.substring(0, 119) + "…";
+            let label = data.media ? "圖文詳細" : "全文";
+            // let url = `https://twitter.com/Aigis1000/status/${data.twitterId}`;
+
+            let column = {
+                "text": text,
+                "actions": [{
+                    "type": "postback",
+                    "label": label,
+                    "data": `twitter ${data.twitterId}`
+                }]
+            }
+            replyMsg.template.columns.push(column);
+        }
+
+        return replyMsg;
+    }
 }
 
 module.exports = {
@@ -183,7 +214,11 @@ module.exports = {
             } else if (type == "option") {
                 return _line.createMsgButtons(msg.title, msg.labels, msg.msgs);
 
+            } else if (type == "twitter") {
+                return _line.createTwitterButtons(msg.data);
+
             }
+            return msg;
         }
     },
 }
