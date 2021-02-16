@@ -6,6 +6,7 @@ const anna = require("./anna.js");
 const discord = require("./discord.js");
 const line = require("./line.js")
 const express = require("./express.js")
+const twitter = require("./twitter.js");
 
 const main = async function () {
     // config
@@ -26,6 +27,7 @@ const main = async function () {
     expressOn();
     discordBotOn();
     lineBotOn();
+    twitterBotOn();
 
     console.log("=====*****Anna secretary online*****=====");
 
@@ -245,4 +247,65 @@ const lineBotOn = function () {
         replyFunc(result);
         return true;
     });// */
+}
+
+
+// twitter bot 監聽 Aigis1000
+const twitterBotOn = function () {
+
+    if (config.isLocalHost) { return; }
+
+    let callback = async function (tweet_data) {
+        // // get tweet text & media keyword
+        // let text = tweet_data.data.text;
+        // let mediaKey = "";
+
+        // if source is Aigis1000
+        if (tweet_data.includes.users[0].username == "Aigis1000") {
+
+            // // push image data to tweetMediaCache if there are some media
+            // if (tweet_data.includes &&
+            //     Array.isArray(tweet_data.includes.media) &&
+            //     tweet_data.includes.media.length > 0) {
+
+            //     // get keyword in text
+            //     mediaKey = text.split('/t.co/').splice(-1);
+            //     // map keyword => media.url
+            //     tweetMediaCache[mediaKey] = [];
+            //     for (let media of tweet_data.includes.media) {
+            //         if (media.type == "photo") {
+            //             tweetMediaCache[mediaKey].push(media.url);
+            //         }
+            //     }
+            // }
+
+            // // get all announce target
+            // let aIDs = await line.abot.LINE._getGroupsJoined();
+            // for (let aid of aIDs) {
+            //     // // check announce switch
+            //     // if (!groupDatabase.data[i].alarm) continue;
+            //     // // 14 days no ant msg idle group	3 * 24 * 60 * 60 * 1000
+            //     // if (Date.now() - groupDatabase.data[i].timestamp > 259200000) {
+            //     //     groupDatabase.data[i].alarm = false;
+            //     //     groupDatabase.uploadTask();
+            //     //     continue;
+            //     // }
+
+            //     line.abot.LINE.push(aid, text);
+            // }
+
+            // image to dropbox
+            twitter.api.getTweetImages(tweet_data, true);
+        } else {
+            // // send tweet with media to pushlog
+            // if (tweet_data.includes &&
+            //     Array.isArray(tweet_data.includes.media) &&
+            //     tweet_data.includes.media.length > 0) {
+            //     // abotPushLog(`https://twitter.com/${tweet_data.includes.users[0].username}/status/${tweet_data.data.id}`)
+            // }
+            
+            twitter.api.getTweetImages(tweet_data, false);
+        }
+    }
+    twitter.listen(callback);
 }
