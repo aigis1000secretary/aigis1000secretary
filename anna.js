@@ -487,7 +487,7 @@ module.exports = {
                 let tweet_data = await twitter.api.getTweet(tweetId);
                 if (!tweet_data) { return ""; }
 
-                twitter.api.getTweetImages(tweet_data);
+                twitter.api.getTweetImages(tweet_data, isAdmin);
 
                 let replyMsg = [];
                 for (let media of tweet_data.includes.media) {

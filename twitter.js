@@ -38,7 +38,7 @@ const _twitter = {
         },
 
         // download tweet images & return filelist
-        async getTweetImages(tweet_data) {
+        async getTweetImages(tweet_data, isAdmin) {
             let images = [];
             // image to file
             for (let i in tweet_data.includes.media) {
@@ -67,9 +67,10 @@ const _twitter = {
                         fs.writeFileSync("./" + filename, req.body, { encoding: 'binary' });
                         images.push("./" + filename);
 
-                        // let img = fs.readFileSync("./" + filename);
-                        // await dbox.fileUpload("Images/NewImages/" + filename, img);
-                        // fs.unlinkSync("./" + filename);
+                        let dbox = require("./dbox.js")
+                        let img = fs.readFileSync("./" + filename);
+                        await dbox.fileUpload(`/Images/NewImages/${isAdmin ? "" : "etc/"}${filename}`, img);
+                        fs.unlinkSync("./" + filename);
                     }
                 }
             }
@@ -247,10 +248,10 @@ module.exports = {
 
             return await _twitter.api.getTweet(id);
         },
-        async getTweetImages(tweet_data) {
+        async getTweetImages(tweet_data, isAdmin) {
             if (!module.exports.enable()) return null;
 
-            return await _twitter.api.getTweetImages(tweet_data);
+            return await _twitter.api.getTweetImages(tweet_data, isAdmin);
         }
     }
 }
