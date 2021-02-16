@@ -155,7 +155,7 @@ const discordBotOn = function () {
 // line bot 監聽
 const lineBotOn = function () {
     // bot.on
-    let textMessage = async function (event) {
+    let textMessage = async (event) => {
         if (!event) return;
         let message = event.message || event.postback;
         if (["text", "postback"].includes(message.type)) return;
@@ -221,10 +221,8 @@ const lineBotOn = function () {
             }
         }
     };
-    line.bot.on("message", textMessage());
-    line.bot.on("postback", textMessage());
-
-
+    line.bot.on("message", textMessage);
+    line.bot.on("postback", textMessage);
 
     // wellcome msg
     line.bot.on("memberJoined", function (event) {
