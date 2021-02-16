@@ -212,7 +212,7 @@ module.exports = {
     },
 
     async listen(callback) {
-        if (!enable()) return null;
+        if (!module.exports.enable()) return null;
 
         // get target IDs
         // let response = await _twitter.api.getFriendIDs("Aigis1000Anna");
