@@ -25,6 +25,7 @@
     
     1.1.0.1
     line Callback Fix
+    fix line callback bug
 */
 
 const crypto = require("./crypto.js");
