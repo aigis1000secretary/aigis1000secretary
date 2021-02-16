@@ -21,6 +21,7 @@
     >> feature/1.0.0/todaysTweet
     add method to format twitter url obj
     add twitter api to search new tweet
+    new anna reply cmd
 */
 
 const crypto = require("./crypto.js");

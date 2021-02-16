@@ -501,6 +501,80 @@ module.exports = {
                 }
                 return replyMsg;
             }
+            return false;
+
+        } else if (command == "推特" || command == "TWITTER") {
+
+            if (arg1 == null) {
+                // search tweet list
+                let tweets = await twitter.api.getTweetList("Aigis1000");
+                // filter today tweet
+                tweets = tweets.filter((tweet) => {
+                    let now = new Date(Date.now());
+                    let date = new Date(tweet.created_at);
+                    return (now.getDate() == date.getDate()
+                        && now.getMonth() == date.getMonth()
+                        && now.getFullYear() == date.getFullYear());
+                })
+                // sort
+                tweets.sort(function (a, b) {
+                    let idA = a.id_str;
+                    let idB = b.id_str;
+                    if (idA < idB) { return -1; }
+                    if (idA > idB) { return 1; }
+                    return 0;
+                })
+
+                let replyMsg = {
+                    type: "twitter",
+                    // columns
+                    data: []
+                }
+                // set tweet
+                for (let tweet of tweets) {
+                    let tweetId = tweet.id_str;
+                    let tweet_data = await twitter.api.getTweet(tweetId);
+                    if (!tweet_data) { continue; }
+                    try {
+                        let column = {
+                            text: tweet_data.data.text,
+                            twitterId: tweetId,
+                            media: (tweet_data.includes && Array.isArray(tweet_data.includes.media) && tweet_data.includes.media.length > 0)
+                        };
+                        replyMsg.data.push(column);
+                    } catch (e) {
+                    }
+                }
+                return replyMsg;
+
+            } else if (/\d{18,19}/.test(arg1)) {
+                let replyMsg = [];
+
+                // get tweet id
+                let tweetId = arg1;
+                let tweet_data = await twitter.api.getTweet(tweetId);
+                if (!tweet_data) { return false; }
+
+                // get tweet text
+                let text = tweet_data.data.text;
+                replyMsg.push(text);
+
+                if (tweet_data.includes &&
+                    Array.isArray(tweet_data.includes.media) &&
+                    tweet_data.includes.media.length > 0) {
+
+                    for (let media of tweet_data.includes.media) {
+                        if (media.type == "photo") {
+                            replyMsg.push({
+                                type: "image",
+                                imageLink: media.url,
+                                thumbnailLink: media.url
+                            });
+                        }
+                    }
+                }
+                return replyMsg;
+            }
             return "";
 
         } else if (/^(\s|\dD\d|\d|[\+\-\*\/\(\)])+$/i.test(msgLine[0].trim())) {
