@@ -20,6 +20,7 @@
     // commit 
     >> feature/1.0.0/todaysTweet
     add method to format twitter url obj
+    add twitter api to search new tweet
 */
 
 const crypto = require("./crypto.js");
