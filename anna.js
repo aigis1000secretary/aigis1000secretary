@@ -549,7 +549,10 @@ module.exports = {
                 }
                 return replyMsg;
 
-            } else if (/\d{18,19}/.test(arg1)) {
+            }
+
+            let cdTime = process.env.CDTIME;
+            if (/\d{18,19}/.test(arg1) && (isAdmin || !cdTime || Date.now() - cdTime > 30 * 1000)) {
                 let replyMsg = [];
 
                 // get tweet id
@@ -612,7 +615,7 @@ module.exports = {
 
         // Rush!!
         let cdTime = process.env.CDTIME;
-        if (msg.equali("Rush!!") && (!cdTime || Date.now() - cdTime > 30 * 1000)) {
+        if (msg.equali("Rush!!") && (isAdmin || !cdTime || Date.now() - cdTime > 30 * 1000)) {
             process.env.CDTIME = Date.now();
 
             let imgArray = imgur.database.image.findData({ tag: "images", isGif });
