@@ -29,13 +29,16 @@
     
     1.1.0.2
     getTweetImages fix
-    
+
+    1.1.0.3
+    set postback cdtime
+    postback add uri option
 */
 
 const crypto = require("./crypto.js");
 const dbox = require("./dbox.js");
 let _config = module.exports = {
-    _version: "1.1.0.2",
+    _version: "1.1.0.3",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正

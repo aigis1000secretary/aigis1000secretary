@@ -131,11 +131,15 @@ const _line = {
             // let url = `https://twitter.com/Aigis1000/status/${data.twitterId}`;
 
             let column = {
-                "text": text,
-                "actions": [{
-                    "type": "postback",
-                    "label": label,
-                    "data": `twitter ${data.twitterId}`
+                text: text,
+                actions: [{
+                    type: "postback",
+                    label: label,
+                    data: `twitter ${data.twitterId}`
+                }, {
+                    type: "uri",
+                    label: label,
+                    uri: `https://twitter.com/Aigis1000/status/${data.twitterId}`
                 }]
             }
             replyMsg.template.columns.push(column);
