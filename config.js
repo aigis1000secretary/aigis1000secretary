@@ -32,6 +32,7 @@
 
     1.1.0.3
     set postback cdtime
+    postback add uri option
 */
 
 const crypto = require("./crypto.js");

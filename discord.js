@@ -53,7 +53,8 @@ module.exports = {
             } else if (type == "twitter") {
                 let str = ""
                 for (data of msg.data) {
-                    str += `<https://twitter.com/Aigis1000/status/${data.twitterId}>\n`;
+                    // str += `<https://twitter.com/Aigis1000/status/${data.twitterId}>\n`;
+                    str += `https://twitter.com/Aigis1000/status/${data.twitterId}\n`;
                 }
                 return str.trim();
 
