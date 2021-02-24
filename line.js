@@ -138,7 +138,7 @@ const _line = {
                     data: `twitter ${data.twitterId}`
                 }, {
                     type: "uri",
-                    label: label,
+                    label: "原文連結",
                     uri: `https://twitter.com/Aigis1000/status/${data.twitterId}`
                 }]
             }

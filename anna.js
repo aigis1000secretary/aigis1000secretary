@@ -507,7 +507,7 @@ module.exports = {
 
         } else if (command == "推特" || command == "TWITTER") {
 
-            if (arg1 == null) {
+            if (arg1 == null) { //  || !isNaN(Date.parse(arg1))
                 // search tweet list
                 let tweets = await twitter.api.getTweetList("Aigis1000");
                 // filter today tweet
