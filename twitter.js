@@ -69,7 +69,7 @@ const _twitter = {
 
                         let dbox = require("./dbox.js")
                         let img = fs.readFileSync("./" + filename);
-                        await dbox.fileUpload(`/Images/NewImages/${isAdmin ? "" : "etc/"}${filename}`, img);
+                        await dbox.fileUpload(`/Images/NewImages/${isAdmin ? "" : `etc/${tweet_data.includes.users[0].username}/`}${filename}`, img);
                         fs.unlinkSync("./" + filename);
                     }
                 }
