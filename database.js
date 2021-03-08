@@ -1,4 +1,5 @@
 
+const { exception } = require('console');
 const fs = require('fs');
 const dbox = require("./dbox.js");
 
@@ -166,6 +167,28 @@ class CharaDatabase extends Database {
     constructor(dbName, backup) {
         super(dbName, backup);
         this.sortMethod = function (A, B) { return (A.rarity == B.rarity) ? A.name.localeCompare(B.name) : A.rarity.localeCompare(B.rarity) };
+    };
+
+    // 下載
+    async downloadDB() {
+        // console.log(`[CDB] ${this.name} downloading...`);
+
+        // download json
+        try {
+            // await dbox.fileDownloadToFile(`/${this.fileName}`)
+
+            const get = require('util').promisify(require("request").get);
+            const req = await get({ url: "https://aigis1000secretary.github.io/AigisTools/AigisLoader/CharaDatabase.json", encoding: 'binary' });
+            if (req.body && req.statusCode == 200) {
+                fs.writeFileSync(`./${this.fileName}`, req.body, { encoding: "binary" });
+            }
+
+            console.log(`[database] ${this.name} downloaded!`);
+            return true;
+        } catch (error) {
+            console.log(`[database] ${this.name} downloaded error...`);
+            throw error;
+        }
     };
 
     newData() {
