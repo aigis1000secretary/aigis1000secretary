@@ -1180,7 +1180,7 @@ const _anna = {
             // for (let img of imgur.database.images) {
             for (let img of imgur.database.image.findData({ isGif: true })) {
                 let path = img.tagList;
-                let filename = img.imageLink.replace(`https://i.imgur.com/`, "");
+                let filename = img.fileName;
                 let pathInDbox = pathArray.find((p) => path.equali(p));
                 if (!pathInDbox) {
                     console.log(`${path} not exist in drpbox`);
