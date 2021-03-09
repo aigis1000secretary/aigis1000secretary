@@ -405,7 +405,7 @@ module.exports = {
                         // move image file
                         try {
                             await dbox.fileMove(
-                                `/Images/NewImages/${imgArray[0].fileName}`,
+                                imgArray[0].tagList,
                                 `/Images/Character/${target}/${imgArray[0].fileName}`);
                         } catch (error) {
                             _anna.log("分類錯誤!");
