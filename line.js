@@ -219,7 +219,17 @@ module.exports = {
                 return _line.createMsgButtons(msg.title, msg.labels, msg.msgs);
 
             } else if (type == "twitter") {
-                return _line.createTwitterButtons(msg.data);
+                if (msg.data.length <= 10) {
+                    return _line.createTwitterButtons(msg.data);
+
+                } else {
+                    let res = [];
+                    while (msg.data.length > 0) {
+                        res.push(_line.createTwitterButtons(msg.data.splice(0, 10)));
+                    }
+
+                    return res;
+                }
 
             }
             return msg;

@@ -133,7 +133,7 @@ const _twitter = {
         async getTweetList(screen_name) {
             const endpointURL = new URL(`https://api.twitter.com/1.1/search/tweets.json`);
             // const params = { q: `(from:${screen_name})`, count: 10 };
-            const params = { q: `(from:${screen_name})`, count: 10 };
+            const params = { q: `(from:${screen_name})`, count: 50 };
 
             const req = await get({ url: endpointURL, oauth: _twitter.oAuthConfig, qs: params, json: true });
 
