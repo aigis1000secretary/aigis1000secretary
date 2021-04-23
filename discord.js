@@ -36,19 +36,28 @@ module.exports = {
             type = msg.type;
 
             if (type == "image") {
-                return msg.imageLink;
+                let embed = new Discord.MessageEmbed()
+                    .setColor('BLUE')
+                    .setImage(msg.imageLink);
+                return embed;
 
             } else if (type == "option") {
-                let str = `${msg.title}\n`;
+                let str = [];
 
                 for (let i = 0; i < msg.labels.length; ++i) {
                     if (msg.msgs[i].indexOf("http") == 0) {
-                        str += `${msg.labels[i]}: <${msg.msgs[i]}>\n`;
+                        str.push(`[${msg.labels[i]}](${msg.msgs[i]})`);
                     } else {
-                        str += `${msg.labels[i]}:\n${msg.msgs[i]}\n`;
+                        str.push(`${msg.labels[i]}:\n ${msg.msgs[i]}`);
                     }
                 }
-                return str.trim();
+
+                let embed = new Discord.MessageEmbed()
+                    .setColor('BLUE')
+                    .setTitle(msg.title)
+                    .setDescription(str.join("\n"))
+
+                return embed;
 
             } else if (type == "twitter") {
                 let str = ""
@@ -57,6 +66,16 @@ module.exports = {
                     str += `https://twitter.com/Aigis1000/status/${data.twitterId}\n`;
                 }
                 return str.trim();
+
+            } else if (type == "character") {
+                let embed = new Discord.MessageEmbed()
+                    .setColor('BLUE')
+                    .setTitle(msg.title)
+                    .setDescription(`${msg.data}\n\n[${msg.labels}](${msg.url})`);
+
+                if (msg.imageLink) { embed.setImage(msg.imageLink); }
+
+                return embed;
 
             }
             return msg;

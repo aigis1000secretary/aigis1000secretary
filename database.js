@@ -204,10 +204,12 @@ class CharaDatabase extends Database {
         data.rarity = "";
         data.class = "";
 
+        data.getTitle = function () {
+            return this.name + "　　" + this.rarity;
+        };
+
         data.getMessage = function () {
             let string = "";
-
-            string += this.name + "　　" + this.rarity + "\n";
 
             let nickList = [];
             for (let data of nickDatabase.data) {
