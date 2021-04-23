@@ -77,6 +77,17 @@ const expressOn = function () {
         }
         response.send(responseBody);
     });
+
+    express.app.get("/seesaawiki/:command", async (request, response) => {
+
+        let command = request.params.command;
+        // console.log(`<${command}>`);
+
+        let newUrl = require("./urlEncoder.js").urlEncodeJP(`https://seesaawiki.jp/aigis/d/${command}`);
+        response.redirect(301, newUrl);
+        // http://127.0.0.1:8080/seesaawiki/刻詠の風水士リンネ
+        // https://aigis1000secretary.herokuapp.com/seesaawiki/刻詠の風水士リンネ
+    });
 }
 
 // discord bot 監聽
@@ -97,13 +108,13 @@ const discordBotOn = function () {
                 if (Array.isArray(rMsg)) {
 
                     for (let m of rMsg) {
-                        if (!config.isLocalHost) { await dMsg.reply(m); }
+                        if (!config.isLocalHost || isAdmin) { await dMsg.reply(m); }
                         else { console.log("[DC] " + m); }
                     }
 
                 } else {
 
-                    if (!config.isLocalHost) { await dMsg.reply(rMsg); }
+                    if (!config.isLocalHost || isAdmin) { await dMsg.reply(rMsg); }
                     else { console.log("[DC] " + rMsg); }
 
                 }
