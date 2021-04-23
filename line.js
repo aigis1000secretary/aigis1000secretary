@@ -231,6 +231,14 @@ module.exports = {
                     return res;
                 }
 
+            } else if (type == "character") {
+                let res = [];
+
+                res.push(_line.createTextMsg(`${msg.title}\n${msg.data}`));
+                if (msg.imageLink) { _line.createImageMsg(msg.imageLink, msg.thumbnailLink); }
+                res.push(_line.createMsgButtons("Wiki 連結", [msg.label], [msg.url]));
+
+                return res;
             }
             return msg;
         }

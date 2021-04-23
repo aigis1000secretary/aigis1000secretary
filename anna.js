@@ -170,7 +170,7 @@ module.exports = {
             // }];
             return {
                 type: "option",
-                title: "實用工具 (1)",
+                title: "實用工具",
                 labels: [
                     "特殊合成表",
                     "經驗值計算機",
@@ -468,7 +468,7 @@ module.exports = {
 
             } catch (e) {
                 // return null;           
-                return e.message;
+                return e.message.toString();
 
             }
 
@@ -774,27 +774,22 @@ const _anna = {
         if (i != -1) {
             let obj = charaDatabase.data[i];
 
-            let replyMsg = [];
-            // main text
-            replyMsg.push(obj.getMessage());
+            let replyMsg = {
+                type: "character",
+                title: obj.getTitle(),
+                data: obj.getMessage(),
+
+                label: obj.name,
+                url: obj.getWikiUrl()
+            }
             // card image
             let imgArray = imgur.database.image.findData({ tag: charaName });
             if (imgArray && imgArray.length > 0) {
-                let img = randomPick(imgArray);
-                replyMsg.push({
-                    type: "image",
-                    imageLink: img.imageLink,
-                    thumbnailLink: img.thumbnailLink
-                });
-            }
-            // url
-            replyMsg.push({
-                type: "option",
-                title: "Wiki 連結",
-                labels: [obj.name],
-                msgs: [obj.getWikiUrl()]
-            });
+                img = randomPick(imgArray);
 
+                replyMsg.imageLink = img.imageLink;
+                replyMsg.thumbnailLink = img.thumbnailLink;
+            }
             return replyMsg;
         }
 
