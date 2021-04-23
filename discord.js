@@ -1,5 +1,15 @@
 const Discord = require('discord.js')
 const config = require("./config.js");
+const encoder = require("./urlEncoder.js")
+
+const msgEmbedUrl = (url) => {
+    if (url.startsWith("http://seesaawiki.jp/aigis/d/")) {
+        url = encoder.urlDecodeJP(url);
+        url = url.replace("http://seesaawiki.jp/aigis/d/", "https://aigis1000secretary.herokuapp.com/seesaawiki/");
+        // url = url.replace("http://seesaawiki.jp/aigis/d/", "http://127.0.0.1:8080/seesaawiki/");
+    }
+    return url;
+}
 
 module.exports = {
     bot: null,
@@ -46,7 +56,7 @@ module.exports = {
 
                 for (let i = 0; i < msg.labels.length; ++i) {
                     if (msg.msgs[i].indexOf("http") == 0) {
-                        str.push(`[${msg.labels[i]}](${msg.msgs[i]})`);
+                        str.push(`[${msg.labels[i]}](${msgEmbedUrl(msg.msgs[i])})`);
                     } else {
                         str.push(`${msg.labels[i]}:\n ${msg.msgs[i]}`);
                     }
@@ -71,7 +81,7 @@ module.exports = {
                 let embed = new Discord.MessageEmbed()
                     .setColor('BLUE')
                     .setTitle(msg.title)
-                    .setDescription(`${msg.data}\n\n[${msg.label}](${msg.url})`);
+                    .setDescription(`${msg.data}\n\n[${msg.label}](${msgEmbedUrl(msg.url)})`);
 
                 if (msg.imageLink) { embed.setImage(msg.imageLink); }
 
@@ -81,5 +91,4 @@ module.exports = {
             return msg;
         }
     }
-
 }
