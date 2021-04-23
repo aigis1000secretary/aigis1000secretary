@@ -94,10 +94,18 @@ const discordBotOn = function () {
             rMsg = discord.formatReply(rMsg);
 
             try {
-                if (!config.isLocalHost) {
-                    await dMsg.reply(rMsg);
+                if (Array.isArray(rMsg)) {
+
+                    for (let m of rMsg) {
+                        if (!config.isLocalHost) { await dMsg.reply(m); }
+                        else { console.log("[DC] " + m); }
+                    }
+
                 } else {
-                    console.log("[DC] " + rMsg);
+
+                    if (!config.isLocalHost) { await dMsg.reply(rMsg); }
+                    else { console.log("[DC] " + rMsg); }
+
                 }
             } catch (e) { console.log(e); }
             return;
