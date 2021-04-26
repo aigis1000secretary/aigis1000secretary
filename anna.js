@@ -541,9 +541,13 @@ module.exports = {
                         let column = {
                             text: tweet_data.data.text,
                             twitterId: tweetId,
-                            media: (tweet_data.includes && Array.isArray(tweet_data.includes.media) && tweet_data.includes.media.length > 0)
+                            media: false,
+                            created_at: tweet_data.created_at,
+                            includes: Object.assign({ media: [], users: [{ id: null, name: null, username: null }] }, tweet_data.includes)
                         };
+                        if (column.includes.media.length > 0) { column.media = true; }
                         replyMsg.data.push(column);
+                        // console.json(column)
                     } catch (e) {
                     }
                 }
