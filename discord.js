@@ -70,12 +70,37 @@ module.exports = {
                 return embed;
 
             } else if (type == "twitter") {
-                let str = ""
-                for (data of msg.data) {
-                    // str += `<https://twitter.com/Aigis1000/status/${data.twitterId}>\n`;
-                    str += `https://twitter.com/Aigis1000/status/${data.twitterId}\n`;
+                // let str = ""
+                // for (data of msg.data) {
+                //     // str += `<https://twitter.com/Aigis1000/status/${data.twitterId}>\n`;
+                //     str += `https://twitter.com/Aigis1000/status/${data.twitterId}\n`;
+                // }
+                // return str.trim();
+
+                let results = [];
+                for (let tweet of msg.data) {
+                    let embed = new Discord.MessageEmbed()
+                        .setColor('BLUE')
+                        .setAuthor(tweet.includes.users[0].name,
+                            tweet.includes.users[0].username == "Aigis1000" ? 'https://pbs.twimg.com/profile_images/587842655951826945/zs_Nfo7C_bigger.jpg' : '',
+                            `https://twitter.com/${tweet.includes.users[0].username}`)
+                        .setDescription(tweet.text)
+                        .setTimestamp()
+                        .setFooter('Twitter', 'https://abs.twimg.com/icons/apple-touch-icon-192x192.png');
+
+                    if (tweet.media) {
+                        let img = tweet.includes.media.shift();
+                        embed.setImage(img.url)
+                    }
+                    results.push(embed);
+
+                    for (let img of tweet.includes.media) {
+                        embed = new Discord.MessageEmbed()
+                            .setImage(img.url)
+                        results.push(embed);
+                    }
                 }
-                return str.trim();
+                return results;
 
             } else if (type == "character") {
                 let embed = new Discord.MessageEmbed()
