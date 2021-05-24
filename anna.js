@@ -320,6 +320,7 @@ module.exports = {
                 if (imgArray.length > 0) {
                     let i = Math.floor(Math.random() * imgArray.length);
                     let img = imgArray[i];
+                    _anna.log(`img: <${img.fileName}>`);
 
                     // is twitter image
                     if (/^[A-Za-z0-9_]{5,15}-\d{18,19}-\d{8}_\d{6}/.test(img.fileName)) {
@@ -327,7 +328,7 @@ module.exports = {
                         let tweetId = /\d{18,19}/.exec(img.fileName).toString();
                         // get tweet text
                         let tweet_data = await twitter.api.getTweet(tweetId)
-                        if (tweet_data == null) tweet_data = { data: { text: false } };
+                        if (tweet_data == null || !tweet_data.data) tweet_data = { data: { text: false } };
                         // get cards in text
                         let array = _anna.getFullnamesFromText(tweet_data.data.text);
 
