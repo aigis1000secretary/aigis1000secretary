@@ -82,7 +82,7 @@ module.exports = {
             // console.log(`[dropbox]\n${response}`);
             return true;
         } catch (error) {
-            console.log("[dropbox] makeDir error... " + path);
+            console.log(`[dropbox] makeDir error... ${path}`);
             throw error;
         }
     },
@@ -101,7 +101,7 @@ module.exports = {
 
             return response.result.fileBinary;
         } catch (error) {
-            console.log("[dropbox] fileDownload error... " + base);
+            console.log(`[dropbox] fileDownload error... ${base}`);
             throw error;
         }
     },
@@ -126,7 +126,7 @@ module.exports = {
 
             return true;
         } catch (error) {
-            console.log("[dropbox] fileDownloadToFile error... " + base);
+            console.log(`[dropbox] fileDownloadToFile error... ${base}`);
             throw error;
         }
     },
@@ -148,7 +148,7 @@ module.exports = {
             await dbox.filesUpload(filesCommitInfo);
             return true;
         } catch (error) {
-            console.log("[dropbox] fileUpload error... " + dirPath);
+            console.log(`[dropbox] fileUpload error... ${dirPath}`);
             throw error;
         }
     },
@@ -173,7 +173,7 @@ module.exports = {
             // await dbox.filesDelete(filesDeleteArg);
             return true;
         } catch (error) {
-            console.log("[dropbox] fileBackup error... " + filePath);
+            console.log(`[dropbox] fileBackup error... ${filePath}`);
             throw error;
         }
     },
@@ -194,7 +194,7 @@ module.exports = {
             await dbox.filesMoveV2(filesRelocationArg);
             return true;
         } catch (error) {
-            console.log("[dropbox] filesMove error... <" + (root + from) + ">");
+            console.log(`[dropbox] filesMove error... <${(root + from)}> <${to}>`);
             throw error;
         }
     },
@@ -204,11 +204,11 @@ module.exports = {
         if (!this.enable()) return null;
 
         try {
-            console.log("[dropbox] filesDelete: " + path);
+            console.log(`[dropbox] filesDelete: ${path}`);
             await dbox.filesDelete({ path: root + path });
             return true;
         } catch (error) {
-            console.log("[dropbox] filesDelete error... " + path);
+            console.log(`[dropbox] filesDelete error... ${path}`);
             throw error;
         }
     },
