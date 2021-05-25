@@ -614,7 +614,7 @@ module.exports = {
     },
 
     // 定型文貼圖
-    replyStamp(msg, isGif = false) {
+    replyStamp(msg, { isAdmin = false, isGif = false }) {
         if (!msg) return false;
         _anna.log(`replyStamp(${msg})`);
 

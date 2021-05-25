@@ -52,7 +52,7 @@ const expressOn = function () {
         let command = request.params.command;
         // console.log(command);
 
-        let result = anna.replyStamp(command, true);
+        let result = anna.replyStamp(command, { isGif: true });
 
         let responseBody = (typeof (result) == "string" ? result : JSON.stringify(result, null, 2));
         responseBody = responseBody.replaceAll("\n", "<br>");
@@ -142,7 +142,7 @@ const discordBotOn = function () {
             }
 
             let rMsg = await anna.replyAI(cmd, isAdmin);
-            let rStamp = anna.replyStamp(cmd, true);
+            let rStamp = anna.replyStamp(cmd, { isAdmin, isGif: true });
 
             // ai done something
             if (rMsg !== false) {
@@ -162,7 +162,7 @@ const discordBotOn = function () {
             let target = anna.getFullnameByNick(msg);
             if (msg != target) return;
 
-            let rStamp = anna.replyStamp(target, true);
+            let rStamp = anna.replyStamp(target, { isAdmin, isGif: true });
             if (rStamp !== false) {
                 replyFunc(rStamp);
                 return;
@@ -213,7 +213,7 @@ const lineBotOn = function () {
             }
 
             let rMsg = await anna.replyAI(cmd, isAdmin);
-            let rStamp = anna.replyStamp(cmd, true);
+            let rStamp = anna.replyStamp(cmd, { isAdmin, isGif: false });
 
             // ai done something
             if (rMsg !== false) {
@@ -233,7 +233,7 @@ const lineBotOn = function () {
             let target = anna.getFullnameByNick(msg);
             if (msg != target) { target = cmd; }
 
-            let rStamp = anna.replyStamp(target, true);
+            let rStamp = anna.replyStamp(target, { isAdmin, isGif: false });
             if (rStamp !== false) {
                 replyFunc(rStamp);
                 return;
@@ -262,7 +262,7 @@ const lineBotOn = function () {
         };
 
         // 呼叫定型文
-        let result = anna.replyStamp("新人", true);
+        let result = anna.replyStamp("新人", { isAdmin, isGif: false });
         if (result == false) {
             result = "歡迎使用政務官小安娜 v" + config._version + ", 輸入(安娜 HELP)以取得更多訊息";
         }
