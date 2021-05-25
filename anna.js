@@ -451,7 +451,7 @@ module.exports = {
                     let fileName = imgArray[0].fileName;
                     let tagList = imgArray[0].tagList;
                     await imgur.api.image.imageDeletion({ imageHash: imgArray[0].id });
-                    await dbox.fileMove(tagList.substring(1), "DelImages/" + fileName);
+                    await dbox.fileMove(tagList, "DelImages/" + fileName);
                 } catch (error) {
                     _anna.log("刪除錯誤!");
                     _anna.log(error);
