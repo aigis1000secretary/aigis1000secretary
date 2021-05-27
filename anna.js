@@ -967,7 +967,10 @@ const _anna = {
     // imgUploader
     // upload dbox images to imgur
     async uploadImages() {
-        console.log(`Image Upload ${_anna.isLocalHost ? "(Local) " : ""}Script`);
+        let localHost = _anna.isLocalHost;
+        // let localHost = false;
+
+        console.log(`Image Upload ${localHost ? "(Local) " : ""}Script`);
 
         // let loaclPath = "C:/Users/HUANG/Dropbox/應用程式/aigis1000secretary";
         let loaclPath = "C:/Users/Mirror/Dropbox/應用程式/aigis1000secretary";
@@ -975,7 +978,7 @@ const _anna = {
 
         // get file list
         const getFileList = async (mainFolder) => {
-            return _anna.isLocalHost ?
+            return localHost ?
                 await getOfflineFileList(`${loaclPath}/${mainFolder}`) :
                 await getOnlineFileList(`/${mainFolder}`)
         }
@@ -998,39 +1001,13 @@ const _anna = {
         // get dropbox file list
         const getOnlineFileList = async function (mainFolder) {
 
-            let dirs = [mainFolder];
             let files = [];
+            let _result = await dbox.listDir(mainFolder).catch(console.log);
 
-            let listDirsTask = async function (retryCount) {
-                // console.log(retryCount)
-                if (retryCount <= 0) return true;
-                if (dirs.length <= 0) {
-                    await sleep(100);
-                    return await listDirsTask(--retryCount);
-                }
+            let _files = _result.filter((obj) => (obj[".tag"] == "file"));
+            for (let obj of _files) { files.push(obj.path_display); }
 
-                let pop = dirs.pop();
-                let _result = await dbox.listDir(pop).catch(console.log);
-                if (!_result) { dirs.push(pop); await sleep(1000); return false; }   // list dir error, wait 1sec & retry
-
-                let _dirs = _result.filter((obj) => ("folder" == obj[".tag"]));
-                let _files = _result.filter((obj) => ("file" == obj[".tag"]));
-
-                for (let obj of _dirs) { dirs.push(obj.path_display); }
-                for (let obj of _files) { files.push(obj.path_display); }
-
-                // return true;
-                return await listDirsTask(10);
-            }
-
-            while (dirs.length > 0) {
-                // promise array: 10 thead
-                let pArray = [];
-                for (let i = 0; i < 10; ++i) {
-                    pArray.push(listDirsTask(10));
-                }
-                await Promise.all(pArray);
-            }
+            // files.sort();
 
             return files;
         }
@@ -1056,7 +1033,7 @@ const _anna = {
         console.log("GET DBox Images count: " + pathArray.length);
         for (let filePath of pathArray) {
             // image var
-            let tagList = _anna.isLocalHost ? filePath.replace(loaclPath, "") : filePath;
+            let tagList = localHost ? filePath.replace(loaclPath, "") : filePath;
             let fileName = path.parse(filePath).base;
             // album id
             let albumHash = "";
@@ -1075,7 +1052,7 @@ const _anna = {
             // cant found image from imgur (by tag)
             if (resultImage.length == 0) {
                 // get image data
-                let imageBinary = _anna.isLocalHost ? fs.readFileSync(filePath) : await dbox.fileDownload(tagList);
+                let imageBinary = localHost ? fs.readFileSync(filePath) : await dbox.fileDownload(tagList);
                 let md5 = md5f(imageBinary);  // get MD5 for check
 
                 // find again
@@ -1100,7 +1077,7 @@ const _anna = {
                 await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
 
                 let timeout = 40;
-                if (!_anna.isLocalHost) { await sleep(timeout * 1000); }
+                if (!localHost) { await sleep(timeout * 1000); }
                 else { for (let i = timeout; i > 0; --i) { await sleep(1000); console.log(`await... @${i}`) }; }
                 continue;
             }
@@ -1109,7 +1086,7 @@ const _anna = {
             // found image from imgur 
             if (resultImage.length == 1) {
                 // check md5 if on local
-                if (_anna.isLocalHost) {
+                if (localHost) {
                     // get image data
                     let imageBinary = fs.readFileSync(filePath);
                     let md5 = md5f(imageBinary);  // get MD5 for check
@@ -1127,7 +1104,7 @@ const _anna = {
                         await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
 
                         let timeout = 40;
-                        if (!_anna.isLocalHost) { await sleep(timeout * 1000); }
+                        if (!localHost) { await sleep(timeout * 1000); }
                         else { for (let i = timeout; i > 0; --i) { await sleep(1000); console.log(`await... @${i}`) }; }
                     }
                 }
@@ -1144,13 +1121,13 @@ const _anna = {
                 for (let imageHash of resultImage) { await imgur.api.image.imageDeletion({ imageHash }) }
 
                 // image data
-                let imageBinary = _anna.isLocalHost ? fs.readFileSync(filePath) : await dbox.fileDownload(tagList);
+                let imageBinary = localHost ? fs.readFileSync(filePath) : await dbox.fileDownload(tagList);
                 let md5 = md5f(imageBinary);  // get MD5 for check
                 // re-upload            
                 await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
 
                 let timeout = 40;
-                if (!_anna.isLocalHost) { await sleep(timeout * 1000); }
+                if (!localHost) { await sleep(timeout * 1000); }
                 else { for (let i = timeout; i > 0; --i) { await sleep(1000); console.log(`await... @${i}`) }; }
 
                 continue;

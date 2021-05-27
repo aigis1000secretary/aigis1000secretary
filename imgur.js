@@ -309,7 +309,7 @@ const _imgur = {
 
                 } catch (error) {
                     console.log(`[imgur] imgur.api.image.imageUpload Error ${error.statusCode}`);
-                    // console.json(error);
+                    console.log(error);
                     return null;
                 }
             },

@@ -50,7 +50,7 @@ module.exports = {
         try {
             // get list
             let result = [];
-            let response = await dbox.filesListFolder({ path: root + dirPath });
+            let response = await dbox.filesListFolder({ path: root + dirPath, recursive: true });
             result = result.concat(response.result.entries);
 
             // more then
