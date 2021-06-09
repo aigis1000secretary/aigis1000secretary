@@ -1074,7 +1074,8 @@ const _anna = {
                     for (let imageHash of resultImage) { await imgur.api.image.imageDeletion({ imageHash }) }
                 }
                 // now no image in imgur, upload new
-                await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
+                let result = await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
+                if (result == null) break;
 
                 let timeout = 40;
                 if (!localHost) { await sleep(timeout * 1000); }
@@ -1101,7 +1102,8 @@ const _anna = {
                         console.log(`${resultImage[0].fileName} => ${fileName}`);
 
                         await imgur.api.image.imageDeletion({ imageHash: resultImage[0].id })
-                        await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
+                        let result = await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
+                        if (result == null) break;
 
                         let timeout = 40;
                         if (!localHost) { await sleep(timeout * 1000); }
@@ -1114,7 +1116,7 @@ const _anna = {
 
 
             // found many image from imgur
-            if (resultImage.length >= 1) {
+            if (resultImage.length > 1) {
                 console.log(`\n[${pathArray.indexOf(filePath)}/${pathArray.length}] result.length > 1`);
 
                 // del online images 
@@ -1124,7 +1126,8 @@ const _anna = {
                 let imageBinary = localHost ? fs.readFileSync(filePath) : await dbox.fileDownload(tagList);
                 let md5 = md5f(imageBinary);  // get MD5 for check
                 // re-upload            
-                await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
+                let result = await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
+                if (result == null) break;
 
                 let timeout = 40;
                 if (!localHost) { await sleep(timeout * 1000); }
