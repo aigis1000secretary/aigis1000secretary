@@ -58,7 +58,7 @@ module.exports = {
                     if (msg.msgs[i].indexOf("http") == 0) {
                         str.push(`[${msg.labels[i]}](${msgEmbedUrl(msg.msgs[i])})`);
                     } else {
-                        str.push(`${msg.labels[i]}:\n ${msg.msgs[i]}`);
+                        str.push(`\`${msg.labels[i]}:\`\n ${msg.msgs[i]}`);
                     }
                 }
 
