@@ -312,13 +312,24 @@ module.exports = {
         } else if (isAdmin && (command == "NEW")) {
             if (arg1 == null || arg2 == null) {
                 // >> NEW
+                // >> NEW <#1>
+                // >> NEW <md5>
                 let imgArray = imgur.database.image.findData(
-                    arg1 == null ? { tag: "NewImages" } : { md5: arg1 }
+                    /\S{32}/.test(arg1) ? { md5: arg1 } : { tag: "NewImages" }
                 );
 
                 let replyMsg = [];
                 if (imgArray.length > 0) {
-                    let i = Math.floor(Math.random() * imgArray.length);
+                    let i = 0;
+                    if (/#\d+/.test(arg1)) {
+                        i = parseInt(/\d+/.exec(arg1).toString());  // >> NEW #1
+                    } else {
+                        i = Math.floor(Math.random() * imgArray.length);    // >> NEW
+                    }
+                    
+                    if (imgArray.length == 0) { return "md5錯誤!"; }
+                    else if (i >= imgArray.length) { return "index錯誤!"; }
+
                     let img = imgArray[i];
                     _anna.log(`img: <${img.fileName}>`);
 
