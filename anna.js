@@ -172,20 +172,28 @@ module.exports = {
                 type: "option",
                 title: "實用工具",
                 labels: [
+                    "千年戦争アイギス　作戦図＋",
+                    "千年戦争アイギス　所持チェッカー＋",
+                    "千年戦争アイギス　経験値計算機＋ BETA",
+
                     "特殊合成表",
-                    "經驗值計算機",
-                    "體魅計算機",
-                    "千年戦争アイギス 作戦図＋",
                     "DPS 一覽表 (日)",
+                    "體魅計算機",
+
                     "Buff 試算表 (暫)",
+                    "經驗值計算機 (旧)",
                     "Youtube 攻略頻道"
                 ], msgs: [
-                    "https://seesaawiki.jp/aigis/d/%C6%C3%BC%EC%B9%E7%C0%AE%C9%BD",
-                    "http://aigistool.html.xdomain.jp/EXP.html",
-                    "http://aigistool.html.xdomain.jp/ChariSta.html",
                     "https://aigis1000secretary.github.io/AigisTools/html/AigisTactics.html",
+                    "https://aigis1000secretary.github.io/AigisTools/html/AigisChecker.html",
+                    "https://aigis1000secretary.github.io/AigisTools/html/AigisEXP.html",
+
+                    "https://seesaawiki.jp/aigis/d/%C6%C3%BC%EC%B9%E7%C0%AE%C9%BD",
                     "http://www116.sakura.ne.jp/~kuromoji/aigis_dps.htm",
+                    "http://aigistool.html.xdomain.jp/ChariSta.html",
+
                     "https://vprjct.github.io/aigistools/buff.html",
+                    "http://aigistool.html.xdomain.jp/EXP.html",
                     "https://www.youtube.com/channel/UC8RlGt22URJuM0yM0pUyWBA"
                 ]
             };
@@ -326,7 +334,7 @@ module.exports = {
                     } else {
                         i = Math.floor(Math.random() * imgArray.length);    // >> NEW
                     }
-                    
+
                     if (imgArray.length == 0) { return "md5錯誤!"; }
                     else if (i >= imgArray.length) { return "index錯誤!"; }
 
