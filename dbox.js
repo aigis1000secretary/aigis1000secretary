@@ -160,7 +160,7 @@ module.exports = {
         try {
             let filesRelocationArg = {
                 from_path: root + filePath,
-                to_path: root + "/backup/" + filePath,
+                to_path: root + "/backup" + filePath,
                 allow_shared_folder: true,
                 autorename: true,
                 allow_ownership_transfer: true
