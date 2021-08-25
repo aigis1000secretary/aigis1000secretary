@@ -115,5 +115,11 @@ module.exports = {
             }
             return msg;
         }
+    },
+    async pushLog(msg) {
+        const admin = await this.bot.users.fetch(this.admin[0]);
+        return await admin.send(msg)
+            .then(message => console.log(`Sent message: ${message.content}`))
+            .catch(console.error);
     }
 }
