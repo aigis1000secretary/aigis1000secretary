@@ -6,6 +6,7 @@ const dbox = require("./dbox.js");
 const imgur = require("./imgur.js");
 const twitter = require("./twitter.js");
 const database = require("./database.js");
+const discord = require("./discord.js");
 
 module.exports = {
     config: null,
@@ -259,6 +260,8 @@ module.exports = {
                 // wait 10 min to save
                 nickDatabase.uploadTask();
 
+                // log to dc dm
+                discord.pushLog(`學習 ${target[0]} ${keys[0]}`);
                 return "[學習] 嗯！記住了！";
             }
 
