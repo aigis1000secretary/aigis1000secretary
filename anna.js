@@ -320,7 +320,7 @@ module.exports = {
             _anna.uploadImages();
             return "上傳圖檔中...";
 
-        } else if (isAdmin && (command == "NEW")) {
+        } else if (isAdmin && (command == "NEW" || command == "NEW8")) {
             if (arg1 == null || arg2 == null) {
                 // >> NEW
                 // >> NEW <#1>
@@ -425,11 +425,12 @@ module.exports = {
 
                     } else if (charaArray.length == 1) {
                         let target = charaArray[0].trim();
+                        let newTag = `/Images/Character/${target}/${imgArray[0].fileName}`;
+                        if (command == "NEW8") { newTag = `/Images/8周年賀圖/Character/${target}/${imgArray[0].fileName}`; }
+
                         // move image file
                         try {
-                            await dbox.fileMove(
-                                imgArray[0].tagList,
-                                `/Images/Character/${target}/${imgArray[0].fileName}`);
+                            await dbox.fileMove(imgArray[0].tagList, newTag);
                         } catch (error) {
                             _anna.log("分類錯誤!");
                             _anna.log(error);
@@ -437,7 +438,7 @@ module.exports = {
                         }
 
                         // set new taglist
-                        await imgur.api.image.updateImage({ imageHash: imgArray[0].id, tagList: `/Images/Character/${target}/${imgArray[0].fileName}` });
+                        await imgur.api.image.updateImage({ imageHash: imgArray[0].id, tagList: newTag });
 
                         // // update imgur database
                         // imgur.database.deleteImageData({ id: imgArray[0].id });
