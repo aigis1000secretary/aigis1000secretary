@@ -612,10 +612,10 @@ module.exports = {
 
         } else if (/^(\s|\dD\d|\d|[\+\-\*\/\(\)])+$/i.test(msgLine[0].trim())) {
             // dice cmd            
-            let result = msg1.replace(/\s/g, "");
+            let result = msgLine[0].replace(/\s/g, "");
             result = result.replace(/(\d{1,6})(D)(\d{1,6})/ig, (m, p1, p2, p3) => {
                 let nums = [];
-                for (let i = 0; i < p1; ++i) { nums.push(Math.ceil(Math.random() * p3)); }
+                for (let i = 0; i < p1; ++i) { nums.push(1 + Math.floor(Math.random() * p3)); }
                 return `(${nums.join('+')})`;
             });
             try {
