@@ -157,6 +157,49 @@ const discordBotOn = function () {
             }
         }
     });
+    discord.bot.on('interactionCreate', async function (interaction) {
+        if (!interaction.isButton()) { return; }
+        if (!interaction.customId.startsWith("option")) { return; }
+
+        // get message
+        let message = interaction.message;
+        let label;
+        for (let row of message.components) {
+            for (let btn of row.components) {
+                if (btn.customId != interaction.customId) { continue; }
+                label = btn.label;
+                break;
+            }
+        }
+        // get options label:cmd
+        let optionsEmbed = message.embeds.find(embed => embed.description && embed.description.includes(`\`${label}:\``));
+        let lines = optionsEmbed.description.split('\n');
+        let i = lines.indexOf(`\`${label}:\``);
+
+        let isAdmin = discord.isAdmin(interaction.user.id);
+        let cmd = lines[i + 1];
+
+        // define reply function
+        let replyFunc = async function (rMsg) {
+            rMsg = discord.formatReply(rMsg);
+            try {
+                if (!config.isLocalHost || isAdmin) { await message.channel.send(rMsg); }
+                else { console.log("[DC] " + rMsg); }
+            } catch (e) { console.log(e); }
+            return;
+        };
+
+        // ask ai
+        let rMsg = await anna.replyAI(cmd, isAdmin);
+
+        // ai done something
+        if (rMsg !== false) {
+            replyFunc(rMsg);
+        }
+
+        // mute reply
+        interaction.reply({ content: ' ' }).catch(() => { });
+    });
 }
 
 // line bot 監聽

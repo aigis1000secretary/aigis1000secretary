@@ -62,12 +62,20 @@ module.exports = {
 
             } else if (type == "option") {
                 let str = [];
+                let row = new Discord.MessageActionRow();
 
                 for (let i = 0; i < msg.labels.length; ++i) {
-                    if (msg.msgs[i].indexOf("http") == 0) {
-                        str.push(`[${msg.labels[i]}](${msgEmbedUrl(msg.msgs[i])})`);
+                    let label = msg.labels[i];
+                    let command = msg.msgs[i];
+
+                    if (command.indexOf("http") == 0) {
+                        str.push(`[${label}](${msgEmbedUrl(command)})`);
                     } else {
-                        str.push(`\`${msg.labels[i]}:\`\n ${msg.msgs[i]}`);
+                        str.push(`\`${label}:\`\n ${command}`);
+                        row.addComponents(
+                            new Discord.MessageButton().setStyle("PRIMARY")
+                                .setLabel(label).setCustomId(`option #${row.components.length}`)
+                        );
                     }
                 }
 
@@ -76,7 +84,10 @@ module.exports = {
                     .setTitle(msg.title)
                     .setDescription(str.join("\n"))
 
-                return { embeds: [embed] };
+                let components;
+                if (row.components.length > 0) { components = [row]; }
+
+                return { embeds: [embed], components };
 
             } else if (type == "twitter") {
                 // let str = ""
