@@ -16,7 +16,7 @@ module.exports = {
     admin: [],
 
     init(discordCfg) {
-        this.bot = new Discord.Client();
+        this.bot = new Discord.Client({ intents: ["GUILDS", "GUILD_MESSAGES"] });
         this.bot.login(discordCfg.token);
         this.admin = discordCfg.admin;
     },
