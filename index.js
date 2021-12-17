@@ -93,7 +93,7 @@ const expressOn = function () {
 // discord bot 監聽
 const discordBotOn = function () {
     // bot.on
-    discord.bot.on('message', async function (dMsg) {
+    discord.bot.on('messageCreate', async function (dMsg) {
         // if (dMsg.author.id == 628127387657175040) {
         if (dMsg.author.id == discord.bot.user.id) { return; }
         let inChat = dMsg.guild ? dMsg.guild.name : "Chat";
@@ -103,21 +103,9 @@ const discordBotOn = function () {
         // define reply function
         let replyFunc = async function (rMsg) {
             rMsg = discord.formatReply(rMsg);
-
             try {
-                if (Array.isArray(rMsg)) {
-
-                    for (let m of rMsg) {
-                        if (!config.isLocalHost || isAdmin) { await dMsg.reply(m); }
-                        else { console.log("[DC] " + m); }
-                    }
-
-                } else {
-
-                    if (!config.isLocalHost || isAdmin) { await dMsg.reply(rMsg); }
-                    else { console.log("[DC] " + rMsg); }
-
-                }
+                if (!config.isLocalHost || isAdmin) { await dMsg.reply(rMsg); }
+                else { console.log("[DC] " + rMsg); }
             } catch (e) { console.log(e); }
             return;
         };
