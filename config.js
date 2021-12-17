@@ -19,6 +19,11 @@
 /*
     // commit 
     >> feature/1.1.0/discordjs13
+    discord v13
+    message payload
+        Updating from v12 to v13
+    client init fix
+    command button
 */
 
 const crypto = require("./crypto.js");
