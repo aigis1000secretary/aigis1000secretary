@@ -1,6 +1,9 @@
 {
   "name": "secanna",
   "version": "0.7.0",
+  "engines": {
+    "node": "16.x"
+  },
   "description": "1000Aigis LineBot",
   "main": "index.js",
   "scripts": {
