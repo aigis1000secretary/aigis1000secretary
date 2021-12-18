@@ -16,7 +16,7 @@ module.exports = {
     admin: [],
 
     init(discordCfg) {
-        this.bot = new Discord.Client();
+        this.bot = new Discord.Client({ intents: ["GUILDS", "GUILD_MESSAGES"] });
         this.bot.login(discordCfg.token);
         this.admin = discordCfg.admin;
     },
@@ -27,19 +27,28 @@ module.exports = {
 
     formatReply(msgs) {
         if (Array.isArray(msgs)) {
+            let embeds = [], components = [];
+
             for (let i = 0; i < msgs.length; ++i) {
-                msgs[i] = this.replyObj(msgs[i]);
+                let payload = this.replyObj(msgs[i]);
+                if (payload.embeds) { embeds = embeds.concat(payload.embeds); }
+                if (payload.components) { components = components.concat(payload.components); }
             }
-            return msgs;
+            return { embeds, components, allowedMentions: { repliedUser: false } };
         } else {
-            return this.replyObj(msgs);
+            let rMsg = this.replyObj(msgs);
+            rMsg.allowedMentions = { repliedUser: false };
+            return rMsg;
         }
     },
     replyObj(msg) {
         let type = typeof (msg);
 
         if (type == "string") {
-            return msg;
+            let embed = new Discord.MessageEmbed()
+                .setColor('BLUE')
+                .setDescription(msg)
+            return { embeds: [embed] };
 
         } else if (type == "object") {
             // console.json(msg);
@@ -49,16 +58,24 @@ module.exports = {
                 let embed = new Discord.MessageEmbed()
                     .setColor('BLUE')
                     .setImage(msg.imageLink);
-                return embed;
+                return { embeds: [embed] };
 
             } else if (type == "option") {
                 let str = [];
+                let row = new Discord.MessageActionRow();
 
                 for (let i = 0; i < msg.labels.length; ++i) {
-                    if (msg.msgs[i].indexOf("http") == 0) {
-                        str.push(`[${msg.labels[i]}](${msgEmbedUrl(msg.msgs[i])})`);
+                    let label = msg.labels[i];
+                    let command = msg.msgs[i];
+
+                    if (command.indexOf("http") == 0) {
+                        str.push(`[${label}](${msgEmbedUrl(command)})`);
                     } else {
-                        str.push(`\`${msg.labels[i]}:\`\n ${msg.msgs[i]}`);
+                        str.push(`\`${label}:\`\n ${command}`);
+                        row.addComponents(
+                            new Discord.MessageButton().setStyle("PRIMARY")
+                                .setLabel(label).setCustomId(`option #${row.components.length}`)
+                        );
                     }
                 }
 
@@ -67,7 +84,10 @@ module.exports = {
                     .setTitle(msg.title)
                     .setDescription(str.join("\n"))
 
-                return embed;
+                let components;
+                if (row.components.length > 0) { components = [row]; }
+
+                return { embeds: [embed], components };
 
             } else if (type == "twitter") {
                 // let str = ""
@@ -75,7 +95,7 @@ module.exports = {
                 //     // str += `<https://twitter.com/Aigis1000/status/${data.twitterId}>\n`;
                 //     str += `https://twitter.com/Aigis1000/status/${data.twitterId}\n`;
                 // }
-                // return str.trim();
+                // return { content: str.trim() };
 
                 let results = [];
                 for (let tweet of msg.data) {
@@ -100,7 +120,7 @@ module.exports = {
                         results.push(embed);
                     }
                 }
-                return results;
+                return { embeds: results };
 
             } else if (type == "character") {
                 let embed = new Discord.MessageEmbed()
@@ -110,15 +130,15 @@ module.exports = {
 
                 if (msg.imageLink) { embed.setImage(msg.imageLink); }
 
-                return embed;
+                return { embeds: [embed] };
 
             }
-            return msg;
+            return null;
         }
     },
-    async pushLog(msg) {
+    async pushLog(content) {
         const admin = await this.bot.users.fetch(this.admin[0]);
-        return await admin.send(msg)
+        return await admin.send({ content })
             .then(message => console.log(`Sent message: ${message.content}`))
             .catch(console.error);
     }
