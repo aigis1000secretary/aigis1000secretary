@@ -62,7 +62,7 @@ module.exports = {
 
             } else if (type == "option") {
                 let str = [];
-                let row = new Discord.MessageActionRow();
+                let components = [];
 
                 for (let i = 0; i < msg.labels.length; ++i) {
                     let label = msg.labels[i];
@@ -72,10 +72,19 @@ module.exports = {
                         str.push(`[${label}](${msgEmbedUrl(command)})`);
                     } else {
                         str.push(`\`${label}:\`\n ${command}`);
-                        row.addComponents(
-                            new Discord.MessageButton().setStyle("PRIMARY")
-                                .setLabel(label).setCustomId(`option #${row.components.length}`)
-                        );
+
+                        let btn = new Discord.MessageButton().setStyle("PRIMARY")
+                            .setLabel(label).setCustomId(`option #${i}`);
+
+                        if (components.length <= 0 ||
+                            components[components.length - 1].components.length >= 5) {
+                            let row = new Discord.MessageActionRow()
+                                .addComponents(btn);
+                            components.push(row);
+                        } else {
+                            components[components.length - 1]
+                                .addComponents(btn);
+                        }
                     }
                 }
 
@@ -84,10 +93,10 @@ module.exports = {
                     .setTitle(msg.title)
                     .setDescription(str.join("\n"))
 
-                let components;
-                if (row.components.length > 0) { components = [row]; }
+                let result = { embeds: [embed] };
+                if (components.length > 0) { result.components = components; }
 
-                return { embeds: [embed], components };
+                return result;
 
             } else if (type == "twitter") {
                 // let str = ""
