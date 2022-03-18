@@ -1143,7 +1143,7 @@ const _anna = {
                 console.log(`\n[${pathArray.indexOf(filePath)}/${pathArray.length}] result.length > 1`);
 
                 // del online images 
-                for (let imageHash of resultImage) { await imgur.api.image.imageDeletion({ imageHash }) }
+                for (let image of resultImage) { await imgur.api.image.imageDeletion({ imageHash: image.id }) }
 
                 // image data
                 let imageBinary = localHost ? fs.readFileSync(filePath) : await dbox.fileDownload(tagList);
@@ -1162,56 +1162,52 @@ const _anna = {
 
 
         // check dbox img status
-        const checkImages = async function () {
-            await imgur.init(module.exports.config.imgur);
+        await imgur.init(module.exports.config.imgur);
 
-            // get dropbox image list
-            let pathArray = [];
+        // get dropbox image list
+        pathArray = [];
 
-            try {
-                // check album
-                let albumList = ["AutoResponse", "Images"];
-                for (let albumName of albumList) {
-                    // get filelist
-                    pathArray = pathArray.concat(await getOnlineFileList(`/${albumName}`));
-                }
-            } catch (err) {
-                console.log(`checkImages error: ${err}`);
-                return;
+        try {
+            // check album
+            let albumList = ["AutoResponse", "Images"];
+            for (let albumName of albumList) {
+                // get filelist
+                pathArray = pathArray.concat(await getOnlineFileList(`/${albumName}`));
             }
-
-            // for (let img of imgur.database.images) {
-            for (let img of imgur.database.image.findData({ isGif: true })) {
-                let path = img.tagList;
-                let filename = img.fileName;
-                let pathInDbox = pathArray.find((p) => path.equali(p));
-                if (!pathInDbox) {
-                    console.log(`${path} not exist in drpbox`);
-                    // await dbox.fileUpload(`/DelImages/${filename}`, body);
-
-                    await new Promise((resolve, reject) => {
-                        require("request").get(img.imageLink, { encoding: 'binary' }, async (error, response, body) => {
-                            if (body) {
-                                fs.writeFileSync("./" + filename, body, { encoding: 'binary' });
-                                body = fs.readFileSync("./" + filename);
-                                await dbox.fileUpload("/DelImages/" + filename, body);
-                                fs.unlinkSync("./" + filename);
-                                await imgur.api.image.imageDeletion({ imageHash: img.id });
-                                resolve();
-                            }
-                            // if (error || !body) { return console.log(error); }
-                        });
-                    });
-                }
-            }
-            console.log("checkImages done!")
+        } catch (err) {
+            console.log(`CheckImages error: ${err}`);
+            return;
         }
+
+        // for (let img of imgur.database.images) {
+        for (let img of imgur.database.image.findData({ isGif: true })) {
+            let path = img.tagList;
+            let filename = img.fileName;
+            let pathInDbox = pathArray.find((p) => path.equali(p));
+            if (!pathInDbox) {
+                console.log(`${path} not exist in drpbox`);
+                // await dbox.fileUpload(`/DelImages/${filename}`, body);
+
+                await new Promise((resolve, reject) => {
+                    require("request").get(img.imageLink, { encoding: 'binary' }, async (error, response, body) => {
+                        if (body) {
+                            fs.writeFileSync("./" + filename, body, { encoding: 'binary' });
+                            body = fs.readFileSync("./" + filename);
+                            await dbox.fileUpload("/DelImages/" + filename, body);
+                            fs.unlinkSync("./" + filename);
+                            await imgur.api.image.imageDeletion({ imageHash: img.id });
+                            resolve();
+                        }
+                        // if (error || !body) { return console.log(error); }
+                    });
+                });
+            }
+        }
+        console.log("CheckImages done!")
 
 
         // annaWebHook("status");
         // anna.replyAI("status");
-        checkImages();
-        console.log("done!")
         return;
     }
 }

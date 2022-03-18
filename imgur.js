@@ -54,9 +54,9 @@ const _apiRequest = async function (options) {
 const _apiRequest2 = async function (method, route, options = {}) {
 
     // Configure the request
-    options.url = IMGUR_API_URL + route;
+    options.url = `${IMGUR_API_URL}${route}`;
     options.method = method;
-    options.headers = { Authorization: "Bearer " + IMGUR_ACCESS_TOKEN }
+    options.headers = { Authorization: `Bearer ${IMGUR_ACCESS_TOKEN}` }
 
     let result = await _request(options);
     return result.data || result;
