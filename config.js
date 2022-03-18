@@ -27,12 +27,15 @@
 
     1.2.0.1
     discord MessageActionRow limit fix
+
+    1.2.0.2
+    newimg command fix
 */
 
 const crypto = require("./crypto.js");
 const dbox = require("./dbox.js");
 let _config = module.exports = {
-    _version: "1.2.0.1",
+    _version: "1.2.0.2",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
@@ -89,7 +92,8 @@ let _config = module.exports = {
             cfgObj = eval(`(${data})`);
             console.log("[config] Download encrypt config from dropbox");
         }
-
+        
+        // require('fs').writeFileSync('./config.json', JSON.stringify(cfgObj, null, 2));
         return cfgObj;
     },
     async saveConfigToDbox() {
