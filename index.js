@@ -293,7 +293,7 @@ const lineBotOn = function () {
         };
 
         // 呼叫定型文
-        let result = anna.replyStamp("新人", { isAdmin, isGif: false });
+        let result = anna.replyStamp("新人", { isAdmin: false, isGif: false });
         if (result == false) {
             result = "歡迎使用政務官小安娜 v" + config._version + ", 輸入(安娜 HELP)以取得更多訊息";
         }
