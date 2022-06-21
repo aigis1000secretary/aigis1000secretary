@@ -14,3 +14,5 @@ node.bat
 
 LineAlphatJS/download/
 LineAlphatJS/src/tmp/
+
+*.bat
