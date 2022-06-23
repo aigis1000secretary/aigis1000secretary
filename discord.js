@@ -45,9 +45,11 @@ module.exports = {
         let type = typeof (msg);
 
         if (type == "string") {
+            let _msg = /new [a-f0-9]{32}/.test(msg) ? `anna ${msg}` : msg;
+
             let embed = new Discord.MessageEmbed()
                 .setColor('BLUE')
-                .setDescription(msg)
+                .setDescription(_msg)
             return { embeds: [embed] };
 
         } else if (type == "object") {
