@@ -86,7 +86,7 @@ const expressOn = function () {
         let newUrl = require("./urlEncoder.js").urlEncodeJP(`https://seesaawiki.jp/aigis/d/${command}`);
         response.redirect(301, newUrl);
         // http://127.0.0.1:8080/seesaawiki/刻詠の風水士リンネ
-        // https://aigis1000secretary.herokuapp.com/seesaawiki/刻詠の風水士リンネ
+        // https://aigis1000secretary.fly.dev/seesaawiki/刻詠の風水士リンネ
     });
 }
 
