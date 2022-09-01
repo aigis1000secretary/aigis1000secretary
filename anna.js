@@ -320,7 +320,7 @@ module.exports = {
             _anna.uploadImages();
             return "上傳圖檔中...";
 
-        } else if (isAdmin && (command == "NEW" || command == "NEW8")) {
+        } else if (isAdmin && (command == "NEW" || command == "NEW6" || command == "NEW8")) {
             if (arg1 == null || arg2 == null) {
                 // >> NEW
                 // >> NEW <#1>
@@ -426,6 +426,7 @@ module.exports = {
                     } else if (charaArray.length == 1) {
                         let target = charaArray[0].trim();
                         let newTag = `/Images/Character/${target}/${imgArray[0].fileName}`;
+                        if (command == "NEW6") { newTag = `/Images/6周年賀圖/Character/${target}/${imgArray[0].fileName}`; }
                         if (command == "NEW8") { newTag = `/Images/8周年賀圖/Character/${target}/${imgArray[0].fileName}`; }
 
                         // move image file
@@ -449,7 +450,7 @@ module.exports = {
                             type: "option",
                             title: `分類完成`,
                             labels: [`>> ${target}`, "next"],
-                            msgs: [`https://aigis1000secretary.herokuapp.com/images/${target}`, "new"]
+                            msgs: [`https://aigis1000secretary.fly.dev/images/${target}`, "new"]
                         };
 
                     }

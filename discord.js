@@ -5,7 +5,7 @@ const encoder = require("./urlEncoder.js")
 const msgEmbedUrl = (url) => {
     if (url.startsWith("http://seesaawiki.jp/aigis/d/")) {
         url = encoder.urlDecodeJP(url);
-        url = url.replace("http://seesaawiki.jp/aigis/d/", "https://aigis1000secretary.herokuapp.com/seesaawiki/");
+        url = url.replace("http://seesaawiki.jp/aigis/d/", "https://aigis1000secretary.fly.dev/seesaawiki/");
         // url = url.replace("http://seesaawiki.jp/aigis/d/", "http://127.0.0.1:8080/seesaawiki/");
     }
     return url;
