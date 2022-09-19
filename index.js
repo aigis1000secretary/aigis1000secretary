@@ -189,16 +189,16 @@ const discordBotOn = function () {
             return;
         };
 
+        // mute reply
+        interaction.reply({ content: ' ' }).catch(() => { });
+
         // ask ai
         let rMsg = await anna.replyAI(cmd, isAdmin);
 
-        // ai done something
+        // ai done something real reply
         if (rMsg !== false) {
             replyFunc(rMsg);
         }
-
-        // mute reply
-        interaction.reply({ content: ' ' }).catch(() => { });
     });
 }
 

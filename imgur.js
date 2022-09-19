@@ -819,6 +819,8 @@ module.exports = {
 
                 // get new data & putin to db
                 let raw = await _imgur.api.image.image({ imageHash });
+                if (!raw) return null;
+                
                 let obj = _imgur.db.image.newData(raw);
                 _imgur.db.image.addData(obj);
                 return _imgur.db.image.findData({ id: imageHash });

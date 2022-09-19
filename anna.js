@@ -439,20 +439,19 @@ module.exports = {
                         }
 
                         // set new taglist
-                        await imgur.api.image.updateImage({ imageHash: imgArray[0].id, tagList: newTag });
+                        let res = await imgur.api.image.updateImage({ imageHash: imgArray[0].id, tagList: newTag });
 
                         // // update imgur database
                         // imgur.database.deleteImageData({ id: imgArray[0].id });
                         // imgur.api.image.image({ imageHash: imgArray[0].id });
 
                         // return "分類完成";
-                        return {
+                        return res ? {
                             type: "option",
                             title: `分類完成`,
                             labels: [`>> ${target}`, "next"],
                             msgs: [`https://aigis1000secretary.fly.dev/images/${target}`, "new"]
-                        };
-
+                        } : `分類失敗`;
                     }
                 }
             }
