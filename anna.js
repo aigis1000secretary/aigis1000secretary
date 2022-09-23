@@ -347,6 +347,7 @@ module.exports = {
                     // is twitter image
                     if (/^[A-Za-z0-9_]{5,15}-\d{18,19}-\d{8}_\d{6}/.test(img.fileName)) {
                         // get tweet id
+                        let userId = /[A-Za-z0-9_]{5,15}/.exec(img.fileName).toString();
                         let tweetId = /\d{18,19}/.exec(img.fileName).toString();
                         // get tweet text
                         let tweet_data = await twitter.api.getTweet(tweetId)
@@ -354,41 +355,55 @@ module.exports = {
                         // get cards in text
                         let array = _anna.getFullnamesFromText(tweet_data.data.text);
 
+                        // image
+                        replyMsg.push({
+                            type: "image",
+                            imageLink: img.imageLink,
+                            thumbnailLink: img.thumbnailLink
+                        });
+                        // cmd
+                        replyMsg.push(`new ${img.md5} `);
+
+                        // search name result
                         if (array.length > 0) {
-
-                            replyMsg.push({
-                                type: "image",
-                                imageLink: img.imageLink,
-                                thumbnailLink: img.thumbnailLink
-                            });
-                            replyMsg.push(`new ${img.md5} `);
-
                             let labels = [], msgs = [];
                             for (let name of array) {
                                 labels.push(name);
                                 msgs.push("new " + img.md5 + " " + name);
                             }
+                            labels.push(`>> ${userId}`);
                             labels.push("next");
+                            msgs.push(`https://twitter.com/${userId}/status/${tweetId}`);
                             msgs.push("new");
-
+                            // search result
                             replyMsg.push({
                                 type: "option",
                                 title: `[${i}/${imgArray.length}]`,
                                 labels,
                                 msgs
                             });
-
-                            // _anna.log(JSON.stringify(replyMsg));
-                            return replyMsg;
+                        } else {
+                            // search result
+                            replyMsg.push({
+                                type: "option",
+                                title: `[${i}/${imgArray.length}]`,
+                                labels: [`>> ${userId}`, "next"],
+                                msgs: [`https://twitter.com/${userId}/status/${tweetId}`, "new"]
+                            });
                         }
+
+                        // _anna.log(JSON.stringify(replyMsg));
+                        return replyMsg;
                     }
 
+                    // image
                     replyMsg.push({
                         type: "image",
                         imageLink: img.imageLink,
                         thumbnailLink: img.thumbnailLink
                     });
                     replyMsg.push(`[${i}/${imgArray.length}]`);
+                    // cmd
                     replyMsg.push(`new ${img.md5} `);
 
                     return replyMsg;
@@ -1135,7 +1150,7 @@ const _anna = {
                         if (!localHost) { await sleep(timeout * 1000); }
                         else { for (let i = timeout; i > 0; --i) { await sleep(1000); console.log(`await... @${i}`) }; }
                         timeout = 40;
-                        
+
                         // upload
                         let result = await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
                         if (result == null) break;
