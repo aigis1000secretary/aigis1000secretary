@@ -69,24 +69,36 @@ module.exports = {
                 for (let i = 0; i < msg.labels.length; ++i) {
                     let label = msg.labels[i];
                     let command = msg.msgs[i];
+                    let btn;
 
                     if (command.indexOf("http") == 0) {
-                        str.push(`[${label}](${msgEmbedUrl(command)})`);
+                        str.push(`\`${label}\``);
+
+                        // new btn
+                        btn = new Discord.MessageButton()
+                            .setStyle('LINK')
+                            .setLabel(label.replace(/>> /, ''))
+                            .setURL(command);
                     } else {
                         str.push(`\`${label}:\`\n ${command}`);
 
-                        let btn = new Discord.MessageButton().setStyle("PRIMARY")
-                            .setLabel(label).setCustomId(`option #${i}`);
+                        // new btn
+                        btn = new Discord.MessageButton()
+                            .setStyle("PRIMARY")
+                            .setLabel(label)
+                            .setCustomId(`option #${i}`);
+                    }
 
-                        if (components.length <= 0 ||
-                            components[components.length - 1].components.length >= 5) {
-                            let row = new Discord.MessageActionRow()
-                                .addComponents(btn);
-                            components.push(row);
-                        } else {
-                            components[components.length - 1]
-                                .addComponents(btn);
-                        }
+                    // new col
+                    if (components.length <= 0 ||
+                        components[components.length - 1].components.length >= 5) {
+                        // new row
+                        let row = new Discord.MessageActionRow().addComponents(btn);
+                        components.push(row);
+
+                    } else {
+                        components[components.length - 1]
+                            .addComponents(btn);
                     }
                 }
 
