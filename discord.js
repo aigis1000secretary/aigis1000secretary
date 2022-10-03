@@ -1,5 +1,10 @@
-const Discord = require('discord.js')
-const config = require("./config.js");
+const Discord = require('discord.js');
+const { 
+    EmbedBuilder: MessageEmbed,
+    ActionRowBuilder: MessageActionRow,
+    ButtonBuilder: MessageButton 
+} = require('discord.js')
+const { GatewayIntentBits, Partials, ButtonStyle, Colors } = require('discord.js')
 const encoder = require("./urlEncoder.js")
 
 const msgEmbedUrl = (url) => {
@@ -16,7 +21,18 @@ module.exports = {
     admin: [],
 
     init(discordCfg) {
-        this.bot = new Discord.Client({ intents: ["GUILDS", "GUILD_MESSAGES"] });
+        this.bot = new Discord.Client({
+            intents: [
+                GatewayIntentBits.Guilds,
+                GatewayIntentBits.GuildMessages,
+                GatewayIntentBits.MessageContent
+            ],
+            partials: [
+                Partials.Message,
+                Partials.Channel,
+                Partials.Reaction
+            ]
+        });
         this.bot.login(discordCfg.token);
         this.admin = discordCfg.admin;
     },
@@ -47,8 +63,8 @@ module.exports = {
         if (type == "string") {
             let _msg = /new [a-f0-9]{32}/.test(msg) ? `anna ${msg}` : msg;
 
-            let embed = new Discord.MessageEmbed()
-                .setColor('BLUE')
+            let embed = new MessageEmbed()
+                .setColor(Colors.Blue)
                 .setDescription(_msg)
             return { embeds: [embed] };
 
@@ -57,8 +73,8 @@ module.exports = {
             type = msg.type;
 
             if (type == "image") {
-                let embed = new Discord.MessageEmbed()
-                    .setColor('BLUE')
+                let embed = new MessageEmbed()
+                    .setColor(Colors.Blue)
                     .setImage(msg.imageLink);
                 return { embeds: [embed] };
 
@@ -75,16 +91,16 @@ module.exports = {
                         str.push(`\`${label}\``);
 
                         // new btn
-                        btn = new Discord.MessageButton()
-                            .setStyle('LINK')
+                        btn = new MessageButton()
+                            .setStyle(ButtonStyle.Link)
                             .setLabel(label.replace(/>> /, ''))
                             .setURL(command);
                     } else {
                         str.push(`\`${label}:\`\n ${command}`);
 
                         // new btn
-                        btn = new Discord.MessageButton()
-                            .setStyle("PRIMARY")
+                        btn = new MessageButton()
+                            .setStyle(ButtonStyle.Primary)
                             .setLabel(label)
                             .setCustomId(`option #${i}`);
                     }
@@ -93,7 +109,7 @@ module.exports = {
                     if (components.length <= 0 ||
                         components[components.length - 1].components.length >= 5) {
                         // new row
-                        let row = new Discord.MessageActionRow().addComponents(btn);
+                        let row = new MessageActionRow().addComponents(btn);
                         components.push(row);
 
                     } else {
@@ -102,8 +118,8 @@ module.exports = {
                     }
                 }
 
-                let embed = new Discord.MessageEmbed()
-                    .setColor('BLUE')
+                let embed = new MessageEmbed()
+                    .setColor(Colors.Blue)
                     .setTitle(msg.title)
                     .setDescription(str.join("\n"))
 
@@ -122,8 +138,8 @@ module.exports = {
 
                 let results = [];
                 for (let tweet of msg.data) {
-                    let embed = new Discord.MessageEmbed()
-                        .setColor('BLUE')
+                    let embed = new MessageEmbed()
+                        .setColor(Colors.Blue)
                         .setAuthor(tweet.includes.users[0].name,
                             tweet.includes.users[0].username == "Aigis1000" ? 'https://pbs.twimg.com/profile_images/587842655951826945/zs_Nfo7C_bigger.jpg' : '',
                             `https://twitter.com/${tweet.includes.users[0].username}`)
@@ -138,7 +154,7 @@ module.exports = {
                     results.push(embed);
 
                     for (let img of tweet.includes.media) {
-                        embed = new Discord.MessageEmbed()
+                        embed = new MessageEmbed()
                             .setImage(img.url)
                         results.push(embed);
                     }
@@ -146,8 +162,8 @@ module.exports = {
                 return { embeds: results };
 
             } else if (type == "character") {
-                let embed = new Discord.MessageEmbed()
-                    .setColor('BLUE')
+                let embed = new MessageEmbed()
+                    .setColor(Colors.Blue)
                     .setTitle(msg.title)
                     .setDescription(`${msg.data}\n\n[${msg.label}](${msgEmbedUrl(msg.url)})`);
 
