@@ -54,12 +54,15 @@
 
     1.2.0.10
     discord.js v14
+
+    1.2.0.11
+    newimg cmd upgrade
 */
 
 const crypto = require("./crypto.js");
 const dbox = require("./dbox.js");
 let _config = module.exports = {
-    _version: "1.2.0.10",
+    _version: "1.2.0.11",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
