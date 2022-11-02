@@ -40,6 +40,7 @@ const _twitter = {
         // download tweet images & return filelist
         async getTweetImages(tweet_data, isAdmin) {
             let images = [];
+            if (!tweet_data.includes) { return images; }
             // image to file
             for (let i in tweet_data.includes.media) {
                 let media = tweet_data.includes.media[i];

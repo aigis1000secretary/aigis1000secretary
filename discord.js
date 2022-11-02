@@ -84,7 +84,7 @@ module.exports = {
 
                 for (let i = 0; i < msg.labels.length; ++i) {
                     let label = msg.labels[i];
-                    let command = msg.msgs[i];
+                    let command = /new [a-f0-9]{32}/.test(msg.msgs[i]) ? `anna ${msg.msgs[i]}` : msg.msgs[i];
                     let btn;
 
                     if (command.indexOf("http") == 0) {
