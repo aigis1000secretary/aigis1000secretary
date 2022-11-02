@@ -173,11 +173,12 @@ const discordBotOn = function () {
         }
         // get options label:cmd
         let optionsEmbed = message.embeds.find(embed => embed.description && embed.description.includes(`\`${label}:\``));
-        let lines = optionsEmbed.description.split('\n');
+        let lines = optionsEmbed.description.split(/\s*\n\s*/);
         let i = lines.indexOf(`\`${label}:\``);
 
         let isAdmin = discord.isAdmin(interaction.user.id);
         let cmd = lines[i + 1];
+        if (/^ANNA /i.test(cmd)) { cmd = cmd.replace(/^ANNA /i, ''); }
 
         // define reply function
         let replyFunc = async function (rMsg) {
