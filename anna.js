@@ -13,10 +13,6 @@ module.exports = {
 
     async init(config) {
         this.config = config;
-        // await dbox.init(config.dropbox);
-        // await imgur.init(config.imgur);
-        // await twitter.init(config.twitter);
-        // await database.init(config.isLocalHost);
 
         await Promise.all([
             imgur.init(config.imgur),
@@ -39,8 +35,8 @@ module.exports = {
         // isAdmin |= _anna.isLocalHost;
 
         // 分析命令
-        let msgLine = rawMsg.split(/\n+/);
-        let msgs = msgLine[0].split(/\s+/);
+        let msgLines = rawMsg.split(/\n+/);
+        let msgs = msgLines[0].split(/\s+/);
 
         // >> <command>     <arg1>          <arg2>
         // >> 學習          NNL:黑弓
@@ -627,9 +623,9 @@ module.exports = {
             }
             return "";
 
-        } else if (/^(\s|\dD\d|\d|[\+\-\*\/\(\)])+$/i.test(msgLine[0].trim())) {
+        } else if (/^(\s|\dD\d|\d|[\+\-\*\/\(\)])+$/i.test(msgLines[0].trim())) {
             // dice cmd            
-            let result = msgLine[0].replace(/\s/g, "");
+            let result = msgLines[0].replace(/\s/g, "");
             result = result.replace(/(\d{1,6})(D)(\d{1,6})/ig, (m, p1, p2, p3) => {
                 let nums = [];
                 for (let i = 0; i < p1; ++i) { nums.push(1 + Math.floor(Math.random() * p3)); }
@@ -677,11 +673,11 @@ module.exports = {
         }
 
         // by tag
-        let imgArray = imgur.database.image.findData({ tag: msg, isGif });
+        let imgArray = imgur.database.image.findData({ tag: msg, isGif }) || [];
         // by filename or md5
         if (imgArray.length < 1) {
-            imgArray = imgArray.concat(imgur.database.image.findData({ fileName: msg, isGif }));
-            imgArray = imgArray.concat(imgur.database.image.findData({ md5: msg, isGif }));
+            imgArray = imgArray.concat(imgur.database.image.findData({ fileName: msg, isGif }) || []);
+            imgArray = imgArray.concat(imgur.database.image.findData({ md5: msg, isGif }) || []);
         }
 
         let forceIndex;

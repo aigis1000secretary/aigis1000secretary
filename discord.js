@@ -1,8 +1,8 @@
 const Discord = require('discord.js');
-const { 
+const {
     EmbedBuilder: MessageEmbed,
     ActionRowBuilder: MessageActionRow,
-    ButtonBuilder: MessageButton 
+    ButtonBuilder: MessageButton
 } = require('discord.js')
 const { GatewayIntentBits, Partials, ButtonStyle, Colors } = require('discord.js')
 const encoder = require("./urlEncoder.js")

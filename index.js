@@ -129,17 +129,20 @@ const discordBotOn = function () {
                 return;
             }
 
-            let rMsg = await anna.replyAI(cmd, isAdmin);
-            let rStamp = anna.replyStamp(cmd, { isAdmin, isGif: true });
-
             // ai done something
+            let rMsg = await anna.replyAI(cmd, isAdmin);
             if (rMsg !== false) {
                 replyFunc(rMsg);
                 return;
-            } else if (rStamp !== false) {
+            }
+
+            let rStamp = anna.replyStamp(cmd, { isAdmin, isGif: true });
+            if (rStamp !== false) {
                 replyFunc(rStamp);
                 return;
-            } else if (rMsg !== null) {
+            }
+
+            if (rMsg !== null) {
                 // not found]
                 let res = cmd.length == 1 ? "王子太短了，找不到..." : randomPick(["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"]);
                 replyFunc(res);
@@ -244,17 +247,20 @@ const lineBotOn = function () {
                 return;
             }
 
-            let rMsg = await anna.replyAI(cmd, isAdmin);
-            let rStamp = anna.replyStamp(cmd, { isAdmin, isGif: false });
-
             // ai done something
+            let rMsg = await anna.replyAI(cmd, isAdmin);
             if (rMsg !== false) {
                 replyFunc(rMsg);
                 return;
-            } else if (rStamp !== false) {
+            }
+
+            let rStamp = anna.replyStamp(cmd, { isAdmin, isGif: false });
+            if (rStamp !== false) {
                 replyFunc(rStamp);
                 return;
-            } else if (rMsg !== null) {
+            }
+
+            if (rMsg !== null) {
                 // not found]
                 let res = cmd.length == 1 ? "王子太短了，找不到..." : randomPick(["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"]);
                 replyFunc(res);

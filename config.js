@@ -62,6 +62,7 @@ let _config = module.exports = {
         let rawData = null;
         try {
             rawData = await dbox.fileDownload("/config.json");
+            // rawData = require('fs').readFileSync('./config.json');
             rawData = Buffer.from(rawData, "binary").toString();
         } catch (e) {
             // console.log(json(e));
@@ -80,8 +81,8 @@ let _config = module.exports = {
             cfgObj = eval(`(${data})`);
             console.log("[config] Download encrypt config from dropbox");
         }
-        
-        // require('fs').writeFileSync('./config.json', JSON.stringify(cfgObj, null, 2));
+
+        require('fs').writeFileSync('./config.dbox.json', JSON.stringify(cfgObj, null, 2));
         return cfgObj;
     },
     async saveConfigToDbox() {
