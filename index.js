@@ -6,7 +6,7 @@ const anna = require("./anna.js");
 const discord = require("./discord.js");
 const line = require("./line.js")
 const express = require("./express.js")
-const twitter = require("./twitter.js");
+const twitter = require("./twitter2.js");
 
 const main = async function () {
     // config
