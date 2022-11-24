@@ -4,7 +4,7 @@ const path = require("path");
 
 const dbox = require("./dbox.js");
 const imgur = require("./imgur.js");
-const twitter = require("./twitter.js");
+const twitter = require("./twitter2.js");
 const database = require("./database.js");
 const discord = require("./discord.js");
 
@@ -346,7 +346,7 @@ module.exports = {
                         let userId = /[A-Za-z0-9_]{5,15}/.exec(img.fileName).toString();
                         let tweetId = /\d{18,19}/.exec(img.fileName).toString();
                         // get tweet text
-                        let tweet_data = await twitter.api.getTweet(tweetId)
+                        let tweet_data = await twitter.getTweet(tweetId)
                         if (tweet_data == null || !tweet_data.data) tweet_data = { data: { text: false } };
                         // get cards in text
                         let array = _anna.getFullnamesFromText(tweet_data.data.text);
@@ -521,10 +521,10 @@ module.exports = {
 
             if (/(\/)(\d{18,19})(\?|\/|$)/.test(url)) {
                 let tweetId = /\d{18,19}/.exec(url).toString();
-                let tweet_data = await twitter.api.getTweet(tweetId);
+                let tweet_data = await twitter.getTweet(tweetId);
                 if (!tweet_data) { return false; }
 
-                twitter.api.getTweetImages(tweet_data, isAdmin);
+                twitter.getTweetImages(tweet_data);
 
                 let replyMsg = [];
                 if (tweet_data.includes && Array.isArray(tweet_data.includes.media) && tweet_data.includes.media.length > 0) {
@@ -546,23 +546,10 @@ module.exports = {
 
             if (arg1 == null) { //  || !isNaN(Date.parse(arg1))
                 // search tweet list
-                let tweets = await twitter.api.getTweetList("Aigis1000");
-                // filter today tweet
-                tweets = tweets.filter((tweet) => {
-                    let now = new Date(Date.now());
-                    let date = new Date(tweet.created_at);
-                    return (now.getDate() == date.getDate()
-                        && now.getMonth() == date.getMonth()
-                        && now.getFullYear() == date.getFullYear());
-                })
+                let tweets = await twitter.getTweetList("Aigis1000");
                 // sort
-                tweets.sort(function (a, b) {
-                    let idA = a.id_str;
-                    let idB = b.id_str;
-                    if (idA < idB) { return -1; }
-                    if (idA > idB) { return 1; }
-                    return 0;
-                })
+                tweets = tweets.data?.data || [];
+                tweets.reverse();
 
                 let replyMsg = {
                     type: "twitter",
@@ -571,16 +558,19 @@ module.exports = {
                 }
                 // set tweet
                 for (let tweet of tweets) {
-                    let tweetId = tweet.id_str;
-                    let tweet_data = await twitter.api.getTweet(tweetId);
+                    let tweetId = tweet.id;
+                    let tweet_data = await twitter.getTweet(tweetId);
                     if (!tweet_data) { continue; }
                     try {
                         let column = {
                             text: tweet_data.data.text,
                             twitterId: tweetId,
                             media: false,
-                            created_at: tweet_data.created_at,
-                            includes: Object.assign({ media: [], users: [{ id: null, name: null, username: null }] }, tweet_data.includes)
+                            created_at: tweet_data.data.created_at,
+                            includes: Object.assign(
+                                { media: [], users: [{ id: null, name: null, username: null }] },
+                                tweet_data.includes
+                            )
                         };
                         if (column.includes.media.length > 0) { column.media = true; }
                         replyMsg.data.push(column);
@@ -598,7 +588,7 @@ module.exports = {
 
                 // get tweet id
                 let tweetId = arg1;
-                let tweet_data = await twitter.api.getTweet(tweetId);
+                let tweet_data = await twitter.getTweet(tweetId);
                 if (!tweet_data) { return false; }
 
                 // get tweet text
