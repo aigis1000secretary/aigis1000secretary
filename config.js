@@ -18,48 +18,6 @@
 
 /*
     // commit 
-    >> feature/1.1.0/discordjs13
-    discord v13
-    message payload
-        Updating from v12 to v13
-    client init fix
-    command button
-
-    1.2.0.1
-    discord MessageActionRow limit fix
-
-    1.2.0.2
-    newimg command fix
-
-    1.2.0.3
-    line memberJoined event undefined fix
-
-    1.2.0.4
-    discord reply option string fix
-
-    1.2.0.5
-    deploy To fly.io
-
-    1.2.0.6
-    newimg cmd 502 error fix
-
-    1.2.0.7
-    fly.io deploy action fix
-
-    1.2.0.8
-    upload image script cd time
-
-    1.2.0.9
-    cmd new image upgrade
-
-    1.2.0.10
-    discord.js v14
-
-    1.2.0.11
-    newimg cmd upgrade
-
-    1.2.0.12
-    newimg cmd fix
 */
 
 const crypto = require("./crypto.js");
