@@ -515,32 +515,34 @@ module.exports = {
         } else if (false && command.indexOf("://LINE.ME/R/") != -1 && false) {
             // line.abot.LINE.joinQr(msgs[0].trim());
             return "";
-        } else if (command.indexOf("HTTP") == 0) {
+        } else if (/twitter\.com\//i.test(msgLines[0])) {
+
+            let replyMsg = [];
             // tweet image to dropbox
-            let url = command;
+            for (let msgLine of msgLines) {
+                let url = msgLine;
 
-            if (/(\/)(\d{18,19})(\?|\/|$)/.test(url)) {
-                let tweetId = /\d{18,19}/.exec(url).toString();
-                let tweet_data = await twitter.getTweet(tweetId);
-                if (!tweet_data) { return false; }
+                if (/(\/)(\d{18,19})(\?|\/|$)/.test(url)) {
+                    let tweetId = /\d{18,19}/.exec(url).toString();
+                    let tweet_data = await twitter.getTweet(tweetId);
+                    if (!tweet_data) { continue; }
 
-                twitter.getTweetImages(tweet_data);
+                    twitter.getTweetImages(tweet_data);
 
-                let replyMsg = [];
-                if (tweet_data.includes && Array.isArray(tweet_data.includes.media) && tweet_data.includes.media.length > 0) {
-                    for (let media of tweet_data.includes.media) {
-                        if (media.type == "photo") {
-                            replyMsg.push({
-                                type: "image",
-                                imageLink: media.url,
-                                thumbnailLink: media.url
-                            });
+                    if (tweet_data.includes && Array.isArray(tweet_data.includes.media) && tweet_data.includes.media.length > 0) {
+                        for (let media of tweet_data.includes.media) {
+                            if (media.type == "photo") {
+                                replyMsg.push({
+                                    type: "image",
+                                    imageLink: media.url,
+                                    thumbnailLink: media.url
+                                });
+                            }
                         }
                     }
                 }
-                return replyMsg;
             }
-            return false;
+            return replyMsg.length > 0 ? replyMsg : false;
 
         } else if (command == "推特" || command == "TWITTER") {
 

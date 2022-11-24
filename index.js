@@ -106,6 +106,10 @@ const discordBotOn = function () {
             try {
                 if (!config.isLocalHost || isAdmin) { await dMsg.reply(rMsg); }
                 else { console.log("[DC] " + rMsg); }
+
+                if (Array.isArray(rMsg.embeds) && rMsg.embeds[0].data?.image?.url) {
+                    dMsg.suppressEmbeds(true).catch(() => { });
+                }
             } catch (e) { console.log(e); }
             return;
         };
