@@ -1,8 +1,8 @@
 const Discord = require('discord.js');
-const { 
+const {
     EmbedBuilder: MessageEmbed,
     ActionRowBuilder: MessageActionRow,
-    ButtonBuilder: MessageButton 
+    ButtonBuilder: MessageButton
 } = require('discord.js')
 const { GatewayIntentBits, Partials, ButtonStyle, Colors } = require('discord.js')
 const encoder = require("./urlEncoder.js")
@@ -140,12 +140,14 @@ module.exports = {
                 for (let tweet of msg.data) {
                     let embed = new MessageEmbed()
                         .setColor(Colors.Blue)
-                        .setAuthor(tweet.includes.users[0].name,
-                            tweet.includes.users[0].username == "Aigis1000" ? 'https://pbs.twimg.com/profile_images/587842655951826945/zs_Nfo7C_bigger.jpg' : '',
-                            `https://twitter.com/${tweet.includes.users[0].username}`)
+                        .setAuthor({
+                            name: tweet.includes.users[0].name,
+                            iconURL: tweet.includes.users[0].username == "Aigis1000" ? 'https://pbs.twimg.com/profile_images/587842655951826945/zs_Nfo7C_bigger.jpg' : null,
+                            url: `https://twitter.com/${tweet.includes.users[0].username}`
+                        })
                         .setDescription(tweet.text)
                         .setTimestamp()
-                        .setFooter('Twitter', 'https://abs.twimg.com/icons/apple-touch-icon-192x192.png');
+                        .setFooter({ text: 'Twitter', iconURL: 'https://abs.twimg.com/icons/apple-touch-icon-192x192.png' });
 
                     if (tweet.media) {
                         let img = tweet.includes.media.shift();

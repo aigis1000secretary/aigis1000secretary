@@ -36,10 +36,6 @@ const _express = {
         // // line webhook
         // _express.app.post("/linebot/", line.bot.parser());
 
-        // // twitter webhook
-        // _express.app.get("/twitterbot/:function", twitter.webhook.crcFunctions);
-        // _express.app.get("/twitterbot/", twitter.webhook.get);
-        // _express.app.post("/twitterbot/", jsonParser, twitter.webhook.post);
     }
 }
 

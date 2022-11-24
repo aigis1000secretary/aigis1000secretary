@@ -4,7 +4,7 @@ const path = require("path");
 
 const dbox = require("./dbox.js");
 const imgur = require("./imgur.js");
-const twitter = require("./twitter.js");
+const twitter = require("./twitter2.js");
 const database = require("./database.js");
 const discord = require("./discord.js");
 
@@ -13,10 +13,6 @@ module.exports = {
 
     async init(config) {
         this.config = config;
-        // await dbox.init(config.dropbox);
-        // await imgur.init(config.imgur);
-        // await twitter.init(config.twitter);
-        // await database.init(config.isLocalHost);
 
         await Promise.all([
             imgur.init(config.imgur),
@@ -39,8 +35,8 @@ module.exports = {
         // isAdmin |= _anna.isLocalHost;
 
         // 分析命令
-        let msgLine = rawMsg.split(/\n+/);
-        let msgs = msgLine[0].split(/\s+/);
+        let msgLines = rawMsg.split(/\n+/);
+        let msgs = msgLines[0].split(/\s+/);
 
         // >> <command>     <arg1>          <arg2>
         // >> 學習          NNL:黑弓
@@ -350,7 +346,7 @@ module.exports = {
                         let userId = /[A-Za-z0-9_]{5,15}/.exec(img.fileName).toString();
                         let tweetId = /\d{18,19}/.exec(img.fileName).toString();
                         // get tweet text
-                        let tweet_data = await twitter.api.getTweet(tweetId)
+                        let tweet_data = await twitter.getTweet(tweetId)
                         if (tweet_data == null || !tweet_data.data) tweet_data = { data: { text: false } };
                         // get cards in text
                         let array = _anna.getFullnamesFromText(tweet_data.data.text);
@@ -519,54 +515,43 @@ module.exports = {
         } else if (false && command.indexOf("://LINE.ME/R/") != -1 && false) {
             // line.abot.LINE.joinQr(msgs[0].trim());
             return "";
-        } else if (command.indexOf("HTTP") == 0) {
+        } else if (/twitter\.com\//i.test(msgLines[0])) {
+
+            let replyMsg = [];
             // tweet image to dropbox
-            let url = command;
+            for (let msgLine of msgLines) {
+                let url = msgLine;
 
-            if (/(\/)(\d{18,19})(\?|\/|$)/.test(url)) {
-                let tweetId = /\d{18,19}/.exec(url).toString();
-                let tweet_data = await twitter.api.getTweet(tweetId);
-                if (!tweet_data) { return false; }
+                if (/(\/)(\d{18,19})(\?|\/|$)/.test(url)) {
+                    let tweetId = /\d{18,19}/.exec(url).toString();
+                    let tweet_data = await twitter.getTweet(tweetId);
+                    if (!tweet_data) { continue; }
 
-                twitter.api.getTweetImages(tweet_data, isAdmin);
+                    twitter.getTweetImages(tweet_data);
 
-                let replyMsg = [];
-                if (tweet_data.includes && Array.isArray(tweet_data.includes.media) && tweet_data.includes.media.length > 0) {
-                    for (let media of tweet_data.includes.media) {
-                        if (media.type == "photo") {
-                            replyMsg.push({
-                                type: "image",
-                                imageLink: media.url,
-                                thumbnailLink: media.url
-                            });
+                    if (tweet_data.includes && Array.isArray(tweet_data.includes.media) && tweet_data.includes.media.length > 0) {
+                        for (let media of tweet_data.includes.media) {
+                            if (media.type == "photo") {
+                                replyMsg.push({
+                                    type: "image",
+                                    imageLink: media.url,
+                                    thumbnailLink: media.url
+                                });
+                            }
                         }
                     }
                 }
-                return replyMsg;
             }
-            return false;
+            return replyMsg.length > 0 ? replyMsg : false;
 
         } else if (command == "推特" || command == "TWITTER") {
 
             if (arg1 == null) { //  || !isNaN(Date.parse(arg1))
                 // search tweet list
-                let tweets = await twitter.api.getTweetList("Aigis1000");
-                // filter today tweet
-                tweets = tweets.filter((tweet) => {
-                    let now = new Date(Date.now());
-                    let date = new Date(tweet.created_at);
-                    return (now.getDate() == date.getDate()
-                        && now.getMonth() == date.getMonth()
-                        && now.getFullYear() == date.getFullYear());
-                })
+                let tweets = await twitter.getTweetList("Aigis1000");
                 // sort
-                tweets.sort(function (a, b) {
-                    let idA = a.id_str;
-                    let idB = b.id_str;
-                    if (idA < idB) { return -1; }
-                    if (idA > idB) { return 1; }
-                    return 0;
-                })
+                tweets = tweets.data?.data || [];
+                tweets.reverse();
 
                 let replyMsg = {
                     type: "twitter",
@@ -575,16 +560,19 @@ module.exports = {
                 }
                 // set tweet
                 for (let tweet of tweets) {
-                    let tweetId = tweet.id_str;
-                    let tweet_data = await twitter.api.getTweet(tweetId);
+                    let tweetId = tweet.id;
+                    let tweet_data = await twitter.getTweet(tweetId);
                     if (!tweet_data) { continue; }
                     try {
                         let column = {
                             text: tweet_data.data.text,
                             twitterId: tweetId,
                             media: false,
-                            created_at: tweet_data.created_at,
-                            includes: Object.assign({ media: [], users: [{ id: null, name: null, username: null }] }, tweet_data.includes)
+                            created_at: tweet_data.data.created_at,
+                            includes: Object.assign(
+                                { media: [], users: [{ id: null, name: null, username: null }] },
+                                tweet_data.includes
+                            )
                         };
                         if (column.includes.media.length > 0) { column.media = true; }
                         replyMsg.data.push(column);
@@ -602,7 +590,7 @@ module.exports = {
 
                 // get tweet id
                 let tweetId = arg1;
-                let tweet_data = await twitter.api.getTweet(tweetId);
+                let tweet_data = await twitter.getTweet(tweetId);
                 if (!tweet_data) { return false; }
 
                 // get tweet text
@@ -627,9 +615,9 @@ module.exports = {
             }
             return "";
 
-        } else if (/^(\s|\dD\d|\d|[\+\-\*\/\(\)])+$/i.test(msgLine[0].trim())) {
+        } else if (/^(\s|\dD\d|\d|[\+\-\*\/\(\)])+$/i.test(msgLines[0].trim())) {
             // dice cmd            
-            let result = msgLine[0].replace(/\s/g, "");
+            let result = msgLines[0].replace(/\s/g, "");
             result = result.replace(/(\d{1,6})(D)(\d{1,6})/ig, (m, p1, p2, p3) => {
                 let nums = [];
                 for (let i = 0; i < p1; ++i) { nums.push(1 + Math.floor(Math.random() * p3)); }
@@ -677,11 +665,11 @@ module.exports = {
         }
 
         // by tag
-        let imgArray = imgur.database.image.findData({ tag: msg, isGif });
+        let imgArray = imgur.database.image.findData({ tag: msg, isGif }) || [];
         // by filename or md5
         if (imgArray.length < 1) {
-            imgArray = imgArray.concat(imgur.database.image.findData({ fileName: msg, isGif }));
-            imgArray = imgArray.concat(imgur.database.image.findData({ md5: msg, isGif }));
+            imgArray = imgArray.concat(imgur.database.image.findData({ fileName: msg, isGif }) || []);
+            imgArray = imgArray.concat(imgur.database.image.findData({ md5: msg, isGif }) || []);
         }
 
         let forceIndex;

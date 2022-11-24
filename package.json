@@ -20,6 +20,6 @@
     "isomorphic-fetch": "^3.0.0",
     "linebot": "^1.6.1",
     "request": "^2.88.2",
-    "twitter": "^1.7.1"
+    "twitter-api-v2": "^1.12.8"
   }
 }
