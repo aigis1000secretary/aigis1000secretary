@@ -18,54 +18,12 @@
 
 /*
     // commit 
-    >> feature/1.1.0/discordjs13
-    discord v13
-    message payload
-        Updating from v12 to v13
-    client init fix
-    command button
-
-    1.2.0.1
-    discord MessageActionRow limit fix
-
-    1.2.0.2
-    newimg command fix
-
-    1.2.0.3
-    line memberJoined event undefined fix
-
-    1.2.0.4
-    discord reply option string fix
-
-    1.2.0.5
-    deploy To fly.io
-
-    1.2.0.6
-    newimg cmd 502 error fix
-
-    1.2.0.7
-    fly.io deploy action fix
-
-    1.2.0.8
-    upload image script cd time
-
-    1.2.0.9
-    cmd new image upgrade
-
-    1.2.0.10
-    discord.js v14
-
-    1.2.0.11
-    newimg cmd upgrade
-
-    1.2.0.12
-    newimg cmd fix
 */
 
 const crypto = require("./crypto.js");
 const dbox = require("./dbox.js");
 let _config = module.exports = {
-    _version: "1.2.0.12",
+    _version: "1.3.0.0",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
@@ -104,6 +62,7 @@ let _config = module.exports = {
         let rawData = null;
         try {
             rawData = await dbox.fileDownload("/config.json");
+            // rawData = require('fs').readFileSync('./config.json');
             rawData = Buffer.from(rawData, "binary").toString();
         } catch (e) {
             // console.log(json(e));
@@ -122,8 +81,8 @@ let _config = module.exports = {
             cfgObj = eval(`(${data})`);
             console.log("[config] Download encrypt config from dropbox");
         }
-        
-        // require('fs').writeFileSync('./config.json', JSON.stringify(cfgObj, null, 2));
+
+        require('fs').writeFileSync('./config.dbox.json', JSON.stringify(cfgObj, null, 2));
         return cfgObj;
     },
     async saveConfigToDbox() {

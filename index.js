@@ -6,7 +6,7 @@ const anna = require("./anna.js");
 const discord = require("./discord.js");
 const line = require("./line.js")
 const express = require("./express.js")
-const twitter = require("./twitter.js");
+const twitter = require("./twitter2.js");
 
 const main = async function () {
     // config
@@ -106,6 +106,10 @@ const discordBotOn = function () {
             try {
                 if (!config.isLocalHost || isAdmin) { await dMsg.reply(rMsg); }
                 else { console.log("[DC] " + rMsg); }
+
+                if (Array.isArray(rMsg.embeds) && rMsg.embeds[0].data?.image?.url) {
+                    dMsg.suppressEmbeds(true).catch(() => { });
+                }
             } catch (e) { console.log(e); }
             return;
         };
@@ -129,17 +133,20 @@ const discordBotOn = function () {
                 return;
             }
 
-            let rMsg = await anna.replyAI(cmd, isAdmin);
-            let rStamp = anna.replyStamp(cmd, { isAdmin, isGif: true });
-
             // ai done something
+            let rMsg = await anna.replyAI(cmd, isAdmin);
             if (rMsg !== false) {
                 replyFunc(rMsg);
                 return;
-            } else if (rStamp !== false) {
+            }
+
+            let rStamp = anna.replyStamp(cmd, { isAdmin, isGif: true });
+            if (rStamp !== false) {
                 replyFunc(rStamp);
                 return;
-            } else if (rMsg !== null) {
+            }
+
+            if (rMsg !== null) {
                 // not found]
                 let res = cmd.length == 1 ? "王子太短了，找不到..." : randomPick(["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"]);
                 replyFunc(res);
@@ -244,17 +251,20 @@ const lineBotOn = function () {
                 return;
             }
 
-            let rMsg = await anna.replyAI(cmd, isAdmin);
-            let rStamp = anna.replyStamp(cmd, { isAdmin, isGif: false });
-
             // ai done something
+            let rMsg = await anna.replyAI(cmd, isAdmin);
             if (rMsg !== false) {
                 replyFunc(rMsg);
                 return;
-            } else if (rStamp !== false) {
+            }
+
+            let rStamp = anna.replyStamp(cmd, { isAdmin, isGif: false });
+            if (rStamp !== false) {
                 replyFunc(rStamp);
                 return;
-            } else if (rMsg !== null) {
+            }
+
+            if (rMsg !== null) {
                 // not found]
                 let res = cmd.length == 1 ? "王子太短了，找不到..." : randomPick(["不認識的人呢...", "安娜不知道", "安娜不懂", "那是誰？", "那是什麼？"]);
                 replyFunc(res);
@@ -306,61 +316,142 @@ const lineBotOn = function () {
 
 
 // twitter bot 監聽 Aigis1000
-const twitterBotOn = function () {
+const twitterBotOn = async function () {
+
+    // debug method
+    {
+        /*
+        // Log every rule ID
+        await twitter.client.v2.streamRules()
+            .then((_rules) => console.log(_rules.data?.map(rule => rule) || _rules));//*/
+        /*
+        // force delete all online rules (for debug bearer_token)
+        await twitter.client.v2.updateStreamRules({
+            delete: {
+                ids: (await twitter.getStreamRules())
+                    .filter((rule) => rule.tag == 'twitterListener')
+                    .map(rule => rule.id)
+            }
+        })
+            .then(console.log)
+            .catch(console.log);//*/
+    }
+
 
     if (config.isLocalHost) { return; }
 
-    let callback = async function (tweet_data) {
-        // // get tweet text & media keyword
-        // let text = tweet_data.data.text;
-        // let mediaKey = "";
 
-        // if source is Aigis1000
-        if (tweet_data.includes.users[0].username == "Aigis1000") {
+    // collect configs
+    // get client id
+    const meID = await twitter.getUserID('Aigis1000Anna');
+    if (!meID) { return; }
+    // get target ids
+    const usernames = await twitter.getFollowingIDs(meID);
 
-            // // push image data to tweetMediaCache if there are some media
-            // if (tweet_data.includes &&
-            //     Array.isArray(tweet_data.includes.media) &&
-            //     tweet_data.includes.media.length > 0) {
 
-            //     // get keyword in text
-            //     mediaKey = text.split('/t.co/').splice(-1);
-            //     // map keyword => media.url
-            //     tweetMediaCache[mediaKey] = [];
-            //     for (let media of tweet_data.includes.media) {
-            //         if (media.type == "photo") {
-            //             tweetMediaCache[mediaKey].push(media.url);
-            //         }
-            //     }
-            // }
+    // setup rule
+    const ruleTag = 'aigis1000image';
+    let localRules = [];
+    if (usernames.length > 0) {
+        let localRule = '(';
+        const ruleEnd = ') -is:retweet has:images';  // -is:reply -is:quote
 
-            // // get all announce target
-            // let aIDs = await line.abot.LINE._getGroupsJoined();
-            // for (let aid of aIDs) {
-            //     // // check announce switch
-            //     // if (!groupDatabase.data[i].alarm) continue;
-            //     // // 14 days no ant msg idle group	3 * 24 * 60 * 60 * 1000
-            //     // if (Date.now() - groupDatabase.data[i].timestamp > 259200000) {
-            //     //     groupDatabase.data[i].alarm = false;
-            //     //     groupDatabase.uploadTask();
-            //     //     continue;
-            //     // }
+        for (let username of usernames) {
+            // skip same keyword
+            if (localRule.includes(username) ||
+                localRules.find((rule) => (rule.value.includes(username)))) { continue; }
 
-            //     line.abot.LINE.push(aid, text);
-            // }
+            // temp
+            let temp = '';
+            if (localRule.length <= 1) { // temp =           `(#hashA`
+                temp = `(from:${username}`;
+            } else {                     // temp = `(#hash0 OR #hashA`
+                temp = `${localRule} OR from:${username}`;
+            }
 
-            // image to dropbox
-            twitter.api.getTweetImages(tweet_data, true);
-        } else {
-            // // send tweet with media to pushlog
-            // if (tweet_data.includes &&
-            //     Array.isArray(tweet_data.includes.media) &&
-            //     tweet_data.includes.media.length > 0) {
-            //     // abotPushLog(`https://twitter.com/${tweet_data.includes.users[0].username}/status/${tweet_data.data.id}`)
-            // }
-
-            twitter.api.getTweetImages(tweet_data, false);
+            // set keyword
+            if (temp.length < 512 - ruleEnd.length) {
+                localRule = temp;
+            } else {
+                localRule = `${localRule}${ruleEnd}`;
+                localRules.push({ value: localRule, tag: ruleTag });
+                localRule = `(from:${username}`;
+            }
         }
+        // set last keyword
+        localRule = `${localRule}${ruleEnd} `;
+        localRules.push({ value: localRule, tag: ruleTag });
     }
-    twitter.listen(callback);
+
+
+    // check online rules
+    let onlineRules = (await twitter.getStreamRules()).filter((rule) => rule.tag == ruleTag);
+
+    // check online rule valid or not
+    let deleteIDs = [];
+    for (let { value, id, tag } of onlineRules) {
+        // same rule exist
+        if (localRules.find((rule) => (rule.value == value))) { continue; }
+        // keep id for delete
+        deleteIDs.push(id);
+    }
+    // delete all old rules
+    if (deleteIDs.length > 0) {
+        console.log(`[TL2] updateStreamRules delete`);
+        await twitter.client.v2.updateStreamRules({ delete: { ids: deleteIDs } }).then(console.log);
+    }
+
+    // check lost rules & set append list
+    let appendRuels = [];
+    for (let { value, tag } of localRules) {
+        // same rule exist
+        if (onlineRules.find((rule) => (rule.value == value))) { continue; }
+        // keep id for delete
+        appendRuels.push({ value, tag });
+    }
+    // update rules
+    if (appendRuels.length > 0) {
+        await twitter.client.v2.updateStreamRules({ add: appendRuels }).then((res) => {
+            console.log(`[TL2] updateStreamRules add`);
+            if (res.errors) { console.log({ add: appendRuels }) }
+            // console.log(res)
+        });
+    }
+
+    // // Log every rule ID
+    // await twitter.client.v2.streamRules()
+    //     .then((_rules) => console.log(_rules.data?.map(rule => rule) || _rules));
+
+
+    // listen 
+    const callback = async (eventData) => {
+        if (!eventData.data?.id) { return; }
+
+        // check match rule
+        let matchRuleValues = [];
+        for (let match of eventData.matching_rules) {
+            let rule = onlineRules.find((onlineRule) => (onlineRule.id == match.id && onlineRule.tag == ruleTag));
+            if (rule && !matchRuleValues.includes(rule.value)) { matchRuleValues.push(rule.value); }
+        } // value = `(#hashA OR #hashB) -is:retweet`
+        if (matchRuleValues.length <= 0) { return; }
+
+        // get really tweet
+        let tweetID = eventData.data?.id || null;
+        let tweet = await twitter.getTweet(tweetID);
+        if (!tweet) { return; }
+
+        twitter.getTweetImages(tweet);
+
+        // console.log(`====Twitter has sent something: ${tweet.includes?.users[0]?.username} ${eventData.data?.id}`);
+        // console.log(new Date(eventData.data?.created_at));
+        // console.log(JSON.stringify(eventData, null, 2));
+        // console.log(JSON.stringify(tweet, null, 2));
+        // for (let media of tweet.includes?.media || []) {
+        //     console.log(media.url || null);
+        // }
+        // console.log(`https://twitter.com/${tweet.includes?.users[0]?.username}/status/${tweetID}`);
+        // console.log('====');
+    }
+    await twitter.listen(callback);
+
 }
