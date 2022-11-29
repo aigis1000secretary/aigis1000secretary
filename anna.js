@@ -527,6 +527,18 @@ module.exports = {
                     let tweet_data = await twitter.getTweet(tweetId);
                     if (!tweet_data) { continue; }
 
+                    // check http 301 url
+                    if (/^https:\/\/t\.co\/\S+$/.test(tweet_data.data?.text)) {
+                        let url = tweet_data.data?.text;
+                        url = await new Promise((resolve, reject) => {
+                            require('https').get(url, (res) => {
+                                resolve(res.statusCode == 301 ? res.headers.location : null);
+                            })
+                        }) || url;
+                        let match = url.match(/^https:\/\/twitter\.com\/\S+\/status\/(\d+)/i);
+                        if (match) { tweet_data = await twitter.getTweet(match[1]); }
+                    }
+
                     twitter.getTweetImages(tweet_data);
 
                     if (tweet_data.includes && Array.isArray(tweet_data.includes.media) && tweet_data.includes.media.length > 0) {
@@ -563,6 +575,19 @@ module.exports = {
                     let tweetId = tweet.id;
                     let tweet_data = await twitter.getTweet(tweetId);
                     if (!tweet_data) { continue; }
+
+                    // check http 301 url
+                    if (/^https:\/\/t\.co\/\S+$/.test(tweet_data.data?.text)) {
+                        let url = tweet_data.data?.text;
+                        url = await new Promise((resolve, reject) => {
+                            require('https').get(url, (res) => {
+                                resolve(res.statusCode == 301 ? res.headers.location : null);
+                            })
+                        }) || url;
+                        let match = url.match(/^https:\/\/twitter\.com\/\S+\/status\/(\d+)/i);
+                        if (match) { tweet_data = await twitter.getTweet(match[1]); }
+                    }
+
                     try {
                         let column = {
                             text: tweet_data.data.text,
@@ -592,6 +617,18 @@ module.exports = {
                 let tweetId = arg1;
                 let tweet_data = await twitter.getTweet(tweetId);
                 if (!tweet_data) { return false; }
+
+                // check http 301 url
+                if (/^https:\/\/t\.co\/\S+$/.test(tweet_data.data?.text)) {
+                    let url = tweet_data.data?.text;
+                    url = await new Promise((resolve, reject) => {
+                        require('https').get(url, (res) => {
+                            resolve(res.statusCode == 301 ? res.headers.location : null);
+                        })
+                    }) || url;
+                    let match = url.match(/^https:\/\/twitter\.com\/\S+\/status\/(\d+)/i);
+                    if (match) { tweet_data = await twitter.getTweet(match[1]); }
+                }
 
                 // get tweet text
                 let text = tweet_data.data.text;
