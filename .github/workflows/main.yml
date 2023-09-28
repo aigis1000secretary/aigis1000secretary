@@ -18,18 +18,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Shutdown server
-        uses: superfly/flyctl-actions@master
-        with:
-          args: "scale count 0 -a aigis1000secretary"
+      # - name: Shutdown server
+      #   uses: superfly/flyctl-actions@master
+      #   with:
+      #     args: "scale count 0 -a aigis1000secretary"
 
       - name: Deploy
         uses: superfly/flyctl-actions@master
         with:
           args: "deploy --detach"
 
-      - name: Start up
-        uses: superfly/flyctl-actions@master
-        with:
-          args: "scale count 1 -a aigis1000secretary"
+      # - name: Start up
+      #   uses: superfly/flyctl-actions@master
+      #   with:
+      #     args: "scale count 1 -a aigis1000secretary"
       
