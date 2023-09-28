@@ -1,9 +1,5 @@
 const Discord = require('discord.js');
-const {
-    EmbedBuilder: MessageEmbed,
-    ActionRowBuilder: MessageActionRow,
-    ButtonBuilder: MessageButton
-} = require('discord.js')
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder } = require('discord.js')
 const { GatewayIntentBits, Partials, ButtonStyle, Colors } = require('discord.js')
 const encoder = require("./urlEncoder.js")
 
@@ -63,7 +59,7 @@ module.exports = {
         if (type == "string") {
             let _msg = /new [a-f0-9]{32}/.test(msg) ? `anna ${msg}` : msg;
 
-            let embed = new MessageEmbed()
+            let embed = new EmbedBuilder()
                 .setColor(Colors.Blue)
                 .setDescription(_msg)
             return { embeds: [embed] };
@@ -73,7 +69,7 @@ module.exports = {
             type = msg.type;
 
             if (type == "image") {
-                let embed = new MessageEmbed()
+                let embed = new EmbedBuilder()
                     .setColor(Colors.Blue)
                     .setImage(msg.imageLink);
                 return { embeds: [embed] };
@@ -91,7 +87,7 @@ module.exports = {
                         str.push(`\`${label}\``);
 
                         // new btn
-                        btn = new MessageButton()
+                        btn = new ButtonBuilder()
                             .setStyle(ButtonStyle.Link)
                             .setLabel(label.replace(/>> /, ''))
                             .setURL(command);
@@ -99,7 +95,7 @@ module.exports = {
                         str.push(`\`${label}:\`\n ${command}`);
 
                         // new btn
-                        btn = new MessageButton()
+                        btn = new ButtonBuilder()
                             .setStyle(ButtonStyle.Primary)
                             .setLabel(label)
                             .setCustomId(`option #${i}`);
@@ -109,7 +105,7 @@ module.exports = {
                     if (components.length <= 0 ||
                         components[components.length - 1].components.length >= 5) {
                         // new row
-                        let row = new MessageActionRow().addComponents(btn);
+                        let row = new ActionRowBuilder().addComponents(btn);
                         components.push(row);
 
                     } else {
@@ -118,7 +114,7 @@ module.exports = {
                     }
                 }
 
-                let embed = new MessageEmbed()
+                let embed = new EmbedBuilder()
                     .setColor(Colors.Blue)
                     .setTitle(msg.title)
                     .setDescription(str.join("\n"))
@@ -138,7 +134,7 @@ module.exports = {
 
                 let results = [];
                 for (let tweet of msg.data) {
-                    let embed = new MessageEmbed()
+                    let embed = new EmbedBuilder()
                         .setColor(Colors.Blue)
                         .setAuthor({
                             name: tweet.includes.users[0].name,
@@ -156,7 +152,7 @@ module.exports = {
                     results.push(embed);
 
                     for (let img of tweet.includes.media) {
-                        embed = new MessageEmbed()
+                        embed = new EmbedBuilder()
                             .setImage(img.url)
                         results.push(embed);
                     }
@@ -164,7 +160,7 @@ module.exports = {
                 return { embeds: results };
 
             } else if (type == "character") {
-                let embed = new MessageEmbed()
+                let embed = new EmbedBuilder()
                     .setColor(Colors.Blue)
                     .setTitle(msg.title)
                     .setDescription(`${msg.data}\n\n[${msg.label}](${msgEmbedUrl(msg.url)})`);
