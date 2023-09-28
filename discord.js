@@ -3,14 +3,16 @@ const { EmbedBuilder, ActionRowBuilder, ButtonBuilder } = require('discord.js')
 const { GatewayIntentBits, Partials, ButtonStyle, Colors } = require('discord.js')
 const encoder = require("./urlEncoder.js")
 
+/*
 const msgEmbedUrl = (url) => {
-    if (url.startsWith("http://seesaawiki.jp/aigis/d/")) {
+    if (url.startsWith("https://seesaawiki.jp/aigis/d/")) {
         url = encoder.urlDecodeJP(url);
-        url = url.replace("http://seesaawiki.jp/aigis/d/", "https://aigis1000secretary.fly.dev/seesaawiki/");
-        // url = url.replace("http://seesaawiki.jp/aigis/d/", "http://127.0.0.1:8080/seesaawiki/");
+        url = url.replace("https://seesaawiki.jp/aigis/d/", "https://aigis1000secretary.fly.dev/seesaawiki/");
+        // url = url.replace("https://seesaawiki.jp/aigis/d/", "https://127.0.0.1:8080/seesaawiki/");
     }
     return url;
 }
+*/
 
 module.exports = {
     bot: null,
@@ -163,7 +165,7 @@ module.exports = {
                 let embed = new EmbedBuilder()
                     .setColor(Colors.Blue)
                     .setTitle(msg.title)
-                    .setDescription(`${msg.data}\n\n[${msg.label}](${msgEmbedUrl(msg.url)})`);
+                    .setDescription(`${msg.data}\n\n[${msg.label}](${msg.url})`);
 
                 if (msg.imageLink) { embed.setImage(msg.imageLink); }
 
