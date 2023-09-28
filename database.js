@@ -240,7 +240,7 @@ class CharaDatabase extends Database {
             return string;
         };
         data.getWikiUrl = function () {
-            return "http://seesaawiki.jp/aigis/d/" + this.urlName;
+            return "https://seesaawiki.jp/aigis/d/" + this.urlName;
         };
 
         return data;
