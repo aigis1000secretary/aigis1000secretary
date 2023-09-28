@@ -440,6 +440,19 @@ const twitterBotOn = async function () {
         let tweet = await twitter.getTweet(tweetID);
         if (!tweet) { return; }
 
+        // check http 301 url
+        if (/^https:\/\/t\.co\/\S+$/.test(tweet.data?.text)) {
+            let url = tweet.data?.text;
+            url = await new Promise((resolve, reject) => {
+                require('https').get(url, (res) => {
+                    resolve(res.statusCode == 301 ? res.headers.location : null);
+                })
+            }) || url;
+            let match = url.match(/^https:\/\/twitter\.com\/\S+\/status\/(\d+)/i);
+            if (match) { tweet = await twitter.getTweet(match[1]); }
+        }
+
+        // get twitter image & upload to dbox
         twitter.getTweetImages(tweet);
 
         // console.log(`====Twitter has sent something: ${tweet.includes?.users[0]?.username} ${eventData.data?.id}`);
