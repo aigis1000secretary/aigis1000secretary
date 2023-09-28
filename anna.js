@@ -1119,7 +1119,9 @@ const _anna = {
             // cant found image from imgur (by tag)
             if (resultImage.length == 0) {
                 // get image data
-                let imageBinary = localHost ? fs.readFileSync(filePath) : await dbox.fileDownload(tagList);
+                let imageBinary = localHost ? fs.readFileSync(filePath) : await dbox.fileDownload(tagList).catch((e) => { console.log(e.message); return null; });
+                if (imageBinary === null) { continue; }
+
                 let md5 = md5f(imageBinary);  // get MD5 for check
 
                 // find again
@@ -1196,7 +1198,9 @@ const _anna = {
                 for (let image of resultImage) { await imgur.api.image.imageDeletion({ imageHash: image.id }) }
 
                 // image data
-                let imageBinary = localHost ? fs.readFileSync(filePath) : await dbox.fileDownload(tagList);
+                let imageBinary = localHost ? fs.readFileSync(filePath) : await dbox.fileDownload(tagList).catch((e) => { console.log(e.message); return null; });
+                if (imageBinary === null) { continue; }
+
                 let md5 = md5f(imageBinary);  // get MD5 for check
 
                 // API cd before upload
