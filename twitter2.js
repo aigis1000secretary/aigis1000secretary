@@ -207,25 +207,28 @@ class Twitter {
 module.exports = {
 
     core: null,
+    api403: false,
 
     client: new TwitterApi(),
-    init({ bearerToken }) {
+    async init({ bearerToken }) {
         this.client = new TwitterApi(bearerToken);
+
+        if (await this.getUserID('Aigis1000') == null) { this.api403 = true; }
     },
 
     async getUserID(username) {
-        const user = await this.client.v2.userByUsername(username);
+        const user = await this.client.v2.userByUsername(username).catch((e) => console.log(e.message));
         return user?.data?.id || null;
     },
 
     async getUsers(IDs) {
-        const users = await this.client.v2.users(IDs);
+        const users = await this.client.v2.users(IDs).catch((e) => console.log(e.message));
         return users?.data || [];
         // [{ id: '2186926766', name: 'タクシキ', username: 'z1022001' }]
     },
 
     async getFollowingIDs(userID) {
-        const followings = await this.client.v2.following(userID);
+        const followings = await this.client.v2.following(userID).catch((e) => console.log(e.message));
         let usernames = [];
         for (let followingUser of followings?.data || []) {
             usernames.push(followingUser.username);
@@ -239,15 +242,15 @@ module.exports = {
     },
 
     getTweet(tweetId, options = _options.default) {
-        return this.client.v2.singleTweet(tweetId, options).catch(console.log);
+        return this.client.v2.singleTweet(tweetId, options).catch((e) => console.log(e.message));
     },
 
     getTweetsList(username, options = _options.default) {
-        return this.client.v2.search(`from:${username} -is:retweet`, options).catch(console.log);
+        return this.client.v2.search(`from:${username} -is:retweet`, options).catch((e) => console.log(e.message));
     },
 
     getTweets(query, options = _options.default) {
-        return this.client.v2.search(query, options).catch(console.log);
+        return this.client.v2.search(query, options).catch((e) => console.log(e.message));
     },
 
     async getTweetImages(tweet) {
