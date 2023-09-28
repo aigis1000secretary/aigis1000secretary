@@ -515,7 +515,7 @@ module.exports = {
         } else if (false && command.indexOf("://LINE.ME/R/") != -1 && false) {
             // line.abot.LINE.joinQr(msgs[0].trim());
             return "";
-        } else if (/twitter\.com\//i.test(msgLines[0])) {
+        } else if (!twitter.api403 && /twitter\.com\//i.test(msgLines[0])) {
 
             let replyMsg = [];
             // tweet image to dropbox
@@ -556,7 +556,7 @@ module.exports = {
             }
             return replyMsg.length > 0 ? replyMsg : false;
 
-        } else if (command == "推特" || command == "TWITTER") {
+        } else if (!twitter.api403 && ["推特", "TWITTER"].includes(command)) {
 
             if (arg1 == null) { //  || !isNaN(Date.parse(arg1))
                 // search tweet list

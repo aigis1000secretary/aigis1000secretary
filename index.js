@@ -318,6 +318,8 @@ const lineBotOn = function () {
 // twitter bot 監聽 Aigis1000
 const twitterBotOn = async function () {
 
+    if (twitter.api403) { return; }
+
     // debug method
     {
         /*
