@@ -286,8 +286,7 @@ const _imgur = {
 
                 try {
                     console.log(`[imgur] POST Image Upload( ${fileName} )` +
-                        (albumHash ? `\n    albumHash: ${albumHash}` : "") +
-                        (md5 ? `\n    md5: ${md5}` : "") +
+                        (albumHash ? `\n    albumHash: ${albumHash}` : "") + (md5 ? `    md5: ${md5}` : "") +
                         (tagList ? `\n    tagList: ${tagList}` : "")
                     );
 
@@ -309,7 +308,7 @@ const _imgur = {
 
                 } catch (error) {
                     console.log(`[imgur] imgur.api.image.imageUpload Error ${error.statusCode}`);
-                    console.log(error);
+                    // console.log(error);
                     return null;
                 }
             },
@@ -457,7 +456,7 @@ const _imgur = {
             },
 
             // POST Set Album Images
-            async setAlbumImages({ albumHash, ids }) {
+            async albumSetImages({ albumHash, ids }) {
                 if (!enable() || ids.length == 0) return null;
 
                 try {
@@ -474,13 +473,13 @@ const _imgur = {
                     return await _apiRequest2("POST", "album/" + albumHash, options);
 
                 } catch (error) {
-                    console.log(`[imgur] imgur.api.album.setAlbumImages Error ${error.statusCode}`);
+                    console.log(`[imgur] imgur.api.album.albumSetImages Error ${error.statusCode}`);
                     // console.log(error);
                     return null;
                 }
             },
             // POST Add Images to an Album
-            async addAlbumImages({ albumHash, ids }) {
+            async albumAddImages({ albumHash, ids }) {
                 // if (!enable()) return null;
 
                 try {
@@ -496,7 +495,7 @@ const _imgur = {
                     return await _apiRequest2("POST", "album/" + albumHash + "/add", options);
 
                 } catch (error) {
-                    console.log(`[imgur] imgur.api.album.addAlbumImages Error ${error.statusCode}`);
+                    console.log(`[imgur] imgur.api.album.albumAddImages Error ${error.statusCode}`);
                     // console.log(error);
                     return null;
                 }
@@ -754,6 +753,12 @@ module.exports = {
     // API
     api: {
         account: {
+            async getAllImages() {
+                if (!module.exports.enable()) return null;
+
+                return _imgur.api.account.getAllImages();
+            },
+
             async getAllAlbums() {
                 if (!module.exports.enable()) return null;
 
@@ -820,7 +825,7 @@ module.exports = {
                 // get new data & putin to db
                 let raw = await _imgur.api.image.image({ imageHash });
                 if (!raw) return null;
-                
+
                 let obj = _imgur.db.image.newData(raw);
                 _imgur.db.image.addData(obj);
                 return _imgur.db.image.findData({ id: imageHash });
@@ -852,6 +857,16 @@ module.exports = {
 
                 return raw;
             },
+            // POST Add Images to an Album
+            async albumAddImages({ albumHash, ids }) {
+                if (!module.exports.enable()) return null;
+
+                let res = await _imgur.api.album.albumAddImages({ albumHash, ids });
+                if (res != true) return null;
+
+                return true;
+            },
+
             // DEL Album Deletion
             async albumDeletion({ albumHash }) {
                 if (!module.exports.enable()) return null;
