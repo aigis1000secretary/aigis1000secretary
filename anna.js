@@ -1032,13 +1032,43 @@ const _anna = {
     // imgUploader
     // upload dbox images to imgur
     async uploadImages() {
+        // {   // fix image to album
+        //     console.clear();
+        //     let idsObj = {}; idsObj.autoresponse = []; idsObj.images = [];
+
+        //     const allImages = await imgur.api.account.getAllImages();
+        //     for (let image of allImages) {
+        //         let tags = image.title.split('/');
+        //         let maintag = (tags[1] || 'null').toLowerCase();
+
+        //         if (["autoresponse", "images"].includes(maintag)) {
+        //             idsObj[maintag].push(image.id);
+        //         } else {
+        //             console.log('unknown image', image.id)
+        //         }
+        //     }
+
+        //     // [imgur] GET Album GuJXrCH Images
+        //     // [imgur] GET Album M8xyLIb AutoResponse
+        //     console.clear();
+        //     const allAlbums = await imgur.api.account.getAllAlbums();
+
+        //     for (let albumName of ["autoresponse", "images"]) {
+        //         while (idsObj[albumName].length > 0) {
+        //             const albumHash = (albumName == "autoresponse" ? "M8xyLIb" : "GuJXrCH");
+        //             const ids = idsObj[albumName].splice(0, 50);
+        //             await imgur.api.album.albumAddImages({ albumHash, ids });
+        //         }
+        //     }
+        // }
+
         let localHost = _anna.isLocalHost;
         // let localHost = false;
 
         console.log(`Image Upload ${localHost ? "(Local) " : ""}Script`);
 
-        // let loaclPath = "C:/Users/HUANG/Dropbox/應用程式/aigis1000secretary";
-        let loaclPath = "C:/Users/Mirror/Dropbox/應用程式/aigis1000secretary";
+        let loaclPath = "C:/Users/HUANG/Dropbox/應用程式/aigis1000secretary";
+        // let loaclPath = "C:/Users/Mirror/Dropbox/應用程式/aigis1000secretary";
         const md5f = (str) => { return require('crypto').createHash('md5').update(str).digest('hex'); }
 
         // get file list
@@ -1085,8 +1115,8 @@ const _anna = {
             // check album
             let albums = imgur.database.album.findData({ title: albumName });
             if (albums.length == 0) {
-                // await imgur.api.album.albumCreation({ title: albumName, cover: "vtHXE4B" });
-                _anna.log(`cant found albums ${albumName}`);
+                console.log(`[imgur] cant found albums ${albumName}`);
+                await imgur.api.album.albumCreation({ title: albumName, cover: (albumName == albumList[0] ? "AvjwYfZ" : "nUYZhbG") });
                 return;
             }
             // get filelist
@@ -1145,7 +1175,7 @@ const _anna = {
 
                 // API cd before upload
                 if (!localHost) { await sleep(timeout * 1000); }
-                else { for (let i = timeout; i > 0; --i) { await sleep(1000); console.log(`await... @${i}`) }; }
+                else { for (let i = timeout; i > 0; --i) { await sleep(1000); console.log(`await...`) }; }
                 timeout = 40;
 
                 // now no image in imgur, upload new
