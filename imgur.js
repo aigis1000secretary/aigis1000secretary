@@ -1,8 +1,15 @@
 
-const request = require("request");
 const fs = require("fs");
 const path = require("path");
 const md5f = function (str) { return require('crypto').createHash('md5').update(str).digest('hex'); }
+
+
+const util = require('util');
+const requestGet = util.promisify(require('request').get);
+const requestPost = util.promisify(require('request').post);
+const requestDel = util.promisify(require('request').delete);
+const requestPut = util.promisify(require('request').put);
+
 
 let IMGUR_CLIENT_ID = null;
 let IMGUR_CLIENT_SECRET = null;
@@ -11,56 +18,27 @@ let IMGUR_REFRESH_TOKEN = null;
 let IMGUR_API_URL = "https://api.imgur.com/3/";
 let IMGUR_ACCESS_TOKEN = null;
 
-// request
-const _request = function (options) {
-    return new Promise(function (resolve, reject) {
-        request(options, function (error, response, body) {
-            // console.log(`>>error:    ${JSON.stringify(error, null, 2)}`);
-            // console.log(`>>response: ${JSON.stringify(response, null, 2)}`);
-            // console.log(`>>body:     ${JSON.stringify(body, null, 2)}`);
-
-            if (response && response.statusCode == 200) {
-                let result;
-                try { result = JSON.parse(response.body); }
-                catch (e) { result = eval("(" + response.body + ")"); }
-                resolve(result);
-            }
-
-            reject(response || error || body);
-            // reject(error || response || body);
-            // reject(body || error || response);
-        });
-    });
-}
 // imgur API request
-const _apiRequest = async function (options) {
-    // return new Promise(function (resolve, reject) {
-    //     // Set the headers
-    //     options.headers = {
-    //         Authorization: "Bearer " + IMGUR_ACCESS_TOKEN
-    //     }
-
-    //     // send reques
-    //     _request(options).then(resolve).catch(reject);
-    // });
-
-    options.headers = {
-        Authorization: "Bearer " + IMGUR_ACCESS_TOKEN
-    }
-
-    let result = await _request(options);
-    return result.data || result;
-}
-const _apiRequest2 = async function (method, route, options = {}) {
+const _apiRequest = async function (method, route, options = {}, bearer = true) {
 
     // Configure the request
     options.url = `${IMGUR_API_URL}${route}`;
-    options.method = method;
-    options.headers = { Authorization: `Bearer ${IMGUR_ACCESS_TOKEN}` }
+    options.json = true;
+    options.headers = bearer ? { Authorization: `Bearer ${IMGUR_ACCESS_TOKEN}` } : { Authorization: `Client-ID ${IMGUR_CLIENT_ID}` };
 
-    let result = await _request(options);
-    return result.data || result;
-    // return result;
+    let res = null;
+    switch (method) {
+        case 'GET': { res = await requestGet(options); } break;
+        case 'POST': { res = await requestPost(options); } break;
+        case 'DELETE': { res = await requestDel(options); } break;
+        case 'PUT': { res = await requestPut(options); } break;
+    }
+    if (res.statusCode != 200) { throw res; }
+    else if (!res.body) {
+        console.log(`[imgur] API error! statu: ${res.statusCode}, body: null`);
+    }
+
+    return res.body?.data || null;
 }
 
 const _imgur = {
@@ -80,14 +58,15 @@ const _imgur = {
             // Configure the request
             let options = {
                 url: "https://api.imgur.com/oauth2/token",
-                method: "POST",
+                json: true,
                 form: form
             };
 
             // send request
             try {
-                let jsonResponse = await _request(options);
-                IMGUR_ACCESS_TOKEN = jsonResponse.access_token;
+                let jsonResponse = await requestPost(options);
+                if (jsonResponse.statusCode != 200) { throw jsonResponse; }
+                IMGUR_ACCESS_TOKEN = jsonResponse.body.access_token;
 
                 // console.json(jsonResponse);
                 // console.log(IMGUR_ACCESS_TOKEN);
@@ -113,7 +92,7 @@ const _imgur = {
 
                 try {
                     // console.log("[imgur] GET Images page " + page);
-                    return await _apiRequest2("GET", "account/me/images/" + page);
+                    return await _apiRequest("GET", "account/me/images/" + page);
 
                 } catch (error) {
                     console.log(`[imgur] imgur.api.account.images Error ${error.statusCode}`);
@@ -127,7 +106,7 @@ const _imgur = {
 
                 try {
                     console.log("[imgur] GET Images IDs page " + page);
-                    return await _apiRequest2("GET", "account/me/images/ids/" + page);
+                    return await _apiRequest("GET", "account/me/images/ids/" + page);
 
                 } catch (error) {
                     console.log(`[imgur] imgur.api.account.imagesIds Error ${error.statusCode}`);
@@ -141,7 +120,7 @@ const _imgur = {
 
                 try {
                     // console.log("[imgur] GET Image Count");
-                    return await _apiRequest2("GET", "account/me/images/count");
+                    return await _apiRequest("GET", "account/me/images/count");
 
                 } catch (error) {
                     console.log(`[imgur] imgur.api.account.imagesCount Error ${error.statusCode}`);
@@ -191,7 +170,7 @@ const _imgur = {
 
                 try {
                     console.log("[imgur] GET Albums page " + page);
-                    return await _apiRequest2("GET", "account/me/albums/" + page);
+                    return await _apiRequest("GET", "account/me/albums/" + page);
 
                 } catch (error) {
                     console.log(`[imgur] imgur.api.account.albums Error ${error.statusCode}`);
@@ -205,7 +184,7 @@ const _imgur = {
 
                 try {
                     console.log("[imgur] GET Album IDs page " + page);
-                    return await _apiRequest2("GET", "account/me/albums/ids/" + page);
+                    return await _apiRequest("GET", "account/me/albums/ids/" + page);
 
                 } catch (error) {
                     console.log(`[imgur] imgur.api.account.albumsIds Error ${error.statusCode}`);
@@ -219,7 +198,7 @@ const _imgur = {
 
                 try {
                     // console.log("[imgur] GET Album Count");
-                    return await _apiRequest2("GET", "account/me/albums/count");
+                    return await _apiRequest("GET", "account/me/albums/count");
 
                 } catch (error) {
                     console.log(`[imgur] imgur.api.account.albumsCount Error ${error.statusCode}`);
@@ -257,7 +236,7 @@ const _imgur = {
                     return result;
 
                 } catch (error) {
-                    console.log(`[imgur] imgur.api.account.getAllAlbums`);
+                    console.log(`[imgur] imgur.api.account.getAllAlbums Error`);
                     console.log(error);
                     return null;
                 }
@@ -272,7 +251,7 @@ const _imgur = {
 
                 try {
                     console.log("[imgur] GET Image " + imageHash);
-                    return await _apiRequest2("GET", "image/" + imageHash);
+                    return await _apiRequest("GET", "image/" + imageHash, {});
 
                 } catch (error) {
                     console.log(`[imgur] imgur.api.image.image Error ${error.statusCode}`);
@@ -302,13 +281,13 @@ const _imgur = {
                         }
                     };
 
-                    let data = await _apiRequest2("POST", "image", options);
+                    let data = await _apiRequest("POST", "image", options);
                     console.log("[imgur]     Upload complete!");
                     return data;
 
                 } catch (error) {
                     console.log(`[imgur] imgur.api.image.imageUpload Error ${error.statusCode}`);
-                    // console.log(error);
+                    console.log(error);
                     return null;
                 }
             },
@@ -318,7 +297,7 @@ const _imgur = {
 
                 try {
                     console.log(`[imgur] DEL Image Delete( ${imageHash} )`);
-                    let data = await _apiRequest2("DELETE", "image/" + imageHash);
+                    let data = await _apiRequest("DELETE", "image/" + imageHash, {});
                     console.log("[imgur]     Delete complete!");
                     return data;
 
@@ -345,7 +324,7 @@ const _imgur = {
                     // Configure the request
                     let options = { formData };
 
-                    let data = await _apiRequest2("POST", "image/" + imageHash, options);
+                    let data = await _apiRequest("POST", "image/" + imageHash, options);
                     console.log("[imgur]     Update complete!");
                     return data;    // data === true
 
@@ -364,7 +343,7 @@ const _imgur = {
                 // if (!enable()) return null;
 
                 try {
-                    let res = await _apiRequest2("GET", "album/" + albumHash);
+                    let res = await _apiRequest("GET", "album/" + albumHash);
                     console.log(`[imgur] GET Album ${albumHash} ${res.title}`);
                     return res;
 
@@ -381,7 +360,7 @@ const _imgur = {
 
                 try {
                     console.log("[imgur] GET Album Images " + albumHash);
-                    return await _apiRequest2("GET", "album/" + albumHash + "/images");
+                    return await _apiRequest("GET", "album/" + albumHash + "/images");
 
                 } catch (error) {
                     console.log(`[imgur] imgur.api.album.albumImages Error ${error.statusCode}`);
@@ -406,7 +385,7 @@ const _imgur = {
                     // Configure the request
                     let options = { formData };
 
-                    return await _apiRequest2("POST", "album", options);
+                    return await _apiRequest("POST", "album", options);
 
                 } catch (error) {
                     console.log(`[imgur] imgur.api.album.albumCreation Error ${error.statusCode}`);
@@ -432,7 +411,7 @@ const _imgur = {
                     // Configure the request
                     let options = { json };
 
-                    return await _apiRequest2("PUT", "album/" + albumHash, options);
+                    return await _apiRequest("PUT", "album/" + albumHash, options);
 
                 } catch (error) {
                     console.log(`[imgur] imgur.api.album.updateAlbum Error ${error.statusCode}`);
@@ -446,7 +425,7 @@ const _imgur = {
 
                 try {
                     console.log("[imgur] DEL Album " + albumHash);
-                    return await _apiRequest2("DELETE", "album/" + albumHash);
+                    return await _apiRequest("DELETE", "album/" + albumHash);
 
                 } catch (error) {
                     console.log(`[imgur] imgur.api.album.albumDeletion Error ${error.statusCode}`);
@@ -470,7 +449,7 @@ const _imgur = {
                         }
                     };
 
-                    return await _apiRequest2("POST", "album/" + albumHash, options);
+                    return await _apiRequest("POST", "album/" + albumHash, options);
 
                 } catch (error) {
                     console.log(`[imgur] imgur.api.album.albumSetImages Error ${error.statusCode}`);
@@ -492,7 +471,7 @@ const _imgur = {
                             ids: ids.join(",")
                         }
                     };
-                    return await _apiRequest2("POST", "album/" + albumHash + "/add", options);
+                    return await _apiRequest("POST", "album/" + albumHash + "/add", options);
 
                 } catch (error) {
                     console.log(`[imgur] imgur.api.album.albumAddImages Error ${error.statusCode}`);
@@ -507,7 +486,7 @@ const _imgur = {
                 try {
                     console.log("[imgur] POST Remove " + ids + " from an Album " + albumHash);
 
-                    // return await _apiRequest2("DELETE", "album/" + albumHash + "/remove_images/?ids=" + ids.join(","));
+                    // return await _apiRequest("DELETE", "album/" + albumHash + "/remove_images/?ids=" + ids.join(","));
 
                     // Set the POST body
                     let options = {
@@ -515,7 +494,7 @@ const _imgur = {
                         formData: { ids: ids.join(",") }
                     };
 
-                    return await _apiRequest2("DELETE", "album/" + albumHash + "/remove_images", options);
+                    return await _apiRequest("DELETE", "album/" + albumHash + "/remove_images", options);
 
                 } catch (error) {
                     console.log(`[imgur] imgur.api.album.removeAlbumImages Error ${error.statusCode}`);
@@ -762,7 +741,7 @@ module.exports = {
             async getAllAlbums() {
                 if (!module.exports.enable()) return null;
 
-                for (let albumRaw of await _imgur.api.account.getAllAlbums()) {
+                for (let albumRaw of (await _imgur.api.account.getAllAlbums() || [])) {
                     let raw = await _imgur.api.album.album({ albumHash: albumRaw.id });
                     let albumObj = _imgur.db.album.newData(raw);
                     _imgur.db.album.addData(albumObj);
