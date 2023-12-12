@@ -43,6 +43,7 @@
 
     1.3.0.8
     imgur api request fix
+    dbox fix img path
 
 */
 
