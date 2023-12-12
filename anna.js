@@ -459,12 +459,12 @@ module.exports = {
                         // imgur.api.image.image({ imageHash: imgArray[0].id });
 
                         // return "分類完成";
-                        return res ? {
+                        return (res === false) ? `分類失敗` : {
                             type: "option",
                             title: `分類完成`,
                             labels: [`>> ${target}`, "next"],
                             msgs: [`https://aigis1000secretary.fly.dev/images/${target}`, "new"]
-                        } : `分類失敗`;
+                        };
                     }
                 }
             }
@@ -1180,7 +1180,7 @@ const _anna = {
 
                 // now no image in imgur, upload new
                 let result = await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
-                if (result == null) break;
+                if (result === false) break;
 
                 continue;
             }
@@ -1212,7 +1212,7 @@ const _anna = {
 
                         // upload
                         let result = await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
-                        if (result == null) break;
+                        if (result === false) break;
                     }
                 }
 
@@ -1240,7 +1240,7 @@ const _anna = {
 
                 // re-upload            
                 let result = await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
-                if (result == null) break;
+                if (result === false) break;
 
                 continue;
             }
