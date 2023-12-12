@@ -18,7 +18,7 @@ module.exports = {
     bot: null,
     admin: [],
 
-    init(discordCfg) {
+    async init(discordCfg) {
         this.bot = new Discord.Client({
             intents: [
                 GatewayIntentBits.Guilds,
@@ -31,8 +31,13 @@ module.exports = {
                 Partials.Reaction
             ]
         });
-        this.bot.login(discordCfg.token);
+        await this.bot.login(discordCfg.token);
         this.admin = discordCfg.admin;
+
+        const channel = await this.bot.channels.fetch('1009645372831977482')
+        global.discordLog = function (content) {
+            return channel.send({ content });
+        }
     },
 
     isAdmin(id) {
