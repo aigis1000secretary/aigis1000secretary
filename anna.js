@@ -853,7 +853,8 @@ const _anna = {
                 url: obj.getWikiUrl()
             }
             // card image
-            let imgArray = imgur.database.image.findData({ tag: charaName });
+            let tag = charaName.replace('黒英傑', '白金英傑');
+            let imgArray = imgur.database.image.findData({ tag });
             if (imgArray && imgArray.length > 0) {
                 img = randomPick(imgArray);
 

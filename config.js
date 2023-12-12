@@ -41,12 +41,13 @@
     1.3.0.7
     imgur fix images upload script
 
+    dbox fix img path
 */
 
 const crypto = require("./crypto.js");
 const dbox = require("./dbox.js");
 let _config = module.exports = {
-    _version: "1.3.0.7",
+    _version: "1.3.0.8",
     // 主版本號：當你做了不兼容的API修改
     // 次版本號：當你做了向下兼容的功能性新增
     // 修訂號：當你做了向下兼容的問題修正
