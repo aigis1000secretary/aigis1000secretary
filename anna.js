@@ -313,7 +313,7 @@ module.exports = {
 
         } else if (command == "NEWIMG") {
             // imgUploader.upload();
-            _anna.uploadImages();
+            (async () => { await _anna.uploadImages(); })();
             return "上傳圖檔中...";
 
         } else if (isAdmin && (command == "NEW" || /new(\d+)/i.test(command))) {
@@ -1123,11 +1123,15 @@ const _anna = {
             pathArray = pathArray.concat(await getFileList(albumName).catch(console.log));
             // pathArray = pathArray.concat(await getOnlineFileList(`/${albumName}`).catch(console.log));
         }
+        for (let i = 0; i < pathArray.length; ++i) {
+            pathArray[i] = pathArray[i].replace(/AutoResponse/ig, 'AutoResponse').replace(/Images/ig, 'Images');
+        }
 
         // upload timeout
         let timeout = 1;
         // loop
         console.log("GET DBox Images count: " + pathArray.length);
+        pathArray.sort();
         for (let filePath of pathArray) {
             // image var
             let tagList = localHost ? filePath.replace(loaclPath, "") : filePath;
@@ -1176,7 +1180,7 @@ const _anna = {
                 // API cd before upload
                 if (!localHost) { await sleep(timeout * 1000); }
                 else { for (let i = timeout; i > 0; --i) { await sleep(1000); console.log(`await...`) }; }
-                timeout = 40;
+                timeout = 50;
 
                 // now no image in imgur, upload new
                 let result = await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
@@ -1208,7 +1212,7 @@ const _anna = {
                         // API cd before upload
                         if (!localHost) { await sleep(timeout * 1000); }
                         else { for (let i = timeout; i > 0; --i) { await sleep(1000); console.log(`await... @${i}`) }; }
-                        timeout = 40;
+                        timeout = 50;
 
                         // upload
                         let result = await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
@@ -1236,7 +1240,7 @@ const _anna = {
                 // API cd before upload
                 if (!localHost) { await sleep(timeout * 1000); }
                 else { for (let i = timeout; i > 0; --i) { await sleep(1000); console.log(`await... @${i}`) }; }
-                timeout = 40;
+                timeout = 50;
 
                 // re-upload            
                 let result = await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
@@ -1245,7 +1249,7 @@ const _anna = {
                 continue;
             }
         }
-
+        console.log('[imgur] Upload end');
 
         // check dbox img status
         await imgur.init(module.exports.config.imgur);
