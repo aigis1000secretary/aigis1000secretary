@@ -509,6 +509,10 @@ module.exports = {
 
             }
 
+        } else if (isAdmin && (command == "REBOOT")) {
+            process.exit(1);
+            return 'REBOOT';
+
         } else if (false && (command == "ABOTINIT") && false) {
             // line.alphatbotInit();
             return "";
