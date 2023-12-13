@@ -1039,17 +1039,30 @@ const _anna = {
     async uploadImages() {
         // {   // fix image to album
         //     console.clear();
-        //     let idsObj = {}; idsObj.autoresponse = []; idsObj.images = [];
+        //     let idsList = {};
+        //     let mainTagList = [];
 
         //     const allImages = await imgur.api.account.getAllImages();
         //     for (let image of allImages) {
-        //         let tags = image.title.split('/');
-        //         let maintag = (tags[1] || 'null').toLowerCase();
 
-        //         if (["autoresponse", "images"].includes(maintag)) {
-        //             idsObj[maintag].push(image.id);
-        //         } else {
-        //             console.log('unknown image', image.id)
+        //         // get main tag (album title)
+        //         let tags = image.title.split('/');
+        //         let maintag = (tags[1] || null);
+
+        //         if (!maintag) { console.log('unknown image', image.id); continue; }
+
+        //         if (!mainTagList.includes(maintag)) { mainTagList.push(maintag); }
+
+        //         // set array
+        //         if (!idsList[maintag]) { idsList[maintag] = []; }
+        //         // add image to array
+        //         idsList[maintag].push(image.id);
+
+        //         // check imgur album
+        //         let albums = imgur.database.album.findData({ title: maintag });
+        //         if (albums.length == 0) {
+        //             console.log(`[imgur] cant found album ${maintag}, add new album.`);
+        //             await imgur.api.album.albumCreation({ title: maintag });
         //         }
         //     }
 
@@ -1058,29 +1071,32 @@ const _anna = {
         //     console.clear();
         //     const allAlbums = await imgur.api.account.getAllAlbums();
 
-        //     for (let albumName of ["autoresponse", "images"]) {
-        //         while (idsObj[albumName].length > 0) {
+        //     for (let albumName of mainTagList) {
+        //         while (idsList[albumName].length > 0) {
         //             const albumHash = (albumName == "autoresponse" ? "M8xyLIb" : "GuJXrCH");
-        //             const ids = idsObj[albumName].splice(0, 50);
+        //             const ids = idsList[albumName].splice(0, 50);
         //             await imgur.api.album.albumAddImages({ albumHash, ids });
         //         }
         //     }
         // }
 
         let localHost = _anna.isLocalHost;
-        // let localHost = false;
+        // localHost = false;
 
         console.log(`Image Upload ${localHost ? "(Local) " : ""}Script`);
 
-        let loaclPath = "C:/Users/HUANG/Dropbox/應用程式/aigis1000secretary";
+        let mainPath = "C:/Users/HUANG/Dropbox/應用程式/aigis1000secretary";
         // let loaclPath = "C:/Users/Mirror/Dropbox/應用程式/aigis1000secretary";
+        if (!localHost) { mainPath = ""; }
+
+        // script method
         const md5f = (str) => { return require('crypto').createHash('md5').update(str).digest('hex'); }
 
         // get file list
-        const getFileList = async (mainFolder) => {
+        const getFileList = async (dirPath) => {
             return localHost ?
-                await getOfflineFileList(`${loaclPath}/${mainFolder}`) :
-                await getOnlineFileList(`/${mainFolder}`)
+                await getOfflineFileList(dirPath) :
+                await getOnlineFileList(dirPath)
         }
         // get local file list
         const getOfflineFileList = (dirPath) => {
@@ -1099,10 +1115,10 @@ const _anna = {
             });
         };
         // get dropbox file list
-        const getOnlineFileList = async function (mainFolder) {
+        const getOnlineFileList = async (dirPath) => {
 
             let files = [];
-            let _result = await dbox.listDir(mainFolder).catch(console.log);
+            let _result = await dbox.listDir(dirPath).catch(console.log);
 
             let _files = _result.filter((obj) => (obj[".tag"] == "file"));
             for (let obj of _files) { files.push(obj.path_display); }
@@ -1112,7 +1128,7 @@ const _anna = {
             return files;
         }
 
-        // get dropbox image list
+        // get all image file list
         let pathArray = [];
 
         let albumList = ["AutoResponse", "Images"];
@@ -1125,62 +1141,81 @@ const _anna = {
                 return;
             }
             // get filelist
-            pathArray = pathArray.concat(await getFileList(albumName).catch(console.log));
+            const albumPath = mainPath + '/' + albumName;
+            pathArray = pathArray.concat(await getFileList(albumPath).catch(console.log));
             // pathArray = pathArray.concat(await getOnlineFileList(`/${albumName}`).catch(console.log));
         }
-        for (let i = 0; i < pathArray.length; ++i) {
-            pathArray[i] = pathArray[i].replace(/AutoResponse/ig, 'AutoResponse').replace(/Images/ig, 'Images');
-        }
+        pathArray.sort();
 
+
+        
         // upload timeout
         let timeout = 1;
-        // loop
+        // loop start
         console.log("GET DBox Images count: " + pathArray.length);
-        pathArray.sort();
         for (let filePath of pathArray) {
-            // image var
-            let tagList = localHost ? filePath.replace(loaclPath, "") : filePath;
+
+            // Image var
+            // Image taglist (filepath)
+            let tagList = filePath.replace(mainPath, "");
+            tagList = tagList
+                .replace(/AutoResponse/ig, 'AutoResponse')
+                .replace(/Character/ig, 'Character')
+                .replace(/Images/ig, 'Images');
+            // Image filename
             let fileName = path.parse(filePath).base;
-            // album id
-            let albumHash = "";
-            let albums = imgur.database.album.findData({ title: tagList.substring(1, tagList.indexOf("/", 1)) });
-            if (albums.length == 0) continue;
+
+            // get image file
+            let imageBinary = localHost ? fs.readFileSync(filePath) : null;
+            // get MD5 for check
+            let md5 = localHost ? md5f(imageBinary) : null;
+
+
+
+            // get imgur album id
+            let albumHash = null;
+            let mainTag = tagList.substring(1, tagList.indexOf("/", 1));
+            let albums = imgur.database.album.findData({ title: mainTag });
+            if (albums.length == 0) { console.log(`[imgur] cant found album ${mainTag}`); continue; }
             else { albumHash = albums[0].id; }
 
-            // console.log(filePath)
-            // console.log(fileName)
-            // console.log("")
-            // console.log(`\n[${pathArray.indexOf(filePath)}/${pathArray.length}]`);
-            // console.log(`\n[${pathArray.indexOf(filePath)}/${pathArray.length}] ${fileName}`);
-            // get online image data
-            let resultImage = imgur.database.image.findData({ tagList, isGif: true });
 
-            // cant found image from imgur (by tag)
+
+            // search online Image data
+            let resultImage = md5 ?
+                imgur.database.image.findData({ md5, isGif: true }) :
+                imgur.database.image.findData({ tagList, isGif: true });
+
+
+            // imgur image not unique
+            // online host, search by taglist(filepath)
+            if (resultImage.length != 1 && !localHost) {
+                console.log(`\n[${pathArray.indexOf(filePath)}/${pathArray.length}] search by tagList result != 1`);
+
+                // if online, filepath multi match, delete all image;
+                for (let image of resultImage) {
+                    await imgur.api.image.imageDeletion({ imageHash: image.id });
+                }
+
+                // get image from dropbox file
+                imageBinary = await dbox.fileDownload(tagList).catch((e) => { console.log(e.message); return null; });
+                if (imageBinary === null) { console.log(`[imgur] dropbox image download fail.`); continue; }
+                // get MD5 for check
+                md5 = md5f(imageBinary);
+
+                // search again by md5
+                resultImage = imgur.database.image.findData({ md5, isGif: true });
+            }
+
+
+
+            // cant found image from imgur (By md5)
+            // case 1: local,                                 md5 no match, upload, md5 not null
+            // case 2: online, filepath multi match & delete, md5 no match, upload, md5 not null
+            // case 3: online, filepath no match,             md5 no match, upload, md5 not null
+            // ==> upload
             if (resultImage.length == 0) {
-                // get image data
-                let imageBinary = localHost ? fs.readFileSync(filePath) : await dbox.fileDownload(tagList).catch((e) => { console.log(e.message); return null; });
-                if (imageBinary === null) { continue; }
-
-                let md5 = md5f(imageBinary);  // get MD5 for check
-
-                // find again
-                resultImage = imgur.database.image.findData({ md5, tag: fileName, isGif: true });
-
-                // found image from imgur (by md5)
-                if (resultImage.length == 1) {
-                    console.log(`\n[${pathArray.indexOf(filePath)}/${pathArray.length}]`);
-
-                    // if dropbox file moved, update image params
-                    await imgur.api.image.updateImage({ imageHash: resultImage[0].id, tagList });
-                    continue;
-                }
-
-                console.log(`\n[${pathArray.indexOf(filePath)}/${pathArray.length}]`);
-                // found some images from imgur
-                if (resultImage.length >= 1) {
-                    // delete same images
-                    for (let imageHash of resultImage) { await imgur.api.image.imageDeletion({ imageHash }) }
-                }
+                console.log(`\n[${pathArray.indexOf(filePath)}/${pathArray.length}] resultImage.length == 0`);
 
                 // API cd before upload
                 if (!localHost) { await sleep(timeout * 1000); }
@@ -1195,62 +1230,48 @@ const _anna = {
             }
 
 
-            // found image from imgur 
+
+            // found image from imgur (By md5 or filepath)
+            // case 1: local,                     md5 match, need to check filepath, md5 not null
+            // case 2: online, filepath match,               md5 check skip,         md5 is  null
+            // case 3: online, filepath no match, md5 match, update filepath,        md5 not null
+            // ==> if filepath not match, update
             if (resultImage.length == 1) {
-                // check md5 if on local
-                if (localHost) {
-                    // get image data
-                    let imageBinary = fs.readFileSync(filePath);
-                    let md5 = md5f(imageBinary);  // get MD5 for check
 
-                    // check md5, if not same
-                    if (!resultImage[0].md5.equali(md5) ||
-                        // !resultImage[0].fileName.equali(fileName)
-                        fileName.indexOf(resultImage[0].fileName) != 0// filename too long
-                    ) {
-                        console.log(`\n[${pathArray.indexOf(filePath)}/${pathArray.length}]`);
-                        console.log(`${resultImage[0].md5} => ${md5}`);
-                        console.log(`${resultImage[0].fileName} => ${fileName}`);
+                if (resultImage[0].tagList != tagList) {
+                    console.log(`\n[${pathArray.indexOf(filePath)}/${pathArray.length}] resultImage.length == 1`);
 
-                        await imgur.api.image.imageDeletion({ imageHash: resultImage[0].id })
-
-                        // API cd before upload
-                        if (!localHost) { await sleep(timeout * 1000); }
-                        else { for (let i = timeout; i > 0; --i) { await sleep(1000); console.log(`await... @${i}`) }; }
-                        timeout = 50;
-
-                        // upload
-                        let result = await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
-                        if (result === false) break;
-                    }
+                    await imgur.api.image.updateImage({ imageHash: resultImage[0].id, tagList });
                 }
-
                 continue;
             }
 
 
-            // found many image from imgur
+
+            // found many images from imgur (By md5)
+            // case 1: local,                     md5 multi match, check  filepath & delete, md5 not null
+            // case 2: online, filepath no match, md5 multi match, update filepath & delete, md5 not null
             if (resultImage.length > 1) {
                 console.log(`\n[${pathArray.indexOf(filePath)}/${pathArray.length}] result.length > 1`);
 
-                // del online images 
-                for (let image of resultImage) { await imgur.api.image.imageDeletion({ imageHash: image.id }) }
+                for (let i = 0; i < resultImage.length; ++i) {
 
-                // image data
-                let imageBinary = localHost ? fs.readFileSync(filePath) : await dbox.fileDownload(tagList).catch((e) => { console.log(e.message); return null; });
-                if (imageBinary === null) { continue; }
+                    if (i == 0) {
+                        // keep first image
 
-                let md5 = md5f(imageBinary);  // get MD5 for check
+                        if (resultImage[i].taglist != tagList) {
+                            // update if filepath not match
+                            await imgur.api.image.updateImage({ imageHash: resultImage[i].id, tagList });
+                            continue;
+                        }
 
-                // API cd before upload
-                if (!localHost) { await sleep(timeout * 1000); }
-                else { for (let i = timeout; i > 0; --i) { await sleep(1000); console.log(`await... @${i}`) }; }
-                timeout = 50;
+                    } else {
+                        // delete other online images
 
-                // re-upload            
-                let result = await imgur.api.image.imageUpload({ imageBinary, fileName, md5, albumHash, tagList });
-                if (result === false) break;
-
+                        await imgur.api.image.imageDeletion({ imageHash: resultImage[i].id });
+                        continue;
+                    }
+                }
                 continue;
             }
         }
@@ -1280,7 +1301,7 @@ const _anna = {
             let filename = img.fileName;
             let pathInDbox = pathArray.find((p) => path.equali(p));
             if (!pathInDbox) {
-                console.log(`${path} not exist in drpbox`);
+                console.log(`${path} not exist in dropbox`);
                 // await dbox.fileUpload(`/DelImages/${filename}`, body);
 
                 await new Promise((resolve, reject) => {
