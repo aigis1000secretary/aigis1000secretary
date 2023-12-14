@@ -1148,7 +1148,7 @@ const _anna = {
         pathArray.sort();
 
 
-        
+
         // upload timeout
         let timeout = 1;
         // loop start
@@ -1185,17 +1185,12 @@ const _anna = {
             let resultImage = md5 ?
                 imgur.database.image.findData({ md5, isGif: true }) :
                 imgur.database.image.findData({ tagList, isGif: true });
+            let searchLog = `${md5 ? 'md5' : 'tagList'} resultImage[${resultImage.length}]`;
 
 
             // imgur image not unique
             // online host, search by taglist(filepath)
             if (resultImage.length != 1 && !localHost) {
-                console.log(`\n[${pathArray.indexOf(filePath)}/${pathArray.length}] search by tagList result != 1`);
-
-                // if online, filepath multi match, delete all image;
-                for (let image of resultImage) {
-                    await imgur.api.image.imageDeletion({ imageHash: image.id });
-                }
 
                 // get image from dropbox file
                 imageBinary = await dbox.fileDownload(tagList).catch((e) => { console.log(e.message); return null; });
@@ -1203,8 +1198,19 @@ const _anna = {
                 // get MD5 for check
                 md5 = md5f(imageBinary);
 
+                if (resultImage.length > 1) {
+                    console.log(`\n[${pathArray.indexOf(filePath)}/${pathArray.length}] ${searchLog}`);
+
+                    // if online, filepath multi match, delete all image;
+                    for (let image of resultImage) {
+                        if (image.md5 == md5) { continue; }
+                        await imgur.api.image.imageDeletion({ imageHash: image.id });
+                    }
+                }
+
                 // search again by md5
                 resultImage = imgur.database.image.findData({ md5, isGif: true });
+                searchLog = `md5 resultImage[${resultImage.length}]`;
             }
 
 
@@ -1215,7 +1221,7 @@ const _anna = {
             // case 3: online, filepath no match,             md5 no match, upload, md5 not null
             // ==> upload
             if (resultImage.length == 0) {
-                console.log(`\n[${pathArray.indexOf(filePath)}/${pathArray.length}] resultImage.length == 0`);
+                console.log(`\n[${pathArray.indexOf(filePath)}/${pathArray.length}] ${searchLog}`);
 
                 // API cd before upload
                 if (!localHost) { await sleep(timeout * 1000); }
@@ -1239,7 +1245,7 @@ const _anna = {
             if (resultImage.length == 1) {
 
                 if (resultImage[0].tagList != tagList) {
-                    console.log(`\n[${pathArray.indexOf(filePath)}/${pathArray.length}] resultImage.length == 1`);
+                    console.log(`\n[${pathArray.indexOf(filePath)}/${pathArray.length}] ${searchLog}`);
 
                     await imgur.api.image.updateImage({ imageHash: resultImage[0].id, tagList });
                 }
@@ -1252,7 +1258,7 @@ const _anna = {
             // case 1: local,                     md5 multi match, check  filepath & delete, md5 not null
             // case 2: online, filepath no match, md5 multi match, update filepath & delete, md5 not null
             if (resultImage.length > 1) {
-                console.log(`\n[${pathArray.indexOf(filePath)}/${pathArray.length}] result.length > 1`);
+                console.log(`\n[${pathArray.indexOf(filePath)}/${pathArray.length}] ${searchLog}`);
 
                 for (let i = 0; i < resultImage.length; ++i) {
 
