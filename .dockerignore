@@ -1,0 +1,16 @@
+# flyctl launch added from .gitignore
+
+**/.vscode
+**/node_modules
+
+**/test.js
+**/hotfix.js
+**/debug.js
+**/config.json
+
+**/*.bat
+**/*.txt
+**/*.log
+**/*.csv
+
+fly.toml
