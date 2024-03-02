@@ -6,13 +6,8 @@ hotfix.js
 debug.js
 config.json
 
-node.bat
+*.bat
 *.json
 *.txt
 *.log
 *.csv
-
-LineAlphatJS/download/
-LineAlphatJS/src/tmp/
-
-*.bat
