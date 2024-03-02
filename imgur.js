@@ -39,8 +39,8 @@ const _apiRequest = async function (method, route, options = {}, bearer = true) 
     if (result?.data?.error) {
         result = {
             data: null, success: false,
-            message: result.data.error.message,
-            status: result.data.error.code
+            message: result.data.error.message || result.data.error,
+            status: result.data.error.code || result.statusCode || result.status
         };
     }
     if (result.status != 200) { throw result; }
@@ -52,6 +52,8 @@ const _imgur = {
 
     oauth2: {
         async token() {
+            if (IMGUR_ACCESS_TOKEN) { return true; }
+
             console.log("[imgur] Generate Access_Token");
 
             // Set the body
@@ -82,8 +84,8 @@ const _imgur = {
 
             } catch (error) {
                 IMGUR_ACCESS_TOKEN = null;
-                console.log(`[imgur] IMGUR_ACCESS_TOKEN update error ${error.status}!`);
-                // console.log(error);
+                console.log(`[imgur] IMGUR_ACCESS_TOKEN update error ${error.body?.status || error.statusCode}!`);
+                console.log(error.body?.data?.error || error);
                 return null;
             }
         }
@@ -210,7 +212,7 @@ const _imgur = {
 
                 } catch (error) {
                     console.log(`[imgur] imgur.api.account.albumsCount Error ${error.status}`);
-                    // console.json(error);
+                    console.json(error);
                     return null;
                 }
             },
@@ -737,7 +739,7 @@ module.exports = {
         IMGUR_REFRESH_TOKEN = imgurCfg.IMGUR_REFRESH_TOKEN;
 
         // access token update
-        await _imgur.oauth2.token().catch(console.error);
+        while (!(await _imgur.oauth2.token().catch(console.error))) { await sleep(10000); }
         // retry method?
         if (!this.enable()) return null;
 
@@ -765,12 +767,19 @@ module.exports = {
             async getAllAlbums() {
                 if (!module.exports.enable()) return null;
 
+                let promise = [];
                 for (let albumRaw of (await _imgur.api.account.getAllAlbums() || [])) {
-                    let raw = (await _imgur.api.album.album({ albumHash: albumRaw.id }))?.data;
+                    promise.push(_imgur.api.album.album({ albumHash: albumRaw.id }));
+                }
+
+                let albumRawList = await Promise.all(promise);
+                for (let albumRaw of albumRawList) {
+                    let raw = albumRaw?.data;
                     if (!raw) { continue; }
                     let albumObj = _imgur.db.album.newData(raw);
                     _imgur.db.album.addData(albumObj);
                 }
+
                 return true;
             }
         },
@@ -1001,7 +1010,7 @@ class Album {
         }
         this._constructor(rawData);
     };
-    _constructor({ id, title, link, images }) {
+    _constructor({ id, title, link, images = [] }) {
         this.id = id; // albumHash
         this.title = title;
         this.link = link;
